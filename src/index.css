@@ -64,6 +64,8 @@
     --grain-b:       oklch(96% 0.013 50); /* body corner-wash glow B */
     --scrim:         color-mix(in oklch, var(--ink) 30%, transparent); /* modal/nav dim */
     --ink-on-accent: var(--paper);        /* foreground on an accent fill */
+    --scrollbar-thumb:       color-mix(in oklch, var(--ink) 20%, transparent);
+    --scrollbar-thumb-hover: color-mix(in oklch, var(--ink) 34%, transparent);
 
     --side-w: 248px;
     /* Content cap — fills up to here, then centers on ultrawide (matches GT). */
@@ -142,6 +144,17 @@
      ──────────────────────────────────────────────────────────────── */
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+  html {
+    /* Reserve the scrollbar track ALWAYS, so short (non-scrolling) pages line up
+       with tall ones instead of shifting sideways when the scrollbar appears.
+       overflow-y:scroll is the reliable reserve (scrollbar-gutter has no effect
+       under the root's default overflow:visible); the transparent track means no
+       visible bar shows when there's nothing to scroll. */
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;                                  /* Firefox */
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
   body {
     font-family: var(--sans);
     font-size: 14px;
@@ -150,6 +163,17 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  /* Themed scrollbar (WebKit) — the sidebar keeps its own thinner override below. */
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 8px;
+    border: 3px solid transparent;         /* inset the thumb so it reads as a pill */
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); background-clip: padding-box; }
+  ::-webkit-scrollbar-corner { background: transparent; }
   ::selection { background: var(--accent); color: var(--paper); }
 
   /* Subtle paper grain via gradient */
