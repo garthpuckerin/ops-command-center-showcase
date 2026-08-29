@@ -119,7 +119,7 @@ function ImportsScreen({ campaignId, onDataChanged }) {
               <Rule />
               <div className="kv-list">
                 {imports.slice(0, 5).map(item => (
-                  <KV key={item.id} k={item.filename} v={<Pill tone={statusTone(item.status)} block>{statusLabel(item.status)}</Pill>} />
+                  <KV key={item.id} k={item.filename} v={<Pill tone={statusTone(item.status)}>{statusLabel(item.status)}</Pill>} />
                 ))}
               </div>
             </Card>
@@ -296,7 +296,7 @@ function WriteBackDetail({ job, note, setNote, onReview, working }) {
       <Rule />
       <div className="kv-list">
         <KV k="Source record" v={`${job.source_record_type}:${job.source_record_id || "pending"}`} />
-        <KV k="Approval" v={<Pill tone={job.approval_status === "approved" ? "olive" : job.approval_status === "rejected" ? "red" : "ochre"} block>{statusLabel(job.approval_status)}</Pill>} />
+        <KV k="Approval" v={<Pill tone={job.approval_status === "approved" ? "olive" : job.approval_status === "rejected" ? "red" : "ochre"}>{statusLabel(job.approval_status)}</Pill>} />
         <KV k="Blocked reasons" v={blockedReasons.length ? blockedReasons.join(", ") : "None"} />
         <KV k="Reviewer note" v={job.reviewer_note || "Required before approve/reject"} />
       </div>

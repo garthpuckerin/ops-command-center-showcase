@@ -98,7 +98,7 @@ function PeopleDirectoryScreen({ campaignId }) {
         sub="Tenant-scoped lookup across imported learner records, managers, facilities, departments, campaign participation, identity mappings, and custom fields."
       />
       <PeopleFilterBar filters={filters} setFilters={setFilters} campaignId={campaignId} />
-      <div className="grid grid-3">
+      <div className="stat-grid stat-grid-3">
         <Card><StatNumber value={fmt(page.total)} sub="matching records" hint="paged, not fully hydrated" /></Card>
         <Card><StatNumber value={fmt(loaded)} sub="loaded" hint={page.has_more ? "more available" : "current result set"} /></Card>
         <Card><StatNumber value={fmt(uniquePeopleManagers(page.items).length)} sub="managers visible" hint="from current page" /></Card>

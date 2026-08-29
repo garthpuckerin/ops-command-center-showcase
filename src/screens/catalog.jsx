@@ -95,7 +95,7 @@ function CatalogDrawer({ selection, catalog, onClose }) {
             <h2 className="display-sm">{item.name || item.title}</h2>
             <p className="muted small">{item.notes || item.rule || "Campaign-scoped catalog relationship."}</p>
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">x</button>
+          <button className="icon-btn" onClick={onClose} aria-label="Close">×</button>
         </div>
         <div className="profile-section">
           <Card>

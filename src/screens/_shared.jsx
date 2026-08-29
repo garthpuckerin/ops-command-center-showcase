@@ -106,7 +106,7 @@ function CampaignAccessNotice({ campaign, onNav }) {
   return (
     <Card className="campaign-notice">
       <div className="campaign-notice-main">
-        <Pill tone={statusTone(campaign.risk)} dot block>{campaign.status}</Pill>
+        <Pill tone={statusTone(campaign.risk)} dot>{campaign.status}</Pill>
         <div>
           <div className="strong">{campaign.name}</div>
           <div className="muted small">Administrative-first rollout: learner, trainer, manager, and leadership surfaces can exist, but campaign access stays restricted until the workflow proves useful.</div>

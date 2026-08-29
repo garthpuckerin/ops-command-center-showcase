@@ -49,7 +49,7 @@ function CampaignSetupScreen({ campaignId }) {
             <KV k="Risk" v={riskPill(campaign.risk)} />
             <KV k="Next setup item" v={nextSection?.section || "No setup sections"} />
             <KV k="Owner" v={nextSection?.owner || "Unassigned"} />
-            <KV k="Status" v={nextSection ? <Pill tone={statusTone(nextSection.status)} dot block>{statusLabel(nextSection.status)}</Pill> : "—"} />
+            <KV k="Status" v={nextSection ? <Pill tone={statusTone(nextSection.status)} dot>{statusLabel(nextSection.status)}</Pill> : "—"} />
           </div>
         </Card>
 

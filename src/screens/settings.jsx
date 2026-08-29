@@ -68,7 +68,7 @@ function OrgSettingsScreen({ t, setTweak }) {
                 <Cell><span className="mono small">{field.data_type}</span></Cell>
                 <Cell>{field.allowed_entity_types.join(", ")}</Cell>
                 <Cell><span className="muted">{field.source_aliases.join(", ")}</span></Cell>
-                <Cell><Pill tone={field.is_sensitive ? "terracotta" : "olive"} mono>{field.is_sensitive ? "Yes" : "No"}</Pill></Cell>
+                <Cell><Pill tone={field.is_sensitive ? "red" : "olive"} mono>{field.is_sensitive ? "Yes" : "No"}</Pill></Cell>
               </Row>
             ))}
           </Table>
@@ -102,7 +102,7 @@ function SettingsScreen({ me, t, setTweak }) {
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   {PALETTE_OPTIONS.map(p => (
                     <button key={p.id} onClick={() => setTweak("palette", p.value)} className={cls("btn", activePaletteId === p.id ? "btn-solid" : "btn-ghost")} style={{ paddingLeft: 10 }}>
-                      <span aria-hidden="true" style={{ width: 14, height: 14, borderRadius: 2, background: p.swatch, border: "1px solid rgba(0,0,0,.15)", flexShrink: 0 }} />
+                      <span aria-hidden="true" style={{ width: 14, height: 14, borderRadius: 2, background: p.swatch, border: "1px solid var(--rule)", flexShrink: 0 }} />
                       {p.label}
                     </button>
                   ))}
@@ -181,7 +181,7 @@ function NotificationsScreen({ campaignId, onDataChanged }) {
               <div className="strong">Rule execution complete</div>
               <div className="muted small">{result.evaluated} evaluated, {result.created} new notifications.</div>
             </div>
-            <Pill tone={result.created ? "terracotta" : "olive"} mono>{result.created ? "New signals" : "No changes"}</Pill>
+            <Pill tone={result.created ? "ochre" : "olive"} mono>{result.created ? "New signals" : "No changes"}</Pill>
           </div>
         </Card>
       )}
@@ -198,7 +198,7 @@ function NotificationsScreen({ campaignId, onDataChanged }) {
               </Cell>
               <Cell>{riskPill(n.severity)}</Cell>
               <Cell><span className="mono small">{triggerLabel(n.source_type)}</span></Cell>
-              <Cell><Pill tone={n.status === "unread" ? "terracotta" : "muted"} mono>{triggerLabel(n.status)}</Pill></Cell>
+              <Cell><Pill tone={n.status === "unread" ? "ochre" : "muted"} mono>{triggerLabel(n.status)}</Pill></Cell>
               <Cell><span className="mono small">{String(n.created_at || "").slice(0, 16).replace("T", " ")}</span></Cell>
             </Row>
           ))}
@@ -282,10 +282,10 @@ function IntegrationHealthScreen({ campaignId }) {
             <Row key={`${item.source}-${item.import_type}`}>
               <Cell><span className="mono small">{item.source}</span></Cell>
               <Cell>{triggerLabel(item.import_type)}</Cell>
-              <Cell><Pill tone={item.status === "completed" ? "olive" : "terracotta"} mono>{triggerLabel(item.status)}</Pill></Cell>
+              <Cell><Pill tone={item.status === "completed" ? "olive" : "red"} mono>{triggerLabel(item.status)}</Pill></Cell>
               <Cell><span className="mono small">{item.last_import_at ? String(item.last_import_at).slice(0, 16).replace("T", " ") : "Never"}</span></Cell>
               <Cell><span className="mono small">{item.accepted_count}/{item.row_count}</span></Cell>
-              <Cell>{item.is_stale ? <Pill tone="terracotta" mono>Stale</Pill> : <Pill tone="olive" mono>Fresh</Pill>}</Cell>
+              <Cell>{item.is_stale ? <Pill tone="ochre" mono>Stale</Pill> : <Pill tone="olive" mono>Fresh</Pill>}</Cell>
             </Row>
           ))}
         </Table>
@@ -351,7 +351,7 @@ function AiAssistantsScreen({ campaignId }) {
           <Card padded>
             <div className="kv-list">
               <KV k="Task" v={<span className="mono">{triggerLabel(result.task_type)}</span>} />
-              <KV k="Mutation allowed" v={<Pill tone={result.mutation_allowed ? "terracotta" : "olive"} mono>{String(result.mutation_allowed)}</Pill>} />
+              <KV k="Mutation allowed" v={<Pill tone={result.mutation_allowed ? "red" : "olive"} mono>{String(result.mutation_allowed)}</Pill>} />
               <KV k="Model" v={<span className="mono small">{result.model || "deterministic"}</span>} />
             </div>
             <Rule />

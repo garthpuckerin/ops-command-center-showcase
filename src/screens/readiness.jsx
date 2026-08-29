@@ -30,8 +30,13 @@ function FacilitiesScreen({ campaignId }) {
   return (
     <div className="screen">
       <PageHeader eyebrow="Facilities" title="Facility readiness map." sub="Training readiness and exception volume by physical go-live location." />
+      {scoped.facilities.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-title">No facilities yet</div>
+          <p className="muted small">No facilities are mapped for this campaign.</p>
+        </div>
+      ) : (
       <div className="roles-grid">
-        {scoped.facilities.length === 0 && <p className="muted small">No facilities mapped for this campaign yet.</p>}
         {scoped.facilities.map(f => (
           <Card key={f.id} className="role-card">
             <div className="role-head">
@@ -49,6 +54,7 @@ function FacilitiesScreen({ campaignId }) {
           </Card>
         ))}
       </div>
+      )}
     </div>
   );
 }
