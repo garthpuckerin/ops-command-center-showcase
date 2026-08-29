@@ -316,8 +316,8 @@
     border: 1px solid var(--rule);
     background: var(--paper);
     padding: 6px 8px;
-    min-width: 200px;
-    max-width: 240px;
+    min-width: 150px;
+    max-width: 200px;
   }
   .campaign-switcher span {
     color: var(--muted);
@@ -343,7 +343,7 @@
     background: var(--paper); cursor: pointer; color: var(--ink-2);
     font: inherit; font-size: 12.5px;
     white-space: nowrap; flex-shrink: 1; min-width: 0;
-    max-width: 260px; overflow: hidden;
+    max-width: 210px; overflow: hidden;
   }
   .whats-new:hover { border-color: var(--ink); color: var(--ink); }
   .wn-mark {
@@ -360,6 +360,11 @@
      the left group). The "You are · role" pill keeps the essential context. */
   @media (max-width: 1500px) {
     .topbar-left .small { display: none; }
+    /* Compact the control cluster so it stays ONE tidy row instead of wrapping:
+       the Tour / New-Campaign buttons collapse to icon-only (their title
+       tooltips are retained). Prevents the previous 2-row jumble ~1180–1500px. */
+    .topbar-right .btn span { display: none; }
+    .topbar-right .btn { padding-left: 9px; padding-right: 9px; }
   }
 
   .iconbtn {
@@ -506,6 +511,15 @@
   .two-col-66 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; align-items: start; }
   .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .stat-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+  /* Generic grid utilities — these were referenced in JSX (People stats, the AI
+     suggestion cards) but never defined, so their containers fell back to block
+     flow and stacked vertically. */
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .card-grid { display: grid; gap: 16px; }
+  .card-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .campaign-notice {
     padding: 18px;
@@ -1058,7 +1072,7 @@
   }
   .tbl-row:last-child { border-bottom: 0; }
   .tbl-row:hover { background: var(--paper-2); }
-  .tbl-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .tbl-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .meta-stack { display: inline-flex; align-items: center; gap: 8px; }
   .due { display: flex; flex-direction: column; line-height: 1.2; }
@@ -1743,6 +1757,8 @@
   @media (max-width: 720px) {
     .content { padding-inline: 18px; }
     .topbar { padding-inline: 18px; }
+    /* Grid utilities collapse to a single column on phones. */
+    .grid-2, .grid-3, .card-grid-2 { grid-template-columns: 1fr; }
     .role-floater-trigger { min-width: 156px; }
     .role-floater-panel { width: min(270px, calc(100vw - 32px)); }
     .tour-card { bottom: 74px; }
