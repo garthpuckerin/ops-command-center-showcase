@@ -278,14 +278,11 @@
   /* One step darker than the --paper-2 sidebar (GT hovers paper→paper-tint the
      same way). --paper-2 would be invisible here since the sidebar IS --paper-2. */
   .side-link:hover { background: var(--paper-3); color: var(--ink); }
+  /* Active nav item = clean inverted fill in BOTH themes (GT parity): ink bg +
+     paper text. In dark that resolves to a light bar with dark text — no accent.
+     (--ink/--paper flip with the theme, so one rule covers both.) */
   .side-link-on   { background: var(--ink); color: var(--paper); }
   .side-link-on svg { color: var(--paper); }
-  body[data-mode="dark"] .side-link-on {
-    background: var(--accent-tint);
-    color: var(--ink);
-    box-shadow: inset 3px 0 0 var(--accent);
-  }
-  body[data-mode="dark"] .side-link-on svg { color: var(--ink); }
 
   .side-section { padding-top: 8px; border-top: 1px solid var(--rule); }
   .side-hint { color: var(--muted); font-size: 12px; margin: 6px 0 10px; max-width: 30ch; }
@@ -788,9 +785,13 @@
   /* Status/risk pills share ONE width (the widest label, "Needs review" ≈ 99px)
      so "Blocked" and "Needs review" occupy the same footprint and columns of
      them line up. Label centers within the fixed box. */
-  .pill-block { min-width: 104px; }
-  /* Severity scale (low…critical) — its own uniform, narrower width. */
-  .pill-sev { min-width: 72px; }
+  /* Status/risk pills FILL their column up to a cap: uniform within a column,
+     but they shrink to fit a narrow column instead of overflowing it, and cap
+     where there's room. This adapts per column/page (a 90px LMS column gets a
+     90px pill; a 116px status column gets the 104px cap) — no cut-offs. */
+  .pill-block { width: 100%; max-width: 104px; }
+  /* Severity scale (low…critical) — its own, narrower cap. */
+  .pill-sev { width: 100%; max-width: 72px; }
   .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
   /* Borders derive from the pill's own text color, so they adapt to light/dark. */
   .pill-terracotta { color: var(--terracotta-deep); background: var(--terracotta-tint); }
@@ -1961,7 +1962,7 @@
 
     /* Tables cardify on phones, so the column-alignment width no longer applies —
        let status/risk pills size to their label inside each card row. */
-    .pill-block, .pill-sev { min-width: 0; }
+    .pill-block, .pill-sev { width: auto; max-width: none; }
 
     /* Tap-target floor: interactive chrome reaches 44px on touch. */
     .iconbtn, .icon-btn { width: 40px; height: 40px; }

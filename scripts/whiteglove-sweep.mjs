@@ -45,14 +45,25 @@ const settle = async () => {
 }
 
 const scan = async (screen) => {
-  const { text, inert } = await page.evaluate(() => {
+  const { text, inert, pills } = await page.evaluate(() => {
     const text = document.body.innerText
     const sels = '.linkbtn, .link-btn, [role="button"], [data-nav]'
     const inert = [...document.querySelectorAll(sels)]
       .filter((el) => getComputedStyle(el).cursor !== 'pointer' && !el.disabled && el.getAttribute('aria-disabled') !== 'true')
       .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')} "${(el.textContent || '').trim().slice(0, 40)}"`)
-    return { text, inert }
+    // Pill cut-off: a status/risk pill whose content is wider than the clipping
+    // container it sits in (table cell or kv value) — it renders visually cropped.
+    const pills = [...document.querySelectorAll('.pill')]
+      .map((p) => {
+        const box = p.closest('.tbl-cell, .kv-v, .kv-list > div')
+        if (!box) return null
+        const overflow = p.scrollWidth > box.clientWidth + 1 || Math.round(p.getBoundingClientRect().right) > Math.round(box.getBoundingClientRect().right) + 1
+        return overflow ? `"${(p.textContent || '').trim().slice(0, 24)}" (pill ${Math.round(p.getBoundingClientRect().width)}px in ${Math.round(box.clientWidth)}px cell)` : null
+      })
+      .filter(Boolean)
+    return { text, inert, pills }
   })
+  for (const p of [...new Set(pills)]) note(screen, `pill cut off: ${p}`)
   for (const [label, re] of TEXT_DEFECTS) {
     const m = text.match(re)
     if (m) {
