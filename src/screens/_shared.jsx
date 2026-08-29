@@ -35,23 +35,49 @@ function campaignData(campaignId) {
   return { departments, facilities, requirements, learners, sessions, exceptions };
 }
 
+// One predicate for "unresolved work", used everywhere exceptions are counted.
+function isOpenException(e) { return !["resolved", "closed"].includes(e.status); }
+
+// Cross-entity selectors — every displayed aggregate derives from the live
+// exception + department record arrays, so resolving/starting an exception
+// propagates to the KPI, the department scorecard, and the facility rollup.
+function openExceptionsForDepartment(deptId) {
+  return D.exceptions.filter(e => e.department_id === deptId && isOpenException(e)).length;
+}
+function openExceptionsForFacility(facId) {
+  const deptIds = new Set(D.departments.filter(d => d.facility_id === facId).map(d => d.id));
+  return D.exceptions.filter(e => deptIds.has(e.department_id) && isOpenException(e)).length;
+}
+function readinessForFacility(facId) {
+  const depts = D.departments.filter(d => d.facility_id === facId);
+  const req = depts.reduce((s, d) => s + d.required, 0);
+  const comp = depts.reduce((s, d) => s + d.complete, 0);
+  return req ? Math.round((comp / req) * 100) : 0;
+}
+function overCapacitySessions(campaignId) {
+  const facIds = new Set(D.facilities.filter(f => f.campaign_id === campaignId).map(f => f.id));
+  return D.sessions.filter(s => facIds.has(s.facility_id) && s.registered > s.capacity).length;
+}
+
+// DERIVE-ONCE: computed live from campaignData every render (no frozen snapshot),
+// so a mutation anywhere moves the dashboard.
 function campaignMetrics(campaignId) {
   const campaign = campaignById(campaignId);
-  if (campaignId === D.activeCampaignId) return D.metrics;
   const scoped = campaignData(campaignId);
   const required = scoped.departments.reduce((s, d) => s + d.required, 0);
   const complete = scoped.departments.reduce((s, d) => s + d.complete, 0);
+  const openExc = scoped.exceptions.filter(isOpenException);
   return {
     goLiveDate: campaign.goLiveDate,
     daysToGoLive: Math.max(0, Math.round((new Date(campaign.goLiveDate) - new Date()) / (1000 * 60 * 60 * 24))),
     totalLearners: required,
     overallReadiness: required ? (complete / required) * 100 : campaign.readiness,
-    criticalRoleReadiness: campaign.readiness,
+    criticalRoleReadiness: campaign.readinessScore ?? campaign.readiness,
     departmentsAtRisk: scoped.departments.filter(d => ["high", "critical"].includes(d.risk)).length,
     facilitiesAtRisk: scoped.facilities.filter(f => ["high", "critical"].includes(f.risk)).length,
-    openExceptions: scoped.exceptions.length,
-    identityMismatches: scoped.learners.filter(l => l.lms !== "matched" || l.epic_id !== "matched").length,
-    unscheduledLearners: Math.max(0, Math.round(required * 0.18)),
+    openExceptions: openExc.length,
+    identityMismatches: openExc.filter(e => /identity|duplicate/i.test(e.type)).length,
+    overCapacitySessions: overCapacitySessions(campaignId),
   };
 }
 
@@ -160,7 +186,7 @@ function ReadinessTable({ departments }) {
             <Cell><span className="mono">{d.complete}</span></Cell>
             <Cell><span className="mono">{d.in_progress}</span></Cell>
             <Cell><span className="mono">{d.not_started}</span></Cell>
-            <Cell><span className="mono">{d.exceptions}</span></Cell>
+            <Cell><span className="mono">{openExceptionsForDepartment(d.id)}</span></Cell>
             <Cell>{riskPill(d.risk)}</Cell>
           </Row>
         ))}
@@ -244,5 +270,5 @@ function Cell({ children }) { return <div className="tbl-cell">{children}</div>;
 
 
 export {
-  byId, facilityById, departmentById, appById, userById, campaignById, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, ReadinessTable, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
+  byId, facilityById, departmentById, appById, userById, campaignById, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, ReadinessTable, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
 };

@@ -302,7 +302,7 @@ function campaignsForUser(user) {
 function campaignBlockerSummary(campaignId) {
   const D = LMS_DATA;
   const departmentIds = D.departments.filter(d => d.campaign_id === campaignId).map(d => d.id);
-  const blockers = D.exceptions.filter(e => departmentIds.includes(e.department_id) && e.status !== "closed");
+  const blockers = D.exceptions.filter(e => departmentIds.includes(e.department_id) && !["resolved", "closed"].includes(e.status));
   const critical = blockers.filter(e => e.severity === "critical").length;
   return {
     total: blockers.length,

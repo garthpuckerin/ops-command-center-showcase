@@ -187,6 +187,21 @@ const LMS_DATA = (function () {
     { id: "e-303", severity: "high", type: "Session capacity", owner: "Daniel Reeve", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-05-30"), status: "in_progress", notes: "RN lab is four seats over capacity." },
     { id: "e-304", severity: "critical", type: "Trainer conflict", owner: "Priya Anand", department_id: "dep-pharmacy", learner_id: null, due: shiftIso("2026-05-29"), status: "open", notes: "Willow session conflicts with Provider Orders session." },
     { id: "e-305", severity: "medium", type: "Missing LMS account", owner: "Mira Okafor", department_id: "dep-pharmacy", learner_id: "l-005", due: shiftIso("2026-06-03"), status: "open", notes: "Pharmacist exists in HR and Epic but not LMS." },
+    { id: "e-306", severity: "critical", type: "Super-user gap", owner: "Mira Okafor", department_id: "dep-nursing", learner_id: "l-001", due: shiftIso("2026-05-30"), status: "open", notes: "Unit has no credentialed super-user for go-live floor support." },
+    { id: "e-307", severity: "high", type: "Overdue completion", owner: "Daniel Reeve", department_id: "dep-nursing", learner_id: "l-004", due: shiftIso("2026-05-28"), status: "open", notes: "EpicCare Inpatient course past the training deadline." },
+    { id: "e-308", severity: "high", type: "Identity mismatch", owner: "Access Team", department_id: "dep-ed", learner_id: "l-006", due: shiftIso("2026-06-02"), status: "in_progress", notes: "HR employee_id does not match the Epic provisioning feed." },
+    { id: "e-309", severity: "medium", type: "Out-of-scope course", owner: "Priya Anand", department_id: "dep-radiology", learner_id: "l-007", due: shiftIso("2026-06-04"), status: "open", notes: "Imported completion maps to no required Radiant course — held from readiness credit." },
+    { id: "e-310", severity: "high", type: "Role change re-trigger", owner: "Mira Okafor", department_id: "dep-radiology", learner_id: "l-008", due: shiftIso("2026-06-01"), status: "open", notes: "Tech moved to a lead role; new curriculum requirements re-opened." },
+    { id: "e-311", severity: "medium", type: "Credential lapse", owner: "Access Team", department_id: "dep-pharmacy", learner_id: null, due: shiftIso("2026-06-05"), status: "open", notes: "Pharmacist license attestation expires before go-live." },
+    { id: "e-312", severity: "low", type: "Missing LMS account", owner: "Daniel Reeve", department_id: "dep-revcycle", learner_id: null, due: shiftIso("2026-06-06"), status: "open", notes: "Two Prelude/Resolute staff not yet provisioned in the LMS." },
+    { id: "e-313", severity: "high", type: "Session capacity", owner: "Priya Anand", department_id: "dep-ambulatory", learner_id: null, due: shiftIso("2026-06-02"), status: "open", notes: "Ambulatory EpicCare class is over capacity; needs a second offering." },
+    { id: "e-314", severity: "medium", type: "Provisioning pending", owner: "Access Team", department_id: "dep-ambulatory", learner_id: null, due: shiftIso("2026-06-03"), status: "in_progress", notes: "Epic access requests pending approval for float-pool nurses." },
+    { id: "e-315", severity: "critical", type: "Identity mismatch", owner: "Mira Okafor", department_id: "dep-surgery", learner_id: null, due: shiftIso("2026-05-31"), status: "open", notes: "Surgical staff SSO identities not reconciled to Epic." },
+    { id: "e-316", severity: "medium", type: "Overdue completion", owner: "Daniel Reeve", department_id: "dep-surgery", learner_id: null, due: shiftIso("2026-06-04"), status: "open", notes: "Cadence scheduling module past deadline for two coordinators." },
+    { id: "e-317", severity: "low", type: "Duplicate account", owner: "Access Team", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-06-07"), status: "resolved", notes: "Merged duplicate agency-nurse records.", resolution_reason: "Duplicate merged and verified." },
+    { id: "e-318", severity: "high", type: "Super-user gap", owner: "Priya Anand", department_id: "dep-ed", learner_id: null, due: shiftIso("2026-05-30"), status: "open", notes: "ED needs one more credentialed super-user per shift." },
+    { id: "e-319", severity: "medium", type: "Out-of-scope course", owner: "Mira Okafor", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-06-05"), status: "open", notes: "Legacy course completions do not satisfy the Epic curriculum." },
+    { id: "e-320", severity: "high", type: "Overdue completion", owner: "Daniel Reeve", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-06-02"), status: "in_progress", notes: "RN documentation e-learning overdue for a large cohort." },
   ];
 
   const reports = [
@@ -320,18 +335,22 @@ const LMS_DATA = (function () {
   const activeFacilities = facilities.filter(f => f.campaign_id === activeCampaignId);
   const activeExceptions = exceptions.filter(e => activeDepartments.some(d => d.id === e.department_id));
   const activeLearners = learners.filter(l => activeDepartments.some(d => d.id === l.department_id));
-  const exceptionQueue = exceptions.map(e => ({
-    ...e,
-    queue_item_id: `campaign_exception:${e.id}`,
-    source_type: "campaign_exception",
-    facility_id: departments.find(d => d.id === e.department_id)?.facility_id,
-    exception_type: String(e.type || "").toLowerCase().replace(/[^a-z0-9]+/g, "_"),
-    related_entity_type: e.learner_id ? "learner" : "department",
-    related_entity_id: e.learner_id || e.department_id,
-    escalation_level: e.severity === "critical" ? 3 : e.severity === "high" ? 2 : 1,
-    resolution_reason: null,
-    resolved_at: null,
-  }));
+  // ONE source of truth: enrich the exception records IN PLACE with their
+  // queue-presentation fields, and make the queue the SAME array. Mutating a
+  // queue item (Start/Resolve/Escalate) now mutates the exception every count,
+  // scorecard, and KPI derives from — no divergent second copy.
+  exceptions.forEach(e => {
+    e.queue_item_id = `campaign_exception:${e.id}`;
+    e.source_type = "campaign_exception";
+    e.facility_id = departments.find(d => d.id === e.department_id)?.facility_id;
+    e.exception_type = String(e.type || "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    e.related_entity_type = e.learner_id ? "learner" : "department";
+    e.related_entity_id = e.learner_id || e.department_id;
+    e.escalation_level = e.severity === "critical" ? 3 : e.severity === "high" ? 2 : 1;
+    if (e.resolution_reason === undefined) e.resolution_reason = null;
+    if (e.resolved_at === undefined) e.resolved_at = null;
+  });
+  const exceptionQueue = exceptions;
 
   const metrics = {
     goLiveDate,

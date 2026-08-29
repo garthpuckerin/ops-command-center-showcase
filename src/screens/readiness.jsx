@@ -2,7 +2,7 @@
 // Split from screens.jsx (pure code-move); screens.jsx re-exports as a barrel.
 import React from 'react'
 import { Rule, Bar, Card } from '../components.jsx'
-import { Cell, KV, PageHeader, ReadinessTable, Row, Table, appById, campaignById, campaignData, pct, riskPill } from './_shared.jsx'
+import { Cell, KV, PageHeader, ReadinessTable, Row, Table, appById, campaignById, campaignData, openExceptionsForFacility, readinessForFacility, pct, riskPill } from './_shared.jsx'
 
 function ReadinessScreen({ campaignId }) {
   const campaign = campaignById(campaignId);
@@ -36,15 +36,15 @@ function FacilitiesScreen({ campaignId }) {
           <Card key={f.id} className="role-card">
             <div className="role-head">
               {riskPill(f.risk)}
-              <span className="mono">{pct(f.readiness)}</span>
+              <span className="mono">{pct(readinessForFacility(f.id))}</span>
             </div>
             <h3 className="role-title">{f.name}</h3>
             <p className="muted small">{f.type}</p>
             <Rule />
             <div className="kv-list">
               <KV k="Departments" v={<span className="mono">{f.departments}</span>} />
-              <KV k="Open exceptions" v={<span className="mono">{f.exceptions}</span>} />
-              <KV k="Readiness" v={<Bar value={f.readiness} tone={f.risk === "critical" ? "terracotta" : "olive"} showLabel />} />
+              <KV k="Open exceptions" v={<span className="mono">{openExceptionsForFacility(f.id)}</span>} />
+              <KV k="Readiness" v={<Bar value={readinessForFacility(f.id)} tone={f.risk === "critical" ? "terracotta" : "olive"} showLabel />} />
             </div>
           </Card>
         ))}

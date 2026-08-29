@@ -294,20 +294,24 @@
   /* Left info shrinks (its description truncates) so the control group keeps its
      row; min-width:0 lets it shrink below content width. */
   .topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 0 1 auto; }
-  .topbar-left .small { max-width: 56ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar-left .small { max-width: 56ch; min-width: 0; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .topbar-right {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
     min-width: 0;
-    /* Fill the remaining width and wrap the controls INTERNALLY when cramped, so
-       they reflow into a right-aligned block instead of overflowing leftward and
-       overlapping the role text (the old nowrap layout collided ~981–1250px). */
+    /* ONE row at every width: never wrap. The flexible members (role
+       description, campaign switcher, RISK banner) carry min-width:0 and shrink
+       with ellipsis as space tightens; the fixed icon buttons hold their size.
+       This replaces the old flex-wrap, whose per-control breakpoints wrapped the
+       bar into a jagged 2-row block in the transition zones (~1000, 1250, 1520). */
     flex: 1 1 auto;
-    flex-wrap: wrap;
-    row-gap: 8px;
+    flex-wrap: nowrap;
   }
+  .topbar-right > * { flex-shrink: 0; }
+  .topbar-right .campaign-switcher,
+  .topbar-right .whats-new { flex-shrink: 1; }
 
   .campaign-switcher {
     display: inline-flex;
@@ -316,7 +320,7 @@
     border: 1px solid var(--rule);
     background: var(--paper);
     padding: 6px 8px;
-    min-width: 150px;
+    min-width: 104px;
     max-width: 200px;
   }
   .campaign-switcher span {
@@ -1688,11 +1692,12 @@
     background: oklch(96% 0.012 80);
   }
 
-  /* Content two-column layouts collapse BEFORE the shell drawer breakpoint
-     (980px). Without this the 981–1024px band keeps the inline sidebar AND a
-     two-column content grid, whose real table/card content can't fit the ~776px
-     main column — so every screen panned sideways at tablet-L. */
-  @media (max-width: 1080px) {
+  /* Content two-column layouts collapse while the inline sidebar is still
+     present (drawer breakpoint is 980px). Below ~1200px the sidebar + a
+     two-column content grid leave the main column too narrow for real
+     table/card content (a queue card overflowed ~17px at 1100px), so single-
+     column it through the whole narrow-desktop band. */
+  @media (max-width: 1200px) {
     .two-col,
     .two-col-66,
     .focal-grid { grid-template-columns: 1fr; }

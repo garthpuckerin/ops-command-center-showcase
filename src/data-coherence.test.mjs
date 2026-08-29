@@ -93,3 +93,43 @@ test('exceptions reference a real department', () => {
     assert.ok(deptIds.has(e.department_id), `exception ${e.id}: unknown department ${e.department_id}`)
   }
 })
+
+// ── Derive-once cohesion (added after the 2026-08-29 audit) ──────────────────
+// These assert the CROSS-ENTITY discipline the original suite missed: displayed
+// aggregates must roll up from the record arrays, not diverge as hand-typed
+// fields. They fail if a static/second-copy count is reintroduced.
+const isOpenExc = (e) => !['resolved', 'closed'].includes(e.status)
+
+test('exceptions are a single source of truth (queue IS the records, not a copy)', () => {
+  assert.equal(D.exceptionQueue, D.exceptions,
+    'exceptionQueue must be the SAME array reference as exceptions — a copy would let queue mutations diverge from every count')
+})
+
+test('facility open-exception rollup equals the sum of its departments', () => {
+  for (const f of D.facilities) {
+    const depts = D.departments.filter((d) => d.facility_id === f.id)
+    const deptIds = new Set(depts.map((d) => d.id))
+    const facOpen = D.exceptions.filter((e) => deptIds.has(e.department_id) && isOpenExc(e)).length
+    const sumDept = depts.reduce((s, d) => s + D.exceptions.filter((e) => e.department_id === d.id && isOpenExc(e)).length, 0)
+    assert.equal(facOpen, sumDept, `facility ${f.id}: rollup ${facOpen} != sum of departments ${sumDept}`)
+  }
+})
+
+test('facility readiness derives from department completion (0..100)', () => {
+  for (const f of D.facilities) {
+    const depts = D.departments.filter((d) => d.facility_id === f.id)
+    const req = depts.reduce((s, d) => s + d.required, 0)
+    const comp = depts.reduce((s, d) => s + d.complete, 0)
+    const r = req ? Math.round((comp / req) * 100) : 0
+    assert.ok(r >= 0 && r <= 100, `facility ${f.id}: derived readiness ${r} out of range`)
+  }
+})
+
+test('campaign open-exception count agrees across derivation paths', () => {
+  for (const c of D.campaigns) {
+    const deptIds = new Set(D.departments.filter((d) => d.campaign_id === c.id).map((d) => d.id))
+    const direct = D.exceptions.filter((e) => deptIds.has(e.department_id) && isOpenExc(e)).length
+    const byDept = [...deptIds].reduce((s, id) => s + D.exceptions.filter((e) => e.department_id === id && isOpenExc(e)).length, 0)
+    assert.equal(direct, byDept, `campaign ${c.id}: direct ${direct} != per-department sum ${byDept}`)
+  }
+})

@@ -658,9 +658,19 @@ function listPeopleFromLocalData(filters = {}) {
     if (filters.campaign_id && filters.campaign_id !== "all" && person.campaign_id !== filters.campaign_id) return false;
     return true;
   }).map(person => localPersonItem(person));
+  // The demo hydrates a small sample of learner records; the real campaign
+  // population is the sum of department required counts. Absent a narrowing
+  // filter, report that population as "matching" (the UI hint says "not fully
+  // hydrated" and shows "N of TOTAL loaded"), so the directory total agrees with
+  // the dashboard's learner headline instead of contradicting it (8 vs 1,735).
+  const hasFilter = !!q || ["manager", "department_id", "facility_id", "job_role", "training_status", "reconciliation_status", "risk_level"]
+    .some(k => filters[k] && filters[k] !== "all");
+  const activeCamp = (filters.campaign_id && filters.campaign_id !== "all") ? filters.campaign_id : LMS_DATA.activeCampaignId;
+  const campaignScale = (LMS_DATA.departments || []).filter(d => d.campaign_id === activeCamp).reduce((s, d) => s + (d.required || 0), 0);
+  const total = hasFilter ? rows.length : Math.max(rows.length, campaignScale);
   return {
     items: rows.slice(offset, offset + limit),
-    total: rows.length,
+    total,
     limit,
     offset,
     has_more: offset + limit < rows.length,

@@ -17,6 +17,7 @@ const VIEWPORTS = [
   ['phone-P small', 360, 800], ['phone-P', 390, 844], ['phone-P max', 430, 932],
   ['phone-L SE', 667, 375], ['phone-L', 844, 390], ['phone-L max', 932, 430],
   ['tablet-P', 768, 1024], ['tablet-P big', 834, 1194], ['tablet-L', 1024, 768], ['tablet-L big', 1194, 834],
+  ['narrow-1050', 1050, 800], ['narrow-1100', 1100, 800], ['narrow-1250', 1250, 800], ['narrow-1520', 1520, 864],
   ['laptop short', 1280, 720], ['laptop', 1366, 768], ['laptop 125%', 1536, 864],
   ['desktop FHD', 1920, 1080], ['desktop QHD', 2560, 1440],
 ]
@@ -63,10 +64,12 @@ for (const [vpName, width, height] of VIEWPORTS) {
     })
 
     if (m.scrollW > m.vw + 1) note(vpName, view, `sideways scroll (${m.scrollW} > ${m.vw})`)
-    // NOTE: no topbar-height check. .topbar-right intentionally wraps its
-    // controls into extra rows when cramped (documented in index.css) to avoid
-    // the old nowrap overlap defect at ~981–1250px — so a tall topbar here is by
-    // design, not a defect. Sideways-scroll + nav-tier are the real signals.
+    // Header invariant: on the inline (desktop) tier the topbar must stay ONE
+    // row. Its flexible controls compress with ellipsis rather than wrap, so a
+    // tall topbar (>84px ≈ two rows vs the ~64px single row) is the "broken
+    // header" defect. (Below the drawer breakpoint the topbar legitimately
+    // stacks for mobile, so only check width > 980.)
+    if (width > 980 && m.topbar && m.topbar.h > 84) note(vpName, view, `topbar wrapped to ${Math.round(m.topbar.h)}px (should be one row)`)
 
     const isDrawerTier = width <= DRAWER_BP
     if (isDrawerTier) {

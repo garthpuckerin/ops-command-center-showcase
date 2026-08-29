@@ -121,6 +121,26 @@ function ReportsScreen({ campaignId, onDataChanged }) {
 
 function ReportPreview({ report }) {
   const preview = report.preview;
+  const [exported, setExported] = React.useState(false);
+
+  React.useEffect(() => { setExported(false); }, [report.id]);
+
+  function exportCsv() {
+    const rows = buildCsvRows(report);
+    const csv = rows.map(row => row.map(csvCell).join(",")).join("\r\n");
+    const filename = `${csvSlug(report.title)}.csv`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setExported(true);
+  }
+
   return (
     <Card className="report-preview">
       <div className="report-preview-head">
@@ -129,7 +149,10 @@ function ReportPreview({ report }) {
           <h2 className="display-sm">{report.title}</h2>
           <p className="page-sub">{report.desc}</p>
         </div>
-        <Button kind="solid" size="sm" icon="ext">Export</Button>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <Button kind="solid" size="sm" icon="ext" onClick={exportCsv}>{exported ? "Exported ✓" : "Export"}</Button>
+          {exported && <span className="mono mono-dim small">{csvSlug(report.title)}.csv downloaded</span>}
+        </div>
       </div>
       <Rule />
       {report.format === "csv" ? <CsvPreview preview={preview} /> : <GraphicalReportPreview report={report} />}
@@ -221,6 +244,28 @@ function CsvPreview({ preview }) {
 
 function humanizeColumn(value) {
   return String(value).replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function buildCsvRows(report) {
+  const p = report.preview || {};
+  // Tabular (csv-format) reports carry columns + rows directly.
+  if (Array.isArray(p.columns) && Array.isArray(p.rows)) {
+    return [p.columns.map(humanizeColumn), ...p.rows];
+  }
+  // Graphical reports: export the headline metrics as a two-column sheet.
+  if (Array.isArray(p.metrics)) {
+    return [["Metric", "Value"], ...p.metrics.map(m => [m.label, m.value])];
+  }
+  return [["Report"], [report.title]];
+}
+
+function csvCell(value) {
+  const s = value == null ? "" : String(value);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function csvSlug(value) {
+  return String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "report";
 }
 
 

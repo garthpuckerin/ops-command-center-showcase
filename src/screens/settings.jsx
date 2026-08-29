@@ -291,6 +291,7 @@ function AiAssistantsScreen({ campaignId }) {
   const campaign = campaignById(campaignId);
   const [result, setResult] = React.useState(null);
   const [running, setRunning] = React.useState(null);
+  const [staged, setStaged] = React.useState(false);
   const scopedReports = D.reports.filter(r => r.campaign_id === campaignId || !r.campaign_id);
   const scopedLearners = campaignData(campaignId).learners;
   const scopedImports = (D.imports || []).filter(i => i.campaign_id === campaignId);
@@ -299,6 +300,7 @@ function AiAssistantsScreen({ campaignId }) {
   async function run(taskType) {
     if (!LMS_API?.runAiAssistant) return;
     setRunning(taskType);
+    setStaged(false);
     try {
       const next = await LMS_API.runAiAssistant(campaignId, taskType, {
         report_id: scopedReports[0]?.id,
@@ -353,7 +355,8 @@ function AiAssistantsScreen({ campaignId }) {
               </div>
             ))}
             <div className="focal-actions">
-              <Button kind="ghost" icon="shield">Stage for review</Button>
+              <Button kind="ghost" icon="shield" onClick={() => setStaged(true)} disabled={staged}>{staged ? "Staged ✓" : "Stage for review"}</Button>
+              {staged && <span className="muted small">Staged for reviewer — no record mutated.</span>}
             </div>
           </Card>
         </Section>

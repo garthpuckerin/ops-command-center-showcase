@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { LMS_DATA as D } from '../data.js'
 import { cls, statusLabel, fmt, fmtDate, Eyebrow, Rule, Pill, Icon, Card, StatNumber, Button, RequirementCover } from '../components.jsx'
-import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, departmentNameById, facilityNameById, pct, riskPill } from './_shared.jsx'
+import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill } from './_shared.jsx'
 import { SessionsScreen } from './sessions.jsx'
 
 function CommandCenterScreen({ onNav, campaignId }) {
@@ -47,7 +47,7 @@ function CommandCenterScreen({ onNav, campaignId }) {
               <Metric k="Departments at risk" v={<span className="mono">{m.departmentsAtRisk}</span>} />
               <Metric k="Facilities at risk" v={<span className="mono">{m.facilitiesAtRisk}</span>} />
               <Metric k="Identity mismatches" v={<span className="mono">{m.identityMismatches}</span>} />
-              <Metric k="Unscheduled learners" v={<span className="mono">{m.unscheduledLearners}</span>} />
+              <Metric k="Over-capacity sessions" v={<span className="mono">{m.overCapacitySessions}</span>} />
             </div>
             <div className="focal-actions">
               <Button kind="solid" iconRight="arrow" onClick={() => onNav("exceptions")}>Open exception queue</Button>
@@ -66,7 +66,7 @@ function CommandCenterScreen({ onNav, campaignId }) {
                   <Cell><span className="strong">{d.name}</span></Cell>
                   <Cell><span className="muted">{facilityNameById(d.facility_id)}</span></Cell>
                   <Cell><span className="mono">{pct((d.complete / d.required) * 100)}</span></Cell>
-                  <Cell><span className="mono">{d.exceptions}</span></Cell>
+                  <Cell><span className="mono">{openExceptionsForDepartment(d.id)}</span></Cell>
                   <Cell>{riskPill(d.risk)}</Cell>
                 </Row>
               ))}
