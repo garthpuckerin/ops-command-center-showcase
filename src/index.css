@@ -10,22 +10,24 @@
     --sans:   "Geist", ui-sans-serif, system-ui, sans-serif;
     --mono:   "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-    /* Neutrals (warm) */
-    --paper:    oklch(97.5% 0.008 80);
-    --paper-2:  oklch(95.5% 0.010 80);
-    --paper-3:  oklch(93.5% 0.012 80);
-    --ink:      oklch(20% 0.015 70);
-    --ink-2:    oklch(28% 0.015 70);
-    --ink-3:    oklch(40% 0.012 70);
-    --rule:     oklch(86% 0.012 80);
-    --rule-2:   oklch(90% 0.010 80);
-    --muted:    oklch(48% 0.014 70);
-    --muted-2:  oklch(62% 0.012 70);
+    /* Neutrals — unified with Grant Tracker's ledger-paper system: warm paper
+       (hue ~85) under cool blue-grey ink (hue 250). Values matched to GT.
+       (OCC legacy warm-ink values were paper 97.5%/80, ink 20%/70, rule 86%/80.) */
+    --paper:    oklch(98.5% 0.006 85);
+    --paper-2:  oklch(97% 0.008 85);
+    --paper-3:  oklch(95% 0.009 85);
+    --ink:      oklch(16% 0.015 250);
+    --ink-2:    oklch(32% 0.015 250);
+    --ink-3:    oklch(48% 0.015 250);
+    --rule:     oklch(87% 0.010 80);
+    --rule-2:   oklch(91% 0.008 80);
+    --muted:    oklch(54% 0.014 250);
+    --muted-2:  oklch(66% 0.012 250);
 
     /* Accents — overridden per palette */
-    --terracotta: oklch(55% 0.13 35);
-    --terracotta-deep: oklch(42% 0.12 35);
-    --terracotta-tint: oklch(94% 0.04 35);
+    --terracotta: oklch(52% 0.15 35);       /* GT federal amber/rust */
+    --terracotta-deep: oklch(30% 0.10 35);
+    --terracotta-tint: oklch(95% 0.03 50);
 
     --olive:        oklch(52% 0.09 130);
     --olive-deep:   oklch(38% 0.08 130);
@@ -56,25 +58,50 @@
   /* Palette overrides */
   body[data-palette="olive"]   { --accent: var(--olive);      --accent-deep: var(--olive-deep);      --accent-tint: var(--olive-tint); }
   body[data-palette="inkblue"] { --accent: oklch(45% 0.11 245); --accent-deep: oklch(34% 0.10 245); --accent-tint: oklch(94% 0.03 245); }
+  /* ── LEGACY dark theme (pre-GT-unification) — PRESERVED for possible later use.
+     To restore OCC's original higher-contrast charcoal dark mode, swap these
+     values back into body[data-mode="dark"] below (accent was NOT lifted):
+       --paper 16% 0.015 250;  --paper-2 20% 0.015 250;  --paper-3 24% 0.012 250;
+       --ink 94% 0.008 85;     --ink-2 82% 0.010 85;     --ink-3 68% 0.012 85;
+       --rule 31% 0.014 250;   --rule-2 26% 0.012 250;
+       --muted 68% 0.012 85;   --muted-2 52% 0.012 85;
+       --terracotta-tint 25% 0.035 35;
+       olive palette accent-tint var(--olive-tint); inkblue accent-tint 23% 0.035 245;
+     ──────────────────────────────────────────────────────────────────────── */
   body[data-mode="dark"] {
-    --paper:    oklch(16% 0.015 250);
-    --paper-2:  oklch(20% 0.015 250);
-    --paper-3:  oklch(24% 0.012 250);
-    --ink:      oklch(94% 0.008 85);
-    --ink-2:    oklch(82% 0.010 85);
-    --ink-3:    oklch(68% 0.012 85);
-    --rule:     oklch(31% 0.014 250);
-    --rule-2:   oklch(26% 0.012 250);
-    --muted:    oklch(68% 0.012 85);
+    /* Neutrals matched to Grant Tracker's dark (softer charcoal, hue 250). */
+    --paper:    oklch(20% 0.012 250);
+    --paper-2:  oklch(25% 0.014 250);
+    --paper-3:  oklch(28% 0.013 250);
+    --ink:      oklch(95% 0.006 85);
+    --ink-2:    oklch(82% 0.008 85);
+    --ink-3:    oklch(66% 0.010 85);
+    --rule:     oklch(34% 0.014 250);
+    --rule-2:   oklch(28% 0.013 250);
+    --muted:    oklch(66% 0.010 85);
     --muted-2:  oklch(52% 0.012 85);
-    --terracotta-tint: oklch(25% 0.035 35);
-    --olive-tint:      oklch(24% 0.035 150);
-    --ochre-tint:      oklch(25% 0.040 75);
-    --red-tint:        oklch(25% 0.040 28);
+    /* Lift accent AND every semantic status color on dark surfaces so pill text
+       stays legible on its dark tint (GT does this; OCC's drift did not). */
+    --terracotta:      oklch(72% 0.14 45);
+    --terracotta-deep: oklch(80% 0.12 45);
+    --terracotta-tint: oklch(30% 0.05 45);
+    --olive:           oklch(70% 0.12 130);
+    --olive-deep:      oklch(80% 0.10 130);
+    --olive-tint:      oklch(28% 0.05 150);
+    --ochre:           oklch(80% 0.14 78);
+    --ochre-deep:      oklch(82% 0.12 75);
+    --ochre-tint:      oklch(32% 0.055 75);
+    --red:             oklch(68% 0.17 28);
+    --red-tint:        oklch(30% 0.06 28);
+    /* Re-declare so --accent re-substitutes against the lifted dark terracotta
+       (a var() in :root resolves once against :root's value, not a descendant's). */
+    --accent:          var(--terracotta);
+    --accent-deep:     var(--terracotta-deep);
     --accent-tint:     var(--terracotta-tint);
   }
-  body[data-mode="dark"][data-palette="olive"] { --accent-tint: var(--olive-tint); }
-  body[data-mode="dark"][data-palette="inkblue"] { --accent-tint: oklch(23% 0.035 245); }
+  /* Alt palettes also lift their accent on dark surfaces. */
+  body[data-mode="dark"][data-palette="olive"]   { --accent: oklch(70% 0.12 130); --accent-deep: oklch(80% 0.10 130); --accent-tint: var(--olive-tint); }
+  body[data-mode="dark"][data-palette="inkblue"] { --accent: oklch(72% 0.11 250); --accent-deep: oklch(82% 0.09 250); --accent-tint: oklch(28% 0.05 250); }
 
   /* Density */
   body[data-density="compact"] {
@@ -703,21 +730,29 @@
   /* ────────────────────────────────────────────────────────────────
      Pills
      ──────────────────────────────────────────────────────────────── */
+  /* One uniform pill/badge size across the entire UI — every status/risk block
+     is the same height regardless of tone, content, or mono vs sans. Width
+     tracks the label; height is pinned so they line up everywhere. */
   .pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11px; padding: 2px 8px; border: 1px solid currentColor;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 20px;
+    font-size: 11px; line-height: 1;
+    padding: 0 9px;
+    border: 1px solid color-mix(in oklab, currentColor 30%, transparent);
     color: var(--muted); background: transparent;
     text-transform: lowercase; letter-spacing: 0.01em;
     white-space: nowrap;
   }
-  .pill.mono { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; }
-  .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-  .pill-terracotta { color: var(--terracotta-deep); background: var(--terracotta-tint); border-color: oklch(78% 0.06 35); }
-  .pill-olive      { color: var(--olive-deep);      background: var(--olive-tint);      border-color: oklch(78% 0.05 130); }
-  .pill-ochre      { color: var(--ochre-deep);      background: var(--ochre-tint);      border-color: oklch(80% 0.07 75);  }
-  .pill-muted      { color: var(--muted-2);         background: var(--paper-2);         border-color: var(--rule);         }
-  .pill-red        { color: var(--red);             background: var(--red-tint);        border-color: oklch(82% 0.06 25);  }
-  .pill-ink        { color: var(--paper);           background: var(--ink);             border-color: var(--ink);          }
+  /* Mono variant swaps the glyphs only — the box height stays 20px. */
+  .pill.mono { font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; }
+  .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+  /* Borders derive from the pill's own text color, so they adapt to light/dark. */
+  .pill-terracotta { color: var(--terracotta-deep); background: var(--terracotta-tint); }
+  .pill-olive      { color: var(--olive-deep);      background: var(--olive-tint);      }
+  .pill-ochre      { color: var(--ochre-deep);      background: var(--ochre-tint);      }
+  .pill-muted      { color: var(--muted-2);         background: var(--paper-2);         }
+  .pill-red        { color: var(--red);             background: var(--red-tint);        }
+  .pill-ink        { color: var(--paper);           background: var(--ink);             border-color: var(--ink); }
 
   /* ────────────────────────────────────────────────────────────────
      Bar
