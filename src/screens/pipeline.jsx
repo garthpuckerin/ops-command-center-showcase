@@ -265,8 +265,8 @@ function WriteBacksScreen({ campaignId, onDataChanged }) {
             {jobs.map(job => {
               const blocked = job.eligibility?.eligible === false;
               return (
-                <Row key={job.id}>
-                  <Cell><button className="linkbtn strong" onClick={() => setActiveId(job.id)}>{job.target_system}</button></Cell>
+                <Row key={job.id} selected={job.id === active?.id} onSelect={() => setActiveId(job.id)}>
+                  <Cell><span className="strong">{job.target_system}</span></Cell>
                   <Cell><span className="mono">{job.operation}</span></Cell>
                   <Cell><span className="small">{job.source_record_type}</span></Cell>
                   <Cell>{blocked ? <Pill tone="red" dot>Blocked</Pill> : <Pill tone="olive" dot>Eligible</Pill>}</Cell>

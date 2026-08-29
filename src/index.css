@@ -1072,6 +1072,11 @@
   }
   .tbl-row:last-child { border-bottom: 0; }
   .tbl-row:hover { background: var(--paper-2); }
+  /* Master-detail selection: a clickable row shows a pointer, and the row whose
+     detail is open is highlighted with an accent rail so the pairing is clear. */
+  .tbl-row.is-clickable { cursor: pointer; }
+  .tbl-row.is-selected { background: var(--paper-2); box-shadow: inset 3px 0 0 0 var(--accent); }
+  .tbl-row.is-clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .tbl-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .meta-stack { display: inline-flex; align-items: center; gap: 8px; }

@@ -76,9 +76,11 @@ function ExceptionsScreen({ campaignId, onDataChanged }) {
         <Card padded={false}>
           <Table columns={["Severity", "Type", "Owner", "Department", "Due", "Status", "Actions"]} widths={["100px", "1fr", "1fr", "1.1fr", "100px", "100px", "150px"]}>
             {queue.map(e => (
-              <Row key={e.queue_item_id || e.id}>
+              <Row key={e.queue_item_id || e.id}
+                selected={(e.queue_item_id || e.id) === (active?.queue_item_id || active?.id)}
+                onSelect={() => setActiveId(e.queue_item_id || e.id)}>
                 <Cell>{riskPill(e.severity)}</Cell>
-                <Cell><button className="linkbtn strong" onClick={() => setActiveId(e.queue_item_id || e.id)}>{e.type}</button></Cell>
+                <Cell><span className="strong">{e.type}</span></Cell>
                 <Cell><span>{e.owner}</span></Cell>
                 <Cell><span className="muted">{departmentById(e.department_id)?.name || "Campaign"}</span></Cell>
                 <Cell><span className="mono small">{fmtDate(e.due)}</span></Cell>

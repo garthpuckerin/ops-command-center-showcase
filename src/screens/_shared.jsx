@@ -229,7 +229,17 @@ function Table({ columns, widths, children }) {
   );
 }
 
-function Row({ children }) { return <div className="tbl-row">{children}</div>; }
+function Row({ children, selected, onSelect }) {
+  const cls = "tbl-row" + (selected ? " is-selected" : "") + (onSelect ? " is-clickable" : "");
+  const handleKey = onSelect ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(); } } : undefined;
+  return (
+    <div className={cls} onClick={onSelect} onKeyDown={handleKey}
+      role={onSelect ? "button" : undefined} tabIndex={onSelect ? 0 : undefined}
+      aria-pressed={onSelect ? !!selected : undefined}>
+      {children}
+    </div>
+  );
+}
 function Cell({ children }) { return <div className="tbl-cell">{children}</div>; }
 
 
