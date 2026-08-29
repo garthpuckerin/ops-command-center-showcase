@@ -420,6 +420,7 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
   };
   return (
     <header className="topbar">
+      <div className="topbar-inner">
       <div className="topbar-left">
         <button className="iconbtn nav-toggle" onClick={onToggleNav} aria-label="Open navigation" title="Menu">
           <Icon name="menu" size={16} />
@@ -453,6 +454,7 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
         </button>
         <button className="iconbtn mobile-hide" title="Quick search"><Icon name="search" size={16} /></button>
         <Avatar user={me} size={32} />
+      </div>
       </div>
     </header>
   );

@@ -52,7 +52,8 @@
     --accent-tint:  var(--terracotta-tint);
 
     --side-w: 248px;
-    --maxw:   1200px;
+    /* Content cap — fills up to here, then centers on ultrawide (matches GT). */
+    --maxw:   1720px;
   }
 
   /* Palette overrides */
@@ -310,12 +311,19 @@
      Topbar
      ──────────────────────────────────────────────────────────────── */
   .topbar {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    padding: 14px 48px;
     border-bottom: 1px solid var(--rule);
-    /* Solid, matches the content surface — no translucency/blur. */
+    /* Solid, matches the content surface — no translucency/blur. Full-width bar. */
     background: var(--paper);
     position: sticky; top: 0; z-index: 10;
+  }
+  /* Inner wrapper caps + centers the header content in the SAME column as
+     .content, so the header and the page share gutters on wide screens. */
+  .topbar-inner {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    width: 100%;
+    padding: 14px 48px;
   }
   /* Left info shrinks (its description truncates) so the control group keeps its
      row; min-width:0 lets it shrink below content width. */
@@ -1817,7 +1825,7 @@
     .nav-toggle { display: grid; flex-shrink: 0; }
 
     /* Let the topbar wrap and its groups shrink so nothing clips. */
-    .topbar { flex-wrap: wrap; padding-inline: 24px; }
+    .topbar-inner { flex-wrap: wrap; padding-inline: 24px; }
     .topbar-left { flex: 1 1 auto; min-width: 0; }
     .topbar-left .small { max-width: 100%; }
     .topbar-right { width: 100%; justify-content: space-between; flex-wrap: wrap; }
@@ -1850,7 +1858,7 @@
 
   @media (max-width: 720px) {
     .content { padding-inline: 18px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
-    .topbar { padding-inline: 18px; }
+    .topbar-inner { padding-inline: 18px; }
     /* Grid utilities collapse to a single column on phones. */
     .grid-2, .grid-3, .card-grid-2 { grid-template-columns: 1fr; }
 
