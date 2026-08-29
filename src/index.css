@@ -198,7 +198,8 @@
     min-height: 100dvh; /* fill the DYNAMIC viewport — no bottom gap under iOS Safari's toolbar / home indicator */
   }
   .side {
-    background: var(--paper);
+    /* One step off the content surface for subtle depth. */
+    background: var(--paper-2);
     border-right: 1px solid var(--rule);
     padding: 22px 18px;
     display: flex; flex-direction: column; gap: 22px;
