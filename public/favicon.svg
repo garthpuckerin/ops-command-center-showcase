@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="LMS Ops Command Center">
+  <rect width="32" height="32" rx="7" fill="#b05139"/>
+  <g fill="#ffffff" transform="translate(4 4) scale(1)">
+    <path d="M0 0h7v7H0zM13 0h7v7h-7zM0 13h7v7H0z"/>
+    <path d="M16.5 13.5 13 17l3.5-7L20 9Z"/>
+  </g>
+</svg>
