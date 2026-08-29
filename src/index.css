@@ -1522,7 +1522,7 @@
   }
   .session-event {
     border: 1px solid var(--rule);
-    border-left: 4px solid var(--muted);
+    border-left: 3px solid var(--muted);
     background: var(--paper);
     color: var(--ink);
     cursor: pointer;
@@ -1701,7 +1701,7 @@
     gap: 18px;
   }
   .report-doc {
-    background: oklch(99% 0.004 80);
+    background: var(--paper);
     border: 1px solid var(--rule);
     padding: var(--pad-card);
   }
@@ -1744,7 +1744,7 @@
     right: 0;
     top: 0;
     bottom: 0;
-    width: 5px;
+    width: 3px;
     background: var(--ink);
   }
   .report-swatch-olive { background: var(--olive); }
@@ -1788,7 +1788,7 @@
   .sheet-corner,
   .sheet-col-head,
   .sheet-row-head {
-    background: oklch(91% 0.01 80);
+    background: var(--paper-3);
     color: var(--muted);
     border-right: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
@@ -1817,7 +1817,7 @@
   .sheet-header {
     font-weight: 600;
     color: var(--ink);
-    background: oklch(96% 0.012 80);
+    background: var(--paper-2);
   }
 
   /* Content two-column layouts collapse while the inline sidebar is still
