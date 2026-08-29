@@ -380,6 +380,78 @@ export async function updateExceptionQueueItem(campaignId, queueItemId, updates)
   return existing;
 }
 
+function rosterIdColumn(headers) {
+  return (headers || []).find(h => /employee_id|employee_number|emp_id|^id$/i.test(h)) || (headers || [])[0];
+}
+function deptForRole(campaignId, role) {
+  const depts = (LMS_DATA.departments || []).filter(d => d.campaign_id === campaignId);
+  const r = String(role || "").toLowerCase();
+  const match = depts.find(d => {
+    const n = d.name.toLowerCase();
+    return (/rn|nurse|inpatient/.test(r) && /nursing/.test(n))
+      || (/emergency|\bed\b/.test(r) && /emergency/.test(n))
+      || (/pharm/.test(r) && /pharm/.test(n))
+      || (/radiolog|imaging|tech/.test(r) && /radiolog/.test(n))
+      || (/surg|periop/.test(r) && /surg/.test(n))
+      || (/ambulator|clinic/.test(r) && /ambulator/.test(n));
+  });
+  return match || depts[0] || {};
+}
+// Match the in-place enrichment data.js applies, so a raised exception is a
+// first-class queue item that every count derives from.
+function enrichExceptionInPlace(e) {
+  e.queue_item_id = `campaign_exception:${e.id}`;
+  e.source_type = "reconciliation_exception";
+  e.facility_id = (LMS_DATA.departments.find(d => d.id === e.department_id) || {}).facility_id;
+  e.exception_type = String(e.type || "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  e.related_entity_type = e.learner_id ? "learner" : "department";
+  e.related_entity_id = e.learner_id || e.department_id;
+  e.escalation_level = e.severity === "critical" ? 3 : e.severity === "high" ? 2 : 1;
+  e.resolution_reason = e.resolution_reason ?? null;
+  e.resolved_at = e.resolved_at ?? null;
+}
+function rosterValidationErrors(rows, headers) {
+  const idCol = rosterIdColumn(headers);
+  return rows
+    .map((row, i) => (!String(row[idCol] || "").trim())
+      ? { row_number: i + 2, field_name: idCol, message: "Roster row is missing a source identifier" }
+      : null)
+    .filter(Boolean);
+}
+// APPLY effects: valid rows become learners (idempotent by employee_id), and
+// each id-less row raises a reconciliation exception into the shared queue — so
+// applying a roster actually moves the People Directory and the open-exception
+// KPI. This is the import -> reconcile -> exception spine, live on mock data.
+function applyRosterImport(campaignId, rows, headers) {
+  const idCol = rosterIdColumn(headers);
+  let added = 0;
+  rows.forEach((row, i) => {
+    const empId = String(row[idCol] || "").trim();
+    const role = row.job_role || row.role || "Staff";
+    const dept = deptForRole(campaignId, role);
+    if (!empId) {
+      const ex = {
+        id: `e-imp-${Date.now()}-${i}`, severity: "high", type: "Identity mismatch",
+        owner: "Access Team", department_id: dept.id, learner_id: null,
+        due: (LMS_DATA.exceptions[0] || {}).due, status: "open",
+        notes: `Roster row ${i + 2} is missing a source identifier — held from readiness credit until reconciled.`,
+      };
+      enrichExceptionInPlace(ex);
+      LMS_DATA.exceptions.push(ex);
+      return;
+    }
+    if ((LMS_DATA.learners || []).some(l => l.employee_id === empId && l.campaign_id === campaignId)) return;
+    const name = row.name || [row.first_name, row.last_name].filter(Boolean).join(" ").trim() || row.email || empId;
+    LMS_DATA.learners.push({
+      id: `l-imp-${empId}`, employee_id: empId, email: row.email || null, name, role, job_role: role,
+      department_id: dept.id, facility_id: dept.facility_id, manager: row.manager_name || row.manager || "—",
+      lms: "matched", epic_id: "pending", completion: 0, status: "in_progress", exception: null, campaign_id: campaignId,
+    });
+    added++;
+  });
+  return added;
+}
+
 export async function createImport(campaignId, values) {
   const rows = parseCsvPreview(values.content || "");
   const sensitiveColumns = (rows.headers || []).filter(h => /password|secret|token|credential/i.test(h));
@@ -388,26 +460,33 @@ export async function createImport(campaignId, values) {
     sensitiveColumns.forEach(col => { next[col] = "[redacted]"; });
     return next;
   });
+  const isRoster = values.import_type === "roster";
+  const validationErrors = isRoster ? rosterValidationErrors(rows.rows, rows.headers) : [];
+  const applying = !values.preview_only && isRoster;
+  const addedLearners = applying ? applyRosterImport(campaignId, rows.rows, rows.headers) : 0;
+  const acceptedCount = applying ? addedLearners : Math.max(0, maskedRows.length - validationErrors.length);
   const created = {
     id: `import-${Date.now()}`,
     campaign_id: campaignId,
     provider: values.provider || "manual_csv",
     import_type: values.import_type,
     filename: values.filename,
-    status: values.preview_only ? "previewed" : "mapped",
+    status: values.preview_only ? "previewed" : "applied",
     row_count: maskedRows.length,
-    accepted_count: maskedRows.length,
-    error_count: 0,
+    accepted_count: acceptedCount,
+    error_count: validationErrors.length,
     preview: {
       headers: rows.headers,
       rows: maskedRows,
-      errors: [],
+      errors: validationErrors,
       summary: {
         row_count: maskedRows.length,
-        accepted_count: maskedRows.length,
-        error_count: 0,
+        accepted_count: acceptedCount,
+        error_count: validationErrors.length,
         sensitive_columns_masked: sensitiveColumns,
-        mapped_entity_counts: { [values.import_type]: maskedRows.length },
+        mapped_entity_counts: applying
+          ? { learners: addedLearners, reconciliation_exceptions: validationErrors.length }
+          : { [values.import_type]: maskedRows.length },
         suggested_custom_fields: suggestCustomFields(values.import_type, rows.headers, maskedRows, sensitiveColumns),
       },
     },

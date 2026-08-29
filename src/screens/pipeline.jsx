@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react'
 import { LMS_DATA as D } from '../data.js'
 import * as LMS_API from '../api-client.js'
 import { statusTone, statusLabel, fmtDate, Eyebrow, Rule, Pill, Card, StatNumber, Button, Tabs } from '../components.jsx'
-import { Cell, KV, PageHeader, Row, Section, Table, campaignById, pct, riskPill, triggerLabel } from './_shared.jsx'
+import { Cell, KV, PageHeader, Row, Section, Table, campaignById, computeReadiness, pct, riskPill, triggerLabel } from './_shared.jsx'
 
 function ImportsScreen({ campaignId, onDataChanged }) {
   const campaign = campaignById(campaignId);
   const [step, setStep] = useState("upload");
   const [importType, setImportType] = useState("roster");
   const [filename, setFilename] = useState("manual-roster.csv");
-  const [content, setContent] = useState("employee_id,email,first_name,last_name,job_role,api_token\nE-1001,jane@example.com,Jane,Example,Inpatient RN,secret-token\nE-1002,lee@example.com,Lee,Example,Pharmacist,secret-token\n");
+  const [content, setContent] = useState("employee_id,email,first_name,last_name,job_role,api_token\nE-1001,jane@example.com,Jane,Example,Inpatient RN,secret-token\nE-1002,lee@example.com,Lee,Example,Pharmacist,secret-token\n,dana@example.com,Dana,Rivas,Emergency RN,secret-token\n");
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [rowErrors, setRowErrors] = useState([]);
@@ -334,6 +334,8 @@ function ScoringScreen({ campaignId, onDataChanged }) {
     },
   });
   const [message, setMessage] = useState("");
+  // Live, deterministic preview — recomputes on every profile edit.
+  const live = computeReadiness(campaignId, profile);
 
   function setNumber(path, value) {
     const n = Number(value);
@@ -349,8 +351,9 @@ function ScoringScreen({ campaignId, onDataChanged }) {
     setMessage("");
     await LMS_API.updateCampaignScoring(campaignId, profile);
     campaign.scoringProfile = profile;
+    campaign.readinessScore = live.score; // scored readiness feeds the dashboard's critical-role KPI
     onDataChanged?.();
-    setMessage("Scoring profile saved.");
+    setMessage(`Scoring profile saved — readiness scored at ${live.score}%.`);
   }
 
   return (
@@ -390,16 +393,17 @@ function ScoringScreen({ campaignId, onDataChanged }) {
           </div>
         </Card>
         <Card>
-          <Eyebrow n={9}>Current explanation</Eyebrow>
-          <h2 className="display-sm">{campaign.readinessScore ?? campaign.readiness}% score</h2>
-          <p className="muted small">Reports use the same readiness payload, so the scoring explanation is included in daily readiness previews.</p>
+          <Eyebrow n={9}>Live readiness score</Eyebrow>
+          <h2 className="display-sm">{live.score}% score</h2>
+          <p className="muted small">Deterministic and explainable — recomputes as you change the profile; Save writes it to the campaign so the dashboard's critical-role readiness follows.</p>
           <Rule />
           <div className="kv-list">
-            <KV k="Risk" v={riskPill(campaign.risk)} />
-            <KV k="Completion" v={<span className="mono">{pct(campaign.readiness)}</span>} />
-            <KV k="Completion threshold" v={<span className="mono">{profile.completion_threshold}%</span>} />
-            <KV k="Critical role threshold" v={<span className="mono">{profile.critical_role_threshold}%</span>} />
-            <KV k="Mismatch penalty" v={<span className="mono">{profile.identity_mismatch_penalty}</span>} />
+            <KV k="Base completion" v={<span className="mono">{live.completionPct}%</span>} />
+            <KV k="Below-target drag" v={<span className="mono">-{live.belowTargetDrag}</span>} />
+            <KV k={`Open blockers (${live.openBlockers})`} v={<span className="mono">-{live.blockerDrag}</span>} />
+            <KV k={`Identity mismatches (${live.identityMismatches})`} v={<span className="mono">-{live.mismatchDrag}</span>} />
+            <Rule />
+            <KV k="Scored readiness" v={<span className="mono strong">{live.score}%</span>} />
           </div>
         </Card>
       </div>

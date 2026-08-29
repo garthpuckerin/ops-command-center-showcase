@@ -109,13 +109,17 @@ function RoleHomeScreen({ onNav, campaignId }) {
   const campaign = campaignById(campaignId);
   const view = campaign.homeSummary?.default_home_view || "executive_summary";
   if (view === "readiness_lead_queue") {
+    // Derive from the same live metrics the command center uses, so re-scoring
+    // and import-apply move these cards too (fall back to seeded summary only
+    // where no metric exists, e.g. sessions_due).
+    const m = campaignMetrics(campaignId);
     return (
       <div className="screen">
         <PageHeader eyebrow="Readiness lead" title="Queue-first campaign home." sub={`${campaign.name}: open blockers, risk drivers, and ready-to-work queues.`} />
         <div className="stat-grid stat-grid-4">
-          <Card><StatNumber value={campaign.homeSummary?.cards?.readiness_score ?? campaign.readinessScore ?? campaign.readiness} sub="readiness score" hint="configured scoring" /></Card>
-          <Card><StatNumber value={campaign.homeSummary?.cards?.open_exceptions ?? 0} sub="open exceptions" hint="queue workload" /></Card>
-          <Card><StatNumber value={campaign.homeSummary?.cards?.departments_at_risk ?? 0} sub="departments at risk" hint="high or critical" /></Card>
+          <Card><StatNumber value={Math.round(m.criticalRoleReadiness)} sub="readiness score" hint="configured scoring" /></Card>
+          <Card><StatNumber value={m.openExceptions} sub="open exceptions" hint="queue workload" /></Card>
+          <Card><StatNumber value={m.departmentsAtRisk} sub="departments at risk" hint="high or critical" /></Card>
           <Card><StatNumber value={campaign.homeSummary?.cards?.sessions_due ?? 0} sub="sessions" hint="training calendar" /></Card>
         </div>
         <div className="focal-actions">

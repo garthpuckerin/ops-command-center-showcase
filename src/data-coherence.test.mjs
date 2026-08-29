@@ -9,6 +9,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { LMS_DATA as D } from './data.js'
+import { computeReadiness } from './scoring.js'
 import { TODAY, iso } from './dates.js'
 
 const TODAY_ISO = iso(TODAY)
@@ -131,5 +132,21 @@ test('campaign open-exception count agrees across derivation paths', () => {
     const direct = D.exceptions.filter((e) => deptIds.has(e.department_id) && isOpenExc(e)).length
     const byDept = [...deptIds].reduce((s, id) => s + D.exceptions.filter((e) => e.department_id === id && isOpenExc(e)).length, 0)
     assert.equal(direct, byDept, `campaign ${c.id}: direct ${direct} != per-department sum ${byDept}`)
+  }
+})
+
+// The scored-readiness seed is DERIVED data, not a hand-set number: the Scoring
+// screen, the dashboard's critical-role KPI, and this seed must all be the same
+// computeReadiness() output. A stale seed (68 while the blockers actually score
+// 44) is exactly the drift this re-derivation catches — fail in ms, name the
+// campaign, instead of shipping three surfaces that disagree.
+test('seeded readinessScore equals the derived score (no scoring drift)', () => {
+  for (const c of D.campaigns) {
+    const derived = computeReadiness(D, c.id, c.scoringProfile || {}).score
+    assert.equal(c.readinessScore, derived, `campaign ${c.id}: seed readinessScore ${c.readinessScore} != derived ${derived}`)
+    const card = c.homeSummary?.cards?.readiness_score
+    if (card !== undefined) {
+      assert.equal(card, derived, `campaign ${c.id}: homeSummary card ${card} != derived ${derived}`)
+    }
   }
 })

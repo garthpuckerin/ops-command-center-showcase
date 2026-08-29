@@ -2,6 +2,7 @@
 // Split from screens.jsx (pure code-move); screens.jsx re-exports as a barrel.
 import React from 'react'
 import { LMS_DATA as D } from '../data.js'
+import { computeReadiness as computeReadinessPure } from '../scoring.js'
 import { cls, statusTone, statusLabel, fmtDate, Eyebrow, Pill, Card } from '../components.jsx'
 
 const byId = (items, id) => items.find(x => x.id === id);
@@ -59,6 +60,16 @@ function overCapacitySessions(campaignId) {
   return D.sessions.filter(s => facIds.has(s.facility_id) && s.registered > s.capacity).length;
 }
 
+// Deterministic readiness score: raw completion, dragged down by a below-target
+// haircut, weighted open blockers, and identity-mismatch penalties — all from
+// the scoring profile. Moving any profile value moves the number; every input
+// is explainable (the drivers are returned). This is what the Scoring screen
+// previews live and what save() writes back to campaign.readinessScore.
+// Thin wrapper binding the live dataset to the pure scorer in ../scoring.js.
+function computeReadiness(campaignId, profile = {}) {
+  return computeReadinessPure(D, campaignId, profile);
+}
+
 // DERIVE-ONCE: computed live from campaignData every render (no frozen snapshot),
 // so a mutation anywhere moves the dashboard.
 function campaignMetrics(campaignId) {
@@ -72,7 +83,10 @@ function campaignMetrics(campaignId) {
     daysToGoLive: Math.max(0, Math.round((new Date(campaign.goLiveDate) - new Date()) / (1000 * 60 * 60 * 24))),
     totalLearners: required,
     overallReadiness: required ? (complete / required) * 100 : campaign.readiness,
-    criticalRoleReadiness: campaign.readinessScore ?? campaign.readiness,
+    // Derive from the SAME scoring function the Scoring screen previews, using
+    // the campaign's saved profile — so dashboard, home cards, and the scoring
+    // preview never disagree, and Save shows no jump.
+    criticalRoleReadiness: computeReadiness(campaignId, campaign.scoringProfile || {}).score,
     departmentsAtRisk: scoped.departments.filter(d => ["high", "critical"].includes(d.risk)).length,
     facilitiesAtRisk: scoped.facilities.filter(f => ["high", "critical"].includes(f.risk)).length,
     openExceptions: openExc.length,
@@ -270,5 +284,5 @@ function Cell({ children }) { return <div className="tbl-cell">{children}</div>;
 
 
 export {
-  byId, facilityById, departmentById, appById, userById, campaignById, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, ReadinessTable, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
+  byId, facilityById, departmentById, appById, userById, campaignById, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, ReadinessTable, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
 };
