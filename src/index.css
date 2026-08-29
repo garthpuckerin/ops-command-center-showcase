@@ -1236,6 +1236,8 @@
   .exception-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end; /* keep Resolve pinned to the right edge so its
+                                  position is stable whether or not Start shows */
     gap: 6px;
     flex-wrap: wrap;
   }
