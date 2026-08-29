@@ -160,7 +160,7 @@ function ImportsScreen({ campaignId, onDataChanged }) {
       )}
 
       {(step === "preview" || step === "results") && (
-        <Section eyebrow={step === "preview" ? "03 · Preview" : "05 · Results"} title={step === "preview" ? "Validation table." : "Applied import results."}>
+        <Section eyebrow={step === "preview" ? "03 · Preview" : "04 · Results"} title={step === "preview" ? "Validation table." : "Applied import results."}>
           {message && <Card className="campaign-notice"><Pill tone="olive" dot>{message}</Pill></Card>}
           <Card padded={false}>
             <Table columns={headers.length ? headers : ["No rows"]} widths={(headers.length ? headers : ["No rows"]).map(() => "1fr")}>
