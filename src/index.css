@@ -745,6 +745,12 @@
   }
   /* Mono variant swaps the glyphs only — the box height stays 20px. */
   .pill.mono { font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; }
+  /* Status/risk pills share ONE width (the widest label, "Needs review" ≈ 99px)
+     so "Blocked" and "Needs review" occupy the same footprint and columns of
+     them line up. Label centers within the fixed box. */
+  .pill-block { min-width: 104px; }
+  /* Severity scale (low…critical) — its own uniform, narrower width. */
+  .pill-sev { min-width: 72px; }
   .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
   /* Borders derive from the pill's own text color, so they adapt to light/dark. */
   .pill-terracotta { color: var(--terracotta-deep); background: var(--terracotta-tint); }

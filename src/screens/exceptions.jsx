@@ -78,7 +78,7 @@ function ExceptionsScreen({ campaignId, onDataChanged }) {
               Owner/Department + the Start/Resolve/Escalate actions live in the
               detail panel. Actions in a stable panel (not per-row) also means the
               buttons never shift position as rows change status. */}
-          <Table columns={["Severity", "Type", "Due", "Status"]} widths={["92px", "1fr", "104px", "116px"]}>
+          <Table columns={["Severity", "Type", "Due", "Status"]} widths={["96px", "1fr", "104px", "116px"]}>
             {queue.map(e => (
               <Row key={e.queue_item_id || e.id}
                 selected={(e.queue_item_id || e.id) === (active?.queue_item_id || active?.id)}

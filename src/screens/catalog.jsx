@@ -62,7 +62,7 @@ function CurriculumMapScreen({ campaignId }) {
               <Cell>{item.owner || item.source_role || "Training Ops"}</Cell>
               <Cell><span className="mono">{item.assigned || item.learner_count || 0}</span></Cell>
               <Cell><span className="mono">{item.confidence ? `${Math.round(item.confidence * 100)}%` : "n/a"}</span></Cell>
-              <Cell><Pill tone={statusTone(item.status || "approved")} dot>{statusLabel(item.status || "approved")}</Pill></Cell>
+              <Cell><Pill tone={statusTone(item.status || "approved")} dot block>{statusLabel(item.status || "approved")}</Pill></Cell>
             </Row>
           ))}
         </Table>

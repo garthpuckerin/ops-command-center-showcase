@@ -23,6 +23,8 @@ function statusTone(status) {
     case "in_progress": return "terracotta";
     case "needs_review":return "ochre";
     case "blocked":     return "red";
+    case "pending_review": return "ochre";
+    case "rejected":    return "red";
     case "not_started": return "muted";
     case "failed":      return "red";
     case "published":   return "olive";
@@ -38,6 +40,7 @@ function statusLabel(s) {
     open: "Open", exception: "Exception", matched: "Matched", missing: "Missing", duplicate: "Duplicate",
     completed: "Completed", in_progress: "In progress", not_started: "Not started",
     approved: "Approved", needs_review: "Needs review", blocked: "Blocked",
+    pending_review: "Pending", rejected: "Rejected",
     failed: "Failed", published: "Published", draft: "Draft", archived: "Archived",
   })[s] || s;
 }
@@ -82,9 +85,9 @@ function Eyebrow({ children, n }) {
 function Rule({ thick }) { return <hr className={cls("rule", thick && "rule-thick")} />; }
 
 // ─────────────────────────── pill ───────────────────────────
-function Pill({ tone = "muted", children, dot, mono }) {
+function Pill({ tone = "muted", children, dot, mono, block, sev }) {
   return (
-    <span className={cls("pill", `pill-${tone}`, mono && "mono")}>
+    <span className={cls("pill", `pill-${tone}`, mono && "mono", block && "pill-block", sev && "pill-sev")}>
       {dot && <span className="pill-dot" />}
       {children}
     </span>

@@ -14,8 +14,13 @@ const campaignById = id => byId(D.campaigns, id);
 const facilityNameById = id => facilityById(id)?.name || "Unassigned facility";
 const departmentNameById = id => departmentById(id)?.name || "Unassigned department";
 
+// Status/risk pills share a uniform width so they line up in columns: the
+// severity scale (low…critical) uses one width, and the longer status set
+// (open, blocked, needs review, …) uses a wider one — each uniform within its
+// kind, and every status pill matches the widest status ("Needs review").
 function riskPill(risk) {
-  return <Pill tone={statusTone(risk)} dot>{statusLabel(risk)}</Pill>;
+  const severity = ["low", "medium", "high", "critical"].includes(risk);
+  return <Pill tone={statusTone(risk)} dot block={!severity} sev={severity}>{statusLabel(risk)}</Pill>;
 }
 
 function pct(n) {
@@ -101,7 +106,7 @@ function CampaignAccessNotice({ campaign, onNav }) {
   return (
     <Card className="campaign-notice">
       <div className="campaign-notice-main">
-        <Pill tone={statusTone(campaign.risk)} dot>{campaign.status}</Pill>
+        <Pill tone={statusTone(campaign.risk)} dot block>{campaign.status}</Pill>
         <div>
           <div className="strong">{campaign.name}</div>
           <div className="muted small">Administrative-first rollout: learner, trainer, manager, and leadership surfaces can exist, but campaign access stays restricted until the workflow proves useful.</div>
