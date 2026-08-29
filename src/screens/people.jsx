@@ -193,7 +193,7 @@ function PeopleProfileDrawer({ person, loading, onClose }) {
         <div className="drawer-head">
           <div>
             <Eyebrow>Profile</Eyebrow>
-            <h2>{person.name}</h2>
+            <h2 className="display-sm">{person.name}</h2>
             <p className="muted">{person.job_role || "No role"} · {person.manager_name || "No manager"}</p>
           </div>
           <button className="icon-btn" onClick={onClose} title="Close">×</button>

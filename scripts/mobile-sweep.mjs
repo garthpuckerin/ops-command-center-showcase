@@ -1,11 +1,12 @@
-/* Mobile/tablet sweep — ops-command-center uses a hamburger→off-canvas drawer
- * on small viewports (no bottom tab bar), so this checks the defect classes that
- * design can still ship:
+/* Mobile/tablet sweep — on phones ops-command-center presents a bottom tab bar
+ * (companion nav) plus a hamburger→off-canvas drawer for the full menu, so this
+ * checks the defect classes that design can still ship:
  *
  *  1. Sideways scroll — the page must never pan horizontally.
  *  2. Nested scroll regions — the app's scroll surface is .main (or the page).
- *     Any OTHER element that actually overflows is a finding on phone tiers
- *     (tables here cardify/ellipsize via .tbl grid rows, they do not x-scroll).
+ *     Any OTHER element that actually overflows is a finding on phone tiers.
+ *     At <=720px .tbl genuinely cardifies (rows become display:block stacked
+ *     label/value cards, not a fixed grid), so wide tables no longer x-scroll.
  *  3. Grids that stay multi-column beyond the tier's budget.
  *
  * Route injection (hash), lead role, per viewport. Nav-interaction coverage
@@ -27,9 +28,12 @@ const VIEWPORTS = [
 
 const MAX_COLS = { phone: 2, 'phone-land': 3, tablet: 4 }
 
-// Containers allowed to keep columns: table rows (grid-based, cells ellipsize),
-// twin-stat rows, key/value rows, segmented controls, pill groups, nav.
-const GRID_ALLOW = ['tbl', 'tbl-row', 'tbl-head', 'kv-list', 'seg', 'segmented', 'pill-group', 'stat-grid', 'stat-grid-4', 'two-col', 'theme-grid', 'roles-grid', 'card-grid', 'card-grid-2', 'side-nav', 'topbar', 'topbar-right', 'topbar-left']
+// Containers allowed to keep columns: twin-stat rows, key/value rows, segmented
+// controls, pill groups, nav (incl. the bottom tab bar, which is legitimately
+// N-across). NOTE: at phone tier (<=720px) .tbl cardifies to stacked rows
+// (display:block) so it is no longer a grid there; the tbl entries below only
+// exempt the tablet tier, where tables retain their column layout with room.
+const GRID_ALLOW = ['tbl', 'tbl-row', 'tbl-head', 'kv-list', 'seg', 'segmented', 'pill-group', 'stat-grid', 'stat-grid-4', 'two-col', 'theme-grid', 'roles-grid', 'card-grid', 'card-grid-2', 'side-nav', 'topbar', 'topbar-right', 'topbar-left', 'mobile-tabbar']
 
 const SCREENS = ['home', 'readiness', 'departments', 'facilities', 'exceptions', 'sessions', 'people', 'imports', 'writebacks', 'reports', 'setup', 'scoring', 'ai', 'org-settings']
 

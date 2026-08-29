@@ -261,14 +261,15 @@ function WriteBacksScreen({ campaignId, onDataChanged }) {
       {message && <Pill tone={message.startsWith("Review failed") ? "red" : "olive"}>{message}</Pill>}
       <div className="two-col">
         <Card padded={false}>
-          <Table columns={["System", "Operation", "Source", "Eligibility", "Approval", "Created"]} widths={["100px", "1fr", "1fr", "1.1fr", "110px", "110px"]}>
+          {/* Source record shows in the detail panel — kept out of the master so
+              Operation and Eligibility read at full width. */}
+          <Table columns={["System", "Operation", "Eligibility", "Approval", "Created"]} widths={["96px", "1.5fr", "1.1fr", "120px", "116px"]}>
             {jobs.map(job => {
               const blocked = job.eligibility?.eligible === false;
               return (
                 <Row key={job.id} selected={job.id === active?.id} onSelect={() => setActiveId(job.id)}>
                   <Cell><span className="strong">{job.target_system}</span></Cell>
                   <Cell><span className="mono">{job.operation}</span></Cell>
-                  <Cell><span className="small">{job.source_record_type}</span></Cell>
                   <Cell>{blocked ? <Pill tone="red" dot>Blocked</Pill> : <Pill tone="olive" dot>Eligible</Pill>}</Cell>
                   <Cell>{riskPill(job.approval_status)}</Cell>
                   <Cell><span className="mono small">{fmtDate(String(job.created_at || "").slice(0, 10))}</span></Cell>

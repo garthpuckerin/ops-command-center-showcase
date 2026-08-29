@@ -25,10 +25,14 @@ export function computeReadiness(D, campaignId, profile = {}) {
   const w = profile.blocker_severity_weights || {};
   const blockerPenalty = openExc.reduce((s, e) => s + (Number(w[e.severity]) || 0), 0);
   const mismatchPenalty = identityMismatches * (Number(profile.identity_mismatch_penalty) || 0);
+  // The base is already completionPct, so being below the target threshold is a
+  // SMALL additional signal (critical roles must clear a higher bar), not a
+  // second full penalty for incompleteness — keep it light to avoid double-
+  // counting. Open blockers and identity mismatches are the real drags.
   const thresholdGap = Math.max(0, (Number(profile.completion_threshold) || 0) - completionPct);
-  const belowTargetDrag = thresholdGap * 0.3;
-  const blockerDrag = Math.min(18, blockerPenalty / 6);
-  const mismatchDrag = Math.min(12, mismatchPenalty);
+  const belowTargetDrag = thresholdGap * 0.15;
+  const blockerDrag = Math.min(16, blockerPenalty / 7);
+  const mismatchDrag = Math.min(8, mismatchPenalty);
   const score = Math.max(0, Math.min(100, Math.round(completionPct - belowTargetDrag - blockerDrag - mismatchDrag)));
   return {
     score,

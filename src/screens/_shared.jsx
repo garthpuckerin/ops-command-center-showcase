@@ -257,30 +257,45 @@ function Segmented({ value, onChange, options }) {
   );
 }
 
+// Table threads its column labels down to each cell as data-label, so on phones
+// (<=720px) CSS can restructure every row into a stacked label/value card
+// instead of an unreadable N-wide grid. Desktop rendering is unchanged.
 function Table({ columns, widths, children }) {
   const cols = widths ? widths.join(" ") : columns.map(() => "1fr").join(" ");
+  const rows = React.Children.map(children, (child) =>
+    React.isValidElement(child) && child.type === Row
+      ? React.cloneElement(child, { _labels: columns })
+      : child
+  );
   return (
     <div className="tbl" style={{ "--cols": cols }}>
       <div className="tbl-head">
         {columns.map((c, i) => <div key={i} className="tbl-h">{c}</div>)}
       </div>
-      <div className="tbl-body">{children}</div>
+      <div className="tbl-body">{rows}</div>
     </div>
   );
 }
 
-function Row({ children, selected, onSelect }) {
+function Row({ children, selected, onSelect, _labels }) {
   const cls = "tbl-row" + (selected ? " is-selected" : "") + (onSelect ? " is-clickable" : "");
   const handleKey = onSelect ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(); } } : undefined;
+  const cells = _labels
+    ? React.Children.map(children, (child, i) =>
+        React.isValidElement(child) && child.type === Cell
+          ? React.cloneElement(child, { label: _labels[i] })
+          : child
+      )
+    : children;
   return (
     <div className={cls} onClick={onSelect} onKeyDown={handleKey}
       role={onSelect ? "button" : undefined} tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? !!selected : undefined}>
-      {children}
+      {cells}
     </div>
   );
 }
-function Cell({ children }) { return <div className="tbl-cell">{children}</div>; }
+function Cell({ children, label }) { return <div className="tbl-cell" data-label={label || undefined}>{children}</div>; }
 
 
 export {

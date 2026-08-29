@@ -63,19 +63,19 @@ function ReportsScreen({ campaignId, onDataChanged }) {
       {showBuilder && (
         <Card padded>
           <div className="form-grid">
-            <label>
-              <Eyebrow>Title</Eyebrow>
+            <label className="field">
+              <span className="field-label mono">Title</span>
               <input value={builder.title} onChange={(e) => setBuilder({ ...builder, title: e.target.value })} />
             </label>
-            <label>
-              <Eyebrow>Type</Eyebrow>
+            <label className="field">
+              <span className="field-label mono">Type</span>
               <select value={builder.report_type} onChange={(e) => setBuilder({ ...builder, report_type: e.target.value })}>
                 <option value="at_risk_learners">At-risk learners</option>
                 <option value="daily_readiness">Daily readiness</option>
               </select>
             </label>
-            <label>
-              <Eyebrow>Risk filter</Eyebrow>
+            <label className="field">
+              <span className="field-label mono">Risk filter</span>
               <select value={builder.risk_level} onChange={(e) => setBuilder({ ...builder, risk_level: e.target.value })}>
                 <option value="">Any risk</option>
                 <option value="critical">Critical</option>
@@ -84,8 +84,8 @@ function ReportsScreen({ campaignId, onDataChanged }) {
                 <option value="low">Low</option>
               </select>
             </label>
-            <label>
-              <Eyebrow>Columns</Eyebrow>
+            <label className="field">
+              <span className="field-label mono">Columns</span>
               <input value={builder.columns} onChange={(e) => setBuilder({ ...builder, columns: e.target.value })} />
             </label>
           </div>

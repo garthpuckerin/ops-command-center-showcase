@@ -74,27 +74,19 @@ function ExceptionsScreen({ campaignId, onDataChanged }) {
 
       <div className="two-col">
         <Card padded={false}>
-          <Table columns={["Severity", "Type", "Owner", "Department", "Due", "Status", "Actions"]} widths={["100px", "1fr", "1fr", "1.1fr", "100px", "100px", "150px"]}>
+          {/* The master list is purely scannable — Type reads at full width, and
+              Owner/Department + the Start/Resolve/Escalate actions live in the
+              detail panel. Actions in a stable panel (not per-row) also means the
+              buttons never shift position as rows change status. */}
+          <Table columns={["Severity", "Type", "Due", "Status"]} widths={["92px", "1fr", "104px", "116px"]}>
             {queue.map(e => (
               <Row key={e.queue_item_id || e.id}
                 selected={(e.queue_item_id || e.id) === (active?.queue_item_id || active?.id)}
                 onSelect={() => setActiveId(e.queue_item_id || e.id)}>
                 <Cell>{riskPill(e.severity)}</Cell>
                 <Cell><span className="strong">{e.type}</span></Cell>
-                <Cell><span>{e.owner}</span></Cell>
-                <Cell><span className="muted">{departmentById(e.department_id)?.name || "Campaign"}</span></Cell>
                 <Cell><span className="mono small">{fmtDate(e.due)}</span></Cell>
                 <Cell>{riskPill(e.status)}</Cell>
-                <Cell>
-                  <div className="exception-actions">
-                    {e.status === "open" && (
-                      <Button kind="ghost" size="sm" disabled={workingId === (e.queue_item_id || e.id)} onClick={() => updateException(e, { status: "in_progress", owner_name: e.owner || "Readiness Lead" })}>Start</Button>
-                    )}
-                    {!["closed", "resolved"].includes(e.status) && (
-                      <Button kind="solid" size="sm" disabled={workingId === (e.queue_item_id || e.id)} onClick={() => updateException(e, { status: "resolved", resolution_reason: "Resolved from exception queue", notes: `${e.notes || ""} Resolved in Command Center.` })}>Resolve</Button>
-                    )}
-                  </div>
-                </Cell>
               </Row>
             ))}
           </Table>
@@ -155,8 +147,13 @@ function ExceptionDetailPanel({ item, onUpdate, working }) {
         <KV k="Resolution" v={item.resolution_reason || "Open"} />
       </div>
       <div className="focal-actions">
+        {item.status === "open" && (
+          <Button kind="ghost" size="sm" disabled={working} onClick={() => onUpdate({ status: "in_progress", owner_name: item.owner || "Readiness Lead" })}>Start</Button>
+        )}
         <Button kind="ghost" size="sm" disabled={working} onClick={() => onUpdate({ owner_name: item.owner || "Readiness Lead", escalation_level: Math.min((item.escalation_level || 0) + 1, 5) })}>Escalate</Button>
-        <Button kind="solid" size="sm" disabled={working} onClick={() => onUpdate({ status: "resolved", resolution_reason: "Resolved from detail panel" })}>Resolve</Button>
+        {!["closed", "resolved"].includes(item.status) && (
+          <Button kind="solid" size="sm" disabled={working} onClick={() => onUpdate({ status: "resolved", resolution_reason: "Resolved from detail panel" })}>Resolve</Button>
+        )}
       </div>
     </Card>
   );

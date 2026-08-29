@@ -3,14 +3,14 @@
 import React, { useState } from 'react'
 import { LMS_DATA as D } from '../data.js'
 import { cls, statusLabel, fmt, fmtDate, Eyebrow, Rule, Pill, Icon, Card, StatNumber, Button, RequirementCover } from '../components.jsx'
-import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill } from './_shared.jsx'
+import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, isOpenException, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill } from './_shared.jsx'
 import { SessionsScreen } from './sessions.jsx'
 
 function CommandCenterScreen({ onNav, campaignId }) {
   const campaign = campaignById(campaignId);
   const m = campaignMetrics(campaignId);
   const scoped = campaignData(campaignId);
-  const critical = scoped.exceptions.filter(e => e.severity === "critical");
+  const critical = scoped.exceptions.filter(e => e.severity === "critical" && isOpenException(e));
   const atRiskDepartments = scoped.departments.filter(d => ["critical", "high"].includes(d.risk));
 
   return (

@@ -399,6 +399,41 @@
     .side { transition: none; }
   }
 
+  /* Phone bottom tab bar — hidden on desktop, enabled at <=720px. */
+  .mobile-tabbar {
+    display: none;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 90;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -6px 20px oklch(0% 0 0 / 0.05);
+  }
+  .mobile-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 56px;
+    padding: 7px 4px;
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .mobile-tab span {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .mobile-tab-on { color: var(--accent-deep); }
+  .mobile-tab-on svg { color: var(--accent); }
+
   .role-floater {
     position: fixed;
     right: 22px;
@@ -568,9 +603,7 @@
   .demo-hero-main .display-md { margin-top: 12px; max-width: 760px; }
   .demo-hero-aside {
     border-left: 1px solid var(--rule);
-    background:
-      repeating-linear-gradient(0deg, transparent 0 31px, var(--rule-2) 31px 32px),
-      var(--paper);
+    background: var(--paper-2);
     padding: 26px;
     display: grid;
     align-content: center;
@@ -1400,7 +1433,8 @@
     padding: 12px;
     font-size: 12px;
     text-align: center;
-    background: oklch(100% 0 0 / 0.45);
+    /* Opaque so the calendar's ruled-column gradient can't bisect the text. */
+    background: var(--paper);
   }
   .session-event {
     border: 1px solid var(--rule);
@@ -1776,10 +1810,84 @@
   }
 
   @media (max-width: 720px) {
-    .content { padding-inline: 18px; }
+    .content { padding-inline: 18px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
     .topbar { padding-inline: 18px; }
     /* Grid utilities collapse to a single column on phones. */
     .grid-2, .grid-3, .card-grid-2 { grid-template-columns: 1fr; }
+
+    /* ── Phone tables cardify ──────────────────────────────────────────
+       A data-dense workstation table does not port to a phone. Below 720px
+       every .tbl row becomes a stacked label/value card (labels come from the
+       data-label the Table primitive threads onto each cell). This kills the
+       N-wide grid, the fixed-px horizontal overflow, and the ellipsis-to-
+       nothing text — one fix across ~15 screens. */
+    .tbl-head { display: none; }
+    .tbl-row {
+      display: block;
+      padding: 14px 16px;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      margin-bottom: 10px;
+      background: var(--paper);
+    }
+    .tbl-row:last-child { border-bottom: 1px solid var(--rule); }
+    .tbl-row.is-selected { box-shadow: inset 3px 0 0 0 var(--accent); }
+    .tbl-cell {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 14px;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      padding: 5px 0;
+      min-height: 0;
+    }
+    .tbl-cell + .tbl-cell { border-top: 1px solid var(--rule-2); }
+    .tbl-cell::before {
+      content: attr(data-label);
+      flex: 0 0 40%;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      align-self: center;
+    }
+    .tbl-cell:not([data-label])::before { content: none; }
+    .tbl-cell > * { text-align: right; min-width: 0; }
+    /* Action cells: let buttons sit full and wrap instead of aligning right. */
+    .tbl-cell.tbl-cell-actions,
+    .exception-actions { flex-wrap: wrap; justify-content: flex-end; }
+
+    /* Dense forms and metric strips go single-column on phones. */
+    .form-grid { grid-template-columns: 1fr; }
+    .report-metric-grid { grid-template-columns: 1fr 1fr; }
+
+    /* Filter bars pack two-up instead of one tall stack, so the queue/list
+       below stays reachable without a long scroll past the controls. */
+    .filterbar-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .filterbar-row > * { min-width: 0; }
+    .filterbar-sep, .filterbar-spacer { display: none; }
+
+    /* Blocker queue rows wrap instead of crushing the title into a 4-col grid. */
+    .queue-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+    .queue-row .queue-main { flex: 1 1 62%; min-width: 0; }
+
+    /* Tap-target floor: interactive chrome reaches 44px on touch. */
+    .iconbtn, .icon-btn { width: 40px; height: 40px; }
+    .seg-btn, .tab, .btn-sm { min-height: 40px; }
+    .side-link, .role-btn { min-height: 44px; }
+
+    /* Declutter the topbar on phones: demo-only chrome (mock-data pill, theme
+       toggle, tour, new-campaign, search) is hidden so the campaign switcher,
+       notifications, and avatar get room. */
+    .mobile-hide { display: none !important; }
+
+    /* The bottom tab bar owns the floor; lift the demo floaters above it. */
+    .mobile-tabbar { display: grid; }
+    .role-floater { bottom: calc(64px + env(safe-area-inset-bottom)); }
+    .tour-card { bottom: calc(78px + env(safe-area-inset-bottom)); }
     .role-floater-trigger { min-width: 156px; }
     .role-floater-panel { width: min(270px, calc(100vw - 32px)); }
     .tour-card { bottom: 74px; }

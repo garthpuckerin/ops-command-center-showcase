@@ -187,6 +187,7 @@ function NotificationsScreen({ campaignId, onDataChanged }) {
       )}
 
       <Section eyebrow="01" title="In-app notifications">
+        <Card padded={false}>
         <Table columns={["Signal", "Severity", "Source", "Status", "Created"]} widths={["1.7fr", "110px", "1fr", "110px", "150px"]}>
           {notifications.length === 0 && <Row><Cell>No notifications for this campaign.</Cell><Cell /><Cell /><Cell /><Cell /></Row>}
           {notifications.map(n => (
@@ -202,9 +203,11 @@ function NotificationsScreen({ campaignId, onDataChanged }) {
             </Row>
           ))}
         </Table>
+        </Card>
       </Section>
 
       <Section eyebrow="02" title="Escalation rules">
+        <Card padded={false}>
         <Table columns={["Rule", "Trigger", "Parameters", "Severity", "State"]} widths={["1.4fr", "1.2fr", "1.6fr", "110px", "90px"]}>
           {rules.length === 0 && <Row><Cell>No escalation rules configured.</Cell><Cell /><Cell /><Cell /><Cell /></Row>}
           {rules.map(rule => (
@@ -217,6 +220,7 @@ function NotificationsScreen({ campaignId, onDataChanged }) {
             </Row>
           ))}
         </Table>
+        </Card>
       </Section>
     </div>
   );
@@ -239,6 +243,7 @@ function TimelineScreen({ campaignId }) {
         <Card><StatNumber value={milestones.filter(m => m.milestone_type.includes("escalation")).length} sub="escalation checkpoints" /></Card>
       </div>
       <Section eyebrow="01" title="Milestone timeline">
+        <Card padded={false}>
         <Table columns={["Milestone", "Type", "Due", "Owner", "Status"]} widths={["1.6fr", "1fr", "150px", "1fr", "110px"]}>
           {milestones.length === 0 && <Row><Cell>No milestones for this campaign.</Cell><Cell /><Cell /><Cell /><Cell /></Row>}
           {milestones.map(m => (
@@ -251,6 +256,7 @@ function TimelineScreen({ campaignId }) {
             </Row>
           ))}
         </Table>
+        </Card>
       </Section>
     </div>
   );
@@ -269,6 +275,7 @@ function IntegrationHealthScreen({ campaignId }) {
         <Card><StatNumber value={health.reduce((s, h) => s + (h.accepted_count || 0), 0)} sub="accepted rows" /></Card>
       </div>
       <Section eyebrow="01" title="Feed status">
+        <Card padded={false}>
         <Table columns={["Source", "Type", "Status", "Last import", "Rows", "Warning"]} widths={["1fr", "1fr", "110px", "150px", "110px", "1fr"]}>
           {health.length === 0 && <Row><Cell>No integration health snapshots for this campaign.</Cell><Cell /><Cell /><Cell /><Cell /><Cell /></Row>}
           {health.map(item => (
@@ -282,6 +289,7 @@ function IntegrationHealthScreen({ campaignId }) {
             </Row>
           ))}
         </Table>
+        </Card>
       </Section>
     </div>
   );

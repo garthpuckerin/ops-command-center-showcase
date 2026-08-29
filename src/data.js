@@ -9,10 +9,11 @@
 // relationship between events. See dates.js for the migration primitives.
 
 import { shiftIso, shiftDateTime, shiftTimestamp, daysToGoLive } from './dates.js';
+import { computeReadiness } from './scoring.js';
 
 const LMS_DATA = (function () {
   const campaigns = [
-    { id: "camp-st-anne", name: "St. Anne Hospital Acquisition", status: "Active", goLiveDate: shiftIso("2026-07-15"), phase: "Training execution", readiness: 76, readinessScore: 44, risk: "high", scoringProfile: { completion_threshold: 95, critical_role_threshold: 98, identity_mismatch_penalty: 2, blocker_severity_weights: { critical: 8, high: 5, medium: 2 } }, homeSummary: { user_campaign_role: "readiness_lead", default_home_view: "executive_summary", cards: { open_exceptions: 3, departments_at_risk: 2, sessions_due: 3, readiness_score: 44 } } },
+    { id: "camp-st-anne", name: "St. Anne Hospital Acquisition", status: "Active", goLiveDate: shiftIso("2026-07-15"), phase: "Training execution", readiness: 76, readinessScore: 58, risk: "high", scoringProfile: { completion_threshold: 95, critical_role_threshold: 98, identity_mismatch_penalty: 2, blocker_severity_weights: { critical: 8, high: 5, medium: 2 } }, homeSummary: { user_campaign_role: "readiness_lead", default_home_view: "executive_summary", cards: { open_exceptions: 10, departments_at_risk: 2, sessions_due: 3, readiness_score: 58 } } },
     { id: "camp-riverbend", name: "Riverbend Medical Center Acquisition", status: "Planning", goLiveDate: shiftIso("2026-10-03"), phase: "Roster intake", readiness: 12, readinessScore: 0, risk: "medium", scoringProfile: { completion_threshold: 90, critical_role_threshold: 95, identity_mismatch_penalty: 2, blocker_severity_weights: { critical: 8, high: 5, medium: 2 } }, homeSummary: { user_campaign_role: "program_admin", default_home_view: "executive_summary", cards: { open_exceptions: 0, departments_at_risk: 2, sessions_due: 0, readiness_score: 0 } } },
     { id: "camp-ambulatory-wave2", name: "Ambulatory Wave 2", status: "Draft", goLiveDate: shiftIso("2026-11-12"), phase: "Matrix design", readiness: 0, readinessScore: 0, risk: "low", scoringProfile: { completion_threshold: 85, critical_role_threshold: 90, identity_mismatch_penalty: 1, blocker_severity_weights: { critical: 8, high: 5, medium: 2 } }, homeSummary: { user_campaign_role: "training_coordinator", default_home_view: "executive_summary", cards: { open_exceptions: 0, departments_at_risk: 0, sessions_due: 0, readiness_score: 0 } } },
   ];
@@ -182,20 +183,20 @@ const LMS_DATA = (function () {
   ];
 
   const exceptions = [
-    { id: "e-301", severity: "critical", type: "Identity mismatch", owner: "Mira Okafor", department_id: "dep-ed", learner_id: "l-002", due: shiftIso("2026-05-31"), status: "open", notes: "Epic ID missing for ED RN cohort." },
+    { id: "e-301", severity: "critical", type: "Identity mismatch", owner: "Mira Okafor", department_id: "dep-ed", learner_id: "l-002", due: shiftIso("2026-05-31"), status: "resolved", notes: "Epic ID missing for ED RN cohort.", resolution_reason: "Epic ID reconciled from the provisioning feed and verified against HR." },
     { id: "e-302", severity: "high", type: "Duplicate account", owner: "Access Team", department_id: "dep-ed", learner_id: "l-003", due: shiftIso("2026-06-01"), status: "open", notes: "Two LMS records map to one provider profile." },
-    { id: "e-303", severity: "high", type: "Session capacity", owner: "Daniel Reeve", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-05-30"), status: "in_progress", notes: "RN lab is four seats over capacity." },
-    { id: "e-304", severity: "critical", type: "Trainer conflict", owner: "Priya Anand", department_id: "dep-pharmacy", learner_id: null, due: shiftIso("2026-05-29"), status: "open", notes: "Willow session conflicts with Provider Orders session." },
-    { id: "e-305", severity: "medium", type: "Missing LMS account", owner: "Mira Okafor", department_id: "dep-pharmacy", learner_id: "l-005", due: shiftIso("2026-06-03"), status: "open", notes: "Pharmacist exists in HR and Epic but not LMS." },
+    { id: "e-303", severity: "high", type: "Session capacity", owner: "Daniel Reeve", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-05-30"), status: "resolved", notes: "RN lab is four seats over capacity.", resolution_reason: "Second lab offering scheduled; seats rebalanced under capacity." },
+    { id: "e-304", severity: "critical", type: "Trainer conflict", owner: "Priya Anand", department_id: "dep-pharmacy", learner_id: null, due: shiftIso("2026-05-29"), status: "resolved", notes: "Willow session conflicts with Provider Orders session.", resolution_reason: "Pharmacy Willow session moved to a non-conflicting block." },
+    { id: "e-305", severity: "medium", type: "Missing LMS account", owner: "Mira Okafor", department_id: "dep-pharmacy", learner_id: "l-005", due: shiftIso("2026-06-03"), status: "resolved", notes: "Pharmacist exists in HR and Epic but not LMS.", resolution_reason: "LMS account provisioned and mapped to the Epic profile." },
     { id: "e-306", severity: "critical", type: "Super-user gap", owner: "Mira Okafor", department_id: "dep-nursing", learner_id: "l-001", due: shiftIso("2026-05-30"), status: "open", notes: "Unit has no credentialed super-user for go-live floor support." },
     { id: "e-307", severity: "high", type: "Overdue completion", owner: "Daniel Reeve", department_id: "dep-nursing", learner_id: "l-004", due: shiftIso("2026-05-28"), status: "open", notes: "EpicCare Inpatient course past the training deadline." },
-    { id: "e-308", severity: "high", type: "Identity mismatch", owner: "Access Team", department_id: "dep-ed", learner_id: "l-006", due: shiftIso("2026-06-02"), status: "in_progress", notes: "HR employee_id does not match the Epic provisioning feed." },
-    { id: "e-309", severity: "medium", type: "Out-of-scope course", owner: "Priya Anand", department_id: "dep-radiology", learner_id: "l-007", due: shiftIso("2026-06-04"), status: "open", notes: "Imported completion maps to no required Radiant course — held from readiness credit." },
-    { id: "e-310", severity: "high", type: "Role change re-trigger", owner: "Mira Okafor", department_id: "dep-radiology", learner_id: "l-008", due: shiftIso("2026-06-01"), status: "open", notes: "Tech moved to a lead role; new curriculum requirements re-opened." },
+    { id: "e-308", severity: "high", type: "Identity mismatch", owner: "Access Team", department_id: "dep-ed", learner_id: "l-006", due: shiftIso("2026-06-02"), status: "resolved", notes: "HR employee_id does not match the Epic provisioning feed.", resolution_reason: "Identifiers reconciled; provisioning feed re-synced." },
+    { id: "e-309", severity: "medium", type: "Out-of-scope course", owner: "Priya Anand", department_id: "dep-radiology", learner_id: "l-007", due: shiftIso("2026-06-04"), status: "resolved", notes: "Imported completion maps to no required Radiant course — held from readiness credit.", resolution_reason: "Mapped to the correct Radiant curriculum item; credit restored." },
+    { id: "e-310", severity: "high", type: "Role change re-trigger", owner: "Mira Okafor", department_id: "dep-radiology", learner_id: "l-008", due: shiftIso("2026-06-01"), status: "resolved", notes: "Tech moved to a lead role; new curriculum requirements re-opened.", resolution_reason: "Lead curriculum assigned and acknowledged." },
     { id: "e-311", severity: "medium", type: "Credential lapse", owner: "Access Team", department_id: "dep-pharmacy", learner_id: null, due: shiftIso("2026-06-05"), status: "open", notes: "Pharmacist license attestation expires before go-live." },
-    { id: "e-312", severity: "low", type: "Missing LMS account", owner: "Daniel Reeve", department_id: "dep-revcycle", learner_id: null, due: shiftIso("2026-06-06"), status: "open", notes: "Two Prelude/Resolute staff not yet provisioned in the LMS." },
+    { id: "e-312", severity: "low", type: "Missing LMS account", owner: "Daniel Reeve", department_id: "dep-revcycle", learner_id: null, due: shiftIso("2026-06-06"), status: "resolved", notes: "Two Prelude/Resolute staff not yet provisioned in the LMS.", resolution_reason: "Both staff provisioned in the LMS." },
     { id: "e-313", severity: "high", type: "Session capacity", owner: "Priya Anand", department_id: "dep-ambulatory", learner_id: null, due: shiftIso("2026-06-02"), status: "open", notes: "Ambulatory EpicCare class is over capacity; needs a second offering." },
-    { id: "e-314", severity: "medium", type: "Provisioning pending", owner: "Access Team", department_id: "dep-ambulatory", learner_id: null, due: shiftIso("2026-06-03"), status: "in_progress", notes: "Epic access requests pending approval for float-pool nurses." },
+    { id: "e-314", severity: "medium", type: "Provisioning pending", owner: "Access Team", department_id: "dep-ambulatory", learner_id: null, due: shiftIso("2026-06-03"), status: "resolved", notes: "Epic access requests pending approval for float-pool nurses.", resolution_reason: "Access approved and granted for the float pool." },
     { id: "e-315", severity: "critical", type: "Identity mismatch", owner: "Mira Okafor", department_id: "dep-surgery", learner_id: null, due: shiftIso("2026-05-31"), status: "open", notes: "Surgical staff SSO identities not reconciled to Epic." },
     { id: "e-316", severity: "medium", type: "Overdue completion", owner: "Daniel Reeve", department_id: "dep-surgery", learner_id: null, due: shiftIso("2026-06-04"), status: "open", notes: "Cadence scheduling module past deadline for two coordinators." },
     { id: "e-317", severity: "low", type: "Duplicate account", owner: "Access Team", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-06-07"), status: "resolved", notes: "Merged duplicate agency-nurse records.", resolution_reason: "Duplicate merged and verified." },
@@ -203,6 +204,11 @@ const LMS_DATA = (function () {
     { id: "e-319", severity: "medium", type: "Out-of-scope course", owner: "Mira Okafor", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-06-05"), status: "open", notes: "Legacy course completions do not satisfy the Epic curriculum." },
     { id: "e-320", severity: "high", type: "Overdue completion", owner: "Daniel Reeve", department_id: "dep-nursing", learner_id: null, due: shiftIso("2026-06-02"), status: "in_progress", notes: "RN documentation e-learning overdue for a large cohort." },
   ];
+
+  // Derive the active campaign's scored readiness once, from the same function
+  // the dashboard and Scoring screen use, so report previews can't drift from
+  // the live numbers (a partial {departments, exceptions} is all it reads).
+  const activeScoring = computeReadiness({ departments, exceptions }, activeCampaignId, activeCampaign.scoringProfile || {});
 
   const reports = [
     {
@@ -222,8 +228,8 @@ const LMS_DATA = (function () {
         summary: "Two departments remain below launch threshold. ED readiness and identity reconciliation require same-day escalation.",
         metrics: [
           { label: "Overall readiness", value: `${overallReadinessPct}%`, tone: "olive" },
-          { label: "Critical roles", value: "64%", tone: "terracotta" },
-          { label: "Open blockers", value: "5", tone: "red" },
+          { label: "Critical roles", value: `${activeScoring.score}%`, tone: "terracotta" },
+          { label: "Open blockers", value: `${activeScoring.openBlockers}`, tone: "red" },
         ],
         bars: [
           { label: "Revenue Cycle", value: 85, tone: "olive" },

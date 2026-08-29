@@ -214,6 +214,7 @@ function App() {
         </div>
       </main>
       <RoleFloater role={role} setRole={setRole} open={rolePanelOpen} setOpen={setRolePanelOpen} onStartTour={startTour} />
+      <MobileTabBar role={role} view={view} setView={setView} onOpenMenu={() => setNavOpen(true)} />
       {tour.active && <GuidedTour role={role} tour={tour} setTour={setTour} view={view} />}
       {import.meta.env.DEV && <TweaksUI t={t} setTweak={setTweak} />}
     </div>
@@ -427,7 +428,7 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
         <span className="muted small">{desc[role]}</span>
       </div>
       <div className="topbar-right">
-        <Pill tone="muted" mono>Mock data</Pill>
+        <span className="mobile-hide"><Pill tone="muted" mono>Mock data</Pill></span>
         <label className="campaign-switcher" data-tour="campaign-switcher">
           <span className="mono">Campaign</span>
           <select value={campaignId} onChange={(e) => setCampaignId(e.target.value)}>
@@ -441,19 +442,62 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
             <Icon name="chev" size={12} />
           </button>
         )}
-        <button className="iconbtn" title="Toggle dark mode" data-tour="theme-toggle" onClick={() => setTweak("themeMode", (t.themeMode || "light") === "dark" ? "light" : "dark")}>
+        <button className="iconbtn mobile-hide" title="Toggle dark mode" data-tour="theme-toggle" onClick={() => setTweak("themeMode", (t.themeMode || "light") === "dark" ? "light" : "dark")}>
           <Icon name={(t.themeMode || "light") === "dark" ? "check" : "dot"} size={16} />
         </button>
-        <Button kind="ghost" size="sm" icon="play" onClick={onStartTour}>Tour</Button>
-        {role === "lead" && <Button kind="ghost" size="sm" icon="plus" onClick={() => setView("new-campaign")}>Campaign</Button>}
+        <span className="mobile-hide"><Button kind="ghost" size="sm" icon="play" onClick={onStartTour}>Tour</Button></span>
+        {role === "lead" && <span className="mobile-hide"><Button kind="ghost" size="sm" icon="plus" onClick={() => setView("new-campaign")}>Campaign</Button></span>}
         <button className="iconbtn" title="Notifications" onClick={() => setView("notifications")}>
           <Icon name="bell" size={16} />
           {unreadNotifications > 0 && <span className="iconbtn-dot" />}
         </button>
-        <button className="iconbtn" title="Quick search"><Icon name="search" size={16} /></button>
+        <button className="iconbtn mobile-hide" title="Quick search"><Icon name="search" size={16} /></button>
         <Avatar user={me} size={32} />
       </div>
     </header>
+  );
+}
+
+// Phone companion nav — a bottom tab bar owns the floor (the house mobile
+// standard). Tabs map to the role's triage/approvals/monitoring surfaces; the
+// rest of the nav lives behind "More" (the off-canvas drawer). Hidden >720px.
+function MobileTabBar({ role, view, setView, onOpenMenu }) {
+  const TABS = {
+    lead: [
+      { id: "home", label: "Home", icon: "home" },
+      { id: "exceptions", label: "Queue", icon: "flag" },
+      { id: "writebacks", label: "Approvals", icon: "shield" },
+      { id: "readiness", label: "Readiness", icon: "pulse" },
+    ],
+    trainer: [
+      { id: "home", label: "Home", icon: "teach" },
+      { id: "sessions", label: "Sessions", icon: "catalog" },
+      { id: "exceptions", label: "Queue", icon: "flag" },
+    ],
+    learner: [
+      { id: "home", label: "Training", icon: "learn" },
+      { id: "learners", label: "Record", icon: "user" },
+    ],
+  };
+  const tabs = TABS[role] || TABS.lead;
+  return (
+    <nav className="mobile-tabbar" aria-label="Primary">
+      {tabs.map(tb => (
+        <button
+          key={tb.id}
+          className={cls("mobile-tab", view === tb.id && "mobile-tab-on")}
+          onClick={() => setView(tb.id)}
+          aria-current={view === tb.id ? "page" : undefined}
+        >
+          <Icon name={tb.icon} size={18} />
+          <span>{tb.label}</span>
+        </button>
+      ))}
+      <button className="mobile-tab" onClick={onOpenMenu} aria-label="More navigation">
+        <Icon name="menu" size={18} />
+        <span>More</span>
+      </button>
+    </nav>
   );
 }
 
