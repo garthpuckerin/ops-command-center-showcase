@@ -106,13 +106,17 @@
   body[data-mode="dark"][data-palette="olive"]   { --accent: oklch(70% 0.12 130); --accent-deep: oklch(80% 0.10 130); --accent-tint: var(--olive-tint); }
   body[data-mode="dark"][data-palette="inkblue"] { --accent: oklch(72% 0.11 250); --accent-deep: oklch(82% 0.09 250); --accent-tint: oklch(28% 0.05 250); }
 
-  /* Density */
+  /* Density — a 3-step card-padding scale so every card interior comes from a
+     token (dense tiles / standard cards / hero panels) instead of ad-hoc px,
+     and the compact toggle actually tightens all of them. */
   body[data-density="compact"] {
     --pad-card: 18px;
+    --pad-card-sm: 14px;
+    --pad-card-lg: 26px;
     --pad-section: 36px;
     --gap-row: 10px;
   }
-  body { --pad-card: 26px; --pad-section: 56px; --gap-row: 14px; }
+  body { --pad-card: 26px; --pad-card-sm: 18px; --pad-card-lg: 34px; --pad-section: 56px; --gap-row: 14px; }
 
   /* ────────────────────────────────────────────────────────────────
      Base
@@ -633,7 +637,7 @@
   .card-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .campaign-notice {
-    padding: 18px;
+    padding: var(--pad-card);
     display: grid;
     grid-template-columns: 1.15fr 1fr;
     gap: 18px;
@@ -660,14 +664,14 @@
       linear-gradient(135deg, var(--paper) 0%, var(--paper-2) 58%, var(--accent-tint) 100%);
   }
   .demo-hero-main {
-    padding: 34px;
+    padding: var(--pad-card-lg);
     min-width: 0;
   }
   .demo-hero-main .display-md { margin-top: 12px; max-width: 760px; }
   .demo-hero-aside {
     border-left: 1px solid var(--rule);
     background: var(--paper-2);
-    padding: 26px;
+    padding: var(--pad-card);
     display: grid;
     align-content: center;
     gap: 18px;
@@ -737,7 +741,7 @@
     min-height: 118px;
     border: 1px solid var(--rule);
     background: var(--paper);
-    padding: 12px;
+    padding: var(--pad-card-sm);
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -992,7 +996,7 @@
     overflow: auto;
     background: var(--paper);
     border-left: 1px solid var(--rule-strong);
-    padding: 24px;
+    padding: var(--pad-card);
   }
   .drawer-head {
     display: flex;
@@ -1138,7 +1142,7 @@
     border-radius: 2px; overflow: hidden;
   }
   .focal-grid .cover { border-radius: 0; height: 100% !important; min-height: 280px; }
-  .focal-body { padding: 32px 32px 32px 36px; }
+  .focal-body { padding: var(--pad-card-lg); }
   .focal-body .display-md { margin-top: 12px; }
   .focal-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 6px 0 18px; }
   .focal-actions { display: flex; gap: 10px; }
@@ -1258,7 +1262,7 @@
   }
   .catalog-card:hover { border-color: var(--ink); }
   .catalog-card .cover { border-radius: 0; }
-  .catalog-card-body { padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+  .catalog-card-body { padding: var(--pad-card-sm); display: flex; flex-direction: column; gap: 8px; }
   .catalog-card-eyebrow {
     display: flex; align-items: center; justify-content: space-between;
     font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em;
@@ -1671,7 +1675,7 @@
     background: var(--paper);
     border: 1px solid var(--rule);
     border-radius: 2px;
-    padding: 18px;
+    padding: var(--pad-card-sm);
     text-align: left;
     color: var(--ink);
     cursor: pointer;
@@ -1689,7 +1693,7 @@
     color: var(--muted);
     font-size: 12px;
   }
-  .report-preview { padding: 24px; min-height: 620px; }
+  .report-preview { padding: var(--pad-card); min-height: 620px; }
   .report-preview-head {
     display: flex;
     justify-content: space-between;
@@ -1699,7 +1703,7 @@
   .report-doc {
     background: oklch(99% 0.004 80);
     border: 1px solid var(--rule);
-    padding: 24px;
+    padding: var(--pad-card);
   }
   .report-doc-title h3 {
     font-family: var(--serif);
@@ -1718,7 +1722,7 @@
   .report-metric {
     position: relative;
     border: 1px solid var(--rule);
-    padding: 16px;
+    padding: var(--pad-card-sm);
     background: var(--paper);
     overflow: hidden;
   }
