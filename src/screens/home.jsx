@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { LMS_DATA as D } from '../data.js'
 import { cls, statusTone, statusLabel, fmt, fmtDate, Eyebrow, Rule, Pill, Icon, Card, StatNumber, Button, RequirementCover } from '../components.jsx'
 import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, campaignSetupSummary, campaignTemplate, campaignTerms, isOpenException, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill, setupSectionsForCampaign, triggerLabel } from './_shared.jsx'
+import { isStuckLearner, stuckThresholdMinutes } from '../compliance.js'
 import { SessionsScreen } from './sessions.jsx'
 
 function CommandCenterScreen({ onNav, campaignId }) {
@@ -165,6 +166,59 @@ function RoleHomeScreen({ onNav, campaignId }) {
           <Button kind="ghost" onClick={() => onNav("setup")}>Review launch gate</Button>
           <Button kind="ghost" onClick={() => onNav("scoring")}>Tune scoring</Button>
           <Button kind="ghost" onClick={() => onNav("reports")}>Preview reports</Button>
+        </div>
+      </div>
+    );
+  }
+  if (view === "compliance_completion") {
+    // The compliance operation: per-assignee completion against a deadline,
+    // with the signature stuck rule ("> threshold minutes in course, not
+    // completed", src/compliance.js) derived live — this table, the stat card,
+    // and the exception queue all read the same records.
+    const terms = campaignTerms(campaignId);
+    const m = campaignMetrics(campaignId);
+    const scoped = campaignData(campaignId);
+    const threshold = stuckThresholdMinutes(campaign, campaignTemplate(campaignId));
+    const assignees = scoped.learners;
+    const stuck = assignees.filter(l => isStuckLearner(l, threshold));
+    const learnerWord = terms.learner_label.toLowerCase();
+    return (
+      <div className="screen">
+        <PageHeader
+          eyebrow={roleLabel}
+          title="Compliance completion home."
+          sub={`${campaign.name}: per-${learnerWord} completion against the ${terms.launch_label.toLowerCase()}. ${terms.learner_label}s past ${threshold} minutes in a course without completing are flagged as stuck and escalated.`}
+        />
+        <div className="stat-grid stat-grid-4">
+          <Card><StatNumber value={m.daysToGoLive} sub={`days to ${terms.launch_label.toLowerCase()}`} hint={m.goLiveDate} /></Card>
+          <Card><StatNumber value={pct(m.overallReadiness)} sub="completion" hint={`${fmt(m.totalLearners)} ${learnerWord}s assigned`} /></Card>
+          <Card><StatNumber value={stuck.length} sub={`stuck ${learnerWord}s`} hint={`> ${threshold} min, not completed`} /></Card>
+          <Card><StatNumber value={m.openExceptions} sub="open exceptions" hint="escalation queue" /></Card>
+        </div>
+        <Section eyebrow="01 · Completion watch" title={`${terms.learner_label} completion and stuck flags`}>
+          <Card padded={false}>
+            <Table columns={[terms.learner_label, "Division", "Completion", "Time in course", "Status"]} widths={["1.3fr", "1.2fr", "110px", "130px", "140px"]}>
+              {assignees.map(l => {
+                const flagged = isStuckLearner(l, threshold);
+                return (
+                  <Row key={l.id}>
+                    <Cell><span className="strong">{l.name}</span><div className="muted small">{l.role}</div></Cell>
+                    <Cell><span className="muted">{departmentNameById(l.department_id)}</span></Cell>
+                    <Cell><span className="mono">{pct(l.completion)}</span></Cell>
+                    <Cell><span className="mono">{l.time_in_course_minutes ?? 0} min</span></Cell>
+                    <Cell>{flagged
+                      ? <Pill tone={statusTone("blocked")} dot block>Stuck</Pill>
+                      : <Pill tone={statusTone(l.status)} dot block>{statusLabel(l.status)}</Pill>}</Cell>
+                  </Row>
+                );
+              })}
+            </Table>
+          </Card>
+        </Section>
+        <div className="focal-actions">
+          <Button kind="solid" iconRight="arrow" onClick={() => onNav("exceptions")}>Open exception queue</Button>
+          <Button kind="ghost" onClick={() => onNav("setup")}>Review detection setup</Button>
+          <Button kind="ghost" onClick={() => onNav("reports")}>View reports</Button>
         </div>
       </div>
     );
@@ -332,7 +386,7 @@ function DemoWalkthroughScreen({ campaignId, onNav }) {
   );
 }
 
-function ScenarioPacksScreen({ onNav }) {
+function ScenarioPacksScreen({ onNav, setCampaignId }) {
   const packs = D.scenarioPacks || [];
   const templates = D.campaignTemplates || [];
   return (
@@ -345,12 +399,16 @@ function ScenarioPacksScreen({ onNav }) {
       <div className="stat-grid stat-grid-4">
         <Card><StatNumber value={packs.length} sub="scenario packs" hint="Demo-ready and concept packs" /></Card>
         <Card><StatNumber value={templates.length} sub="templates" hint="Reusable setup profiles" /></Card>
-        <Card><StatNumber value={packs.filter(p => p.status === "active").length} sub="active pack" hint="POI surface" /></Card>
+        <Card><StatNumber value={packs.filter(p => p.status === "active").length} sub="active packs" hint="Live demo campaigns" /></Card>
         <Card><StatNumber value="1" sub="adaptive engine" hint="Multiple campaign types" /></Card>
       </div>
       <div className="scenario-grid">
         {packs.map(pack => {
           const template = templates.find(t => t.id === pack.template_id);
+          // demo_campaign_id is live navigation: a pack with a demo campaign
+          // opens THAT campaign's home — its own template, terminology, and
+          // home layout. Concept packs have none, and honestly say so.
+          const demoCampaign = (D.campaigns || []).find(c => c.id === pack.demo_campaign_id);
           return (
             <Card key={pack.id} className="scenario-card">
               <div className="role-head">
@@ -363,9 +421,13 @@ function ScenarioPacksScreen({ onNav }) {
               <div className="kv-list">
                 <KV k="Launch label" v={template?.terminology?.launch_label || "Launch"} />
                 <KV k="Learner label" v={template?.terminology?.learner_label || "Learner"} />
+                <KV k="Demo campaign" v={demoCampaign?.name || "Concept — not yet built"} />
                 <KV k="Buyer signal" v={pack.buyer_signal} />
               </div>
               <div className="focal-actions">
+                {demoCampaign && setCampaignId && (
+                  <Button kind="solid" iconRight="arrow" onClick={() => { setCampaignId(demoCampaign.id); onNav("home"); }}>Open demo campaign</Button>
+                )}
                 <Button kind="ghost" iconRight="chev" onClick={() => onNav("setup")}>View setup gates</Button>
               </div>
             </Card>

@@ -18,9 +18,10 @@ const HOME_VIEWS = new Set([
   'readiness_lead_queue',
   'analyst_import_reconciliation',
   'manager_team_followup',
+  'compliance_completion',
 ])
 
-const CAMPAIGN_ROLES = new Set(['readiness_lead', 'program_admin', 'training_coordinator'])
+const CAMPAIGN_ROLES = new Set(['readiness_lead', 'program_admin', 'training_coordinator', 'compliance_owner'])
 
 test('every campaign is bound to a real template', () => {
   const templateIds = new Set(D.campaignTemplates.map((t) => t.id))
@@ -70,5 +71,19 @@ test('every scenario pack references a real template', () => {
   const templateIds = new Set(D.campaignTemplates.map((t) => t.id))
   for (const p of D.scenarioPacks) {
     assert.ok(templateIds.has(p.template_id), `pack ${p.id}: unknown template ${p.template_id}`)
+  }
+})
+
+test('a pack that declares a demo campaign points at a real one bound to the SAME template', () => {
+  // demo_campaign_id was dead data pointing at the wrong dataset (the
+  // compliance pack "opened" the Epic campaign). Now it is live navigation:
+  // null is honest for concept packs, but a non-null id must resolve AND the
+  // target campaign must actually run this pack's template.
+  for (const p of D.scenarioPacks) {
+    if (p.demo_campaign_id == null) continue
+    const target = D.campaigns.find((c) => c.id === p.demo_campaign_id)
+    assert.ok(target, `pack ${p.id}: demo_campaign_id ${p.demo_campaign_id} does not exist`)
+    assert.equal(target.template_id, p.template_id,
+      `pack ${p.id}: opens ${target.id}, which runs ${target.template_id}, not this pack's template`)
   }
 })

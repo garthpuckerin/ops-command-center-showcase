@@ -16,6 +16,11 @@ const LMS_DATA = (function () {
     { id: "camp-st-anne", name: "St. Anne Hospital Acquisition", template_id: "tpl-epic-go-live", status: "Active", goLiveDate: shiftIso("2026-07-15"), phase: "Training execution", readiness: 76, readinessScore: 58, risk: "high", scoringProfile: { completion_threshold: 95, critical_role_threshold: 98, identity_mismatch_penalty: 2, blocker_severity_weights: { critical: 8, high: 5, medium: 2 } }, homeSummary: { user_campaign_role: "readiness_lead", default_home_view: "executive_summary", cards: { open_exceptions: 10, departments_at_risk: 2, sessions_due: 3, readiness_score: 58 } } },
     { id: "camp-riverbend", name: "Riverbend Medical Center Acquisition", template_id: "tpl-acquisition", status: "Planning", goLiveDate: shiftIso("2026-10-03"), phase: "Roster intake", readiness: 12, readinessScore: 0, risk: "medium", scoringProfile: { completion_threshold: 90, critical_role_threshold: 95, identity_mismatch_penalty: 2, blocker_severity_weights: { critical: 8, high: 5, medium: 2 } }, homeSummary: { user_campaign_role: "program_admin", default_home_view: "analyst_import_reconciliation", cards: { open_exceptions: 0, departments_at_risk: 2, sessions_due: 0, readiness_score: 0 } } },
     { id: "camp-ambulatory-wave2", name: "Ambulatory Wave 2", template_id: "tpl-epic-go-live", status: "Draft", goLiveDate: shiftIso("2026-11-12"), phase: "Matrix design", readiness: 0, readinessScore: 0, risk: "low", scoringProfile: { completion_threshold: 85, critical_role_threshold: 90, identity_mismatch_penalty: 1, blocker_severity_weights: { critical: 8, high: 5, medium: 2 } }, homeSummary: { user_campaign_role: "training_coordinator", default_home_view: "manager_team_followup", cards: { open_exceptions: 0, departments_at_risk: 0, sessions_due: 0, readiness_score: 0 } } },
+    // The second OPERATION: same engine, compliance template. Deadline (not
+    // go-live), assignees (not end users), self-paced (no sessions), and the
+    // signature rule — stuck-assignee detection — configured in `detection`
+    // (seeded from the template default; see src/compliance.js).
+    { id: "camp-compliance-2026", name: "Annual Compliance Cycle", template_id: "tpl-compliance", status: "Active", goLiveDate: shiftIso("2026-06-30"), phase: "Completion tracking", readiness: 86, readinessScore: 82, risk: "medium", scoringProfile: { completion_threshold: 100, critical_role_threshold: 100, identity_mismatch_penalty: 1, blocker_severity_weights: { critical: 8, high: 5, medium: 2 } }, detection: { stuck_after_minutes: 120 }, homeSummary: { user_campaign_role: "compliance_owner", default_home_view: "compliance_completion", cards: { open_exceptions: 3, departments_at_risk: 1, sessions_due: 0, readiness_score: 82 } } },
   ];
   const campaignTemplates = [
     {
@@ -48,6 +53,7 @@ const LMS_DATA = (function () {
       description: "Recurring compliance assignment and completion campaign.",
       terminology: { launch_label: "Deadline", learner_label: "Assignee", blocker_label: "Compliance exception" },
       scoring_profile: { completion_threshold: 100, critical_role_threshold: 100, blocker_weight: 4 },
+      detection: { stuck_after_minutes: 120 },
       default_reports: [{ title: "Compliance Completion" }],
       requirements: [{ requirement_name: "Annual Compliance Attestation" }],
     },
@@ -77,6 +83,7 @@ const LMS_DATA = (function () {
     { user_id: "u-001", campaign_id: "camp-st-anne", scope: "campaign", role: "Campaign Lead", permissions: ["campaign:view", "readiness:view", "learner:view", "session:view", "exception:manage", "report:export", "import:run"] },
     { user_id: "u-001", campaign_id: "camp-riverbend", scope: "campaign", role: "Campaign Lead", permissions: ["campaign:view", "campaign:manage", "readiness:view", "report:view"] },
     { user_id: "u-001", campaign_id: "camp-ambulatory-wave2", scope: "campaign", role: "Program Admin", permissions: ["campaign:view", "campaign:manage", "report:view"] },
+    { user_id: "u-001", campaign_id: "camp-compliance-2026", scope: "campaign", role: "Compliance Owner", permissions: ["campaign:view", "readiness:view", "learner:view", "exception:manage", "report:export"] },
     { user_id: "u-002", campaign_id: "camp-st-anne", scope: "sessions", role: "Trainer", permissions: ["campaign:view", "session:view", "exception:view"] },
     { user_id: "u-003", campaign_id: "camp-st-anne", scope: "sessions", role: "Trainer", permissions: ["campaign:view", "session:view", "exception:view"] },
     { user_id: "u-004", campaign_id: "camp-st-anne", scope: "own_record", role: "Learner", permissions: ["campaign:view", "learner:self"] },
@@ -98,6 +105,10 @@ const LMS_DATA = (function () {
     { id: "setup-ambulatory-details", campaign_id: "camp-ambulatory-wave2", section: "Campaign details", owner: "Program Admin", status: "in_progress", evidence: "Draft wave created; site list pending.", due: shiftIso("2026-07-02"), signoff: null },
     { id: "setup-ambulatory-sites", campaign_id: "camp-ambulatory-wave2", section: "Site list", owner: "Ambulatory Ops", status: "blocked", evidence: "East Ambulatory Group is loaded; remaining sites are not approved.", due: shiftIso("2026-07-08"), signoff: null },
     { id: "setup-ambulatory-matrix", campaign_id: "camp-ambulatory-wave2", section: "Course and role matrix", owner: "Training Ops", status: "not_started", evidence: "Matrix design begins after site signoff.", due: shiftIso("2026-07-15"), signoff: null },
+
+    { id: "setup-compliance-details", campaign_id: "camp-compliance-2026", section: "Campaign details", owner: "Compliance Office", status: "approved", evidence: "Annual cycle scoped with the attestation deadline.", due: shiftIso("2026-05-18"), signoff: "Compliance Office" },
+    { id: "setup-compliance-population", campaign_id: "camp-compliance-2026", section: "Assignment population", owner: "HRIS", status: "approved", evidence: "All active employees assigned across 4 divisions.", due: shiftIso("2026-05-22"), signoff: "HRIS" },
+    { id: "setup-compliance-detection", campaign_id: "camp-compliance-2026", section: "Detection thresholds", owner: "Compliance Office", status: "approved", evidence: "Stuck-assignee threshold set to 120 minutes without completion.", due: shiftIso("2026-05-24"), signoff: "Compliance Office" },
   ];
 
   const sessionUsers = {
@@ -113,6 +124,7 @@ const LMS_DATA = (function () {
     { id: "fac-surgery", campaign_id: "camp-st-anne", name: "Surgical Center", type: "Procedural", departments: 4, readiness: 79, risk: "medium", exceptions: 18 },
     { id: "fac-riverbend", campaign_id: "camp-riverbend", name: "Riverbend Medical Center", type: "Acute Care", departments: 6, readiness: 12, risk: "medium", exceptions: 4 },
     { id: "fac-east-amb", campaign_id: "camp-ambulatory-wave2", name: "East Ambulatory Group", type: "Ambulatory", departments: 9, readiness: 0, risk: "low", exceptions: 0 },
+    { id: "fac-northstar-org", campaign_id: "camp-compliance-2026", name: "Northstar Health System", type: "All facilities", departments: 4, readiness: 86, risk: "medium", exceptions: 3 },
   ];
 
   const departments = [
@@ -125,6 +137,11 @@ const LMS_DATA = (function () {
     { id: "dep-surgery", campaign_id: "camp-st-anne", name: "Perioperative Services", facility_id: "fac-surgery", required: 174, complete: 129, in_progress: 28, not_started: 17, exceptions: 18, risk: "medium" },
     { id: "dep-riverbend-ed", campaign_id: "camp-riverbend", name: "Riverbend ED", facility_id: "fac-riverbend", required: 144, complete: 0, in_progress: 18, not_started: 126, exceptions: 2, risk: "medium" },
     { id: "dep-riverbend-nursing", campaign_id: "camp-riverbend", name: "Riverbend Nursing", facility_id: "fac-riverbend", required: 420, complete: 0, in_progress: 33, not_started: 387, exceptions: 2, risk: "medium" },
+    // Compliance divisions — org-wide, department = division, target is 100%.
+    { id: "dep-comp-clinical", campaign_id: "camp-compliance-2026", name: "Clinical Staff", facility_id: "fac-northstar-org", required: 812, complete: 693, in_progress: 74, not_started: 45, exceptions: 1, risk: "medium" },
+    { id: "dep-comp-ancillary", campaign_id: "camp-compliance-2026", name: "Ancillary & Support", facility_id: "fac-northstar-org", required: 236, complete: 214, in_progress: 12, not_started: 10, exceptions: 0, risk: "low" },
+    { id: "dep-comp-admin", campaign_id: "camp-compliance-2026", name: "Revenue Cycle & Admin", facility_id: "fac-northstar-org", required: 348, complete: 302, in_progress: 21, not_started: 25, exceptions: 1, risk: "low" },
+    { id: "dep-comp-leadership", campaign_id: "camp-compliance-2026", name: "Leadership", facility_id: "fac-northstar-org", required: 74, complete: 58, in_progress: 6, not_started: 10, exceptions: 1, risk: "high" },
   ];
 
   // Single source of truth for the active campaign's headline readiness.
@@ -148,6 +165,7 @@ const LMS_DATA = (function () {
     { id: "app-willow", name: "Willow", owner: "Pharmacy" },
     { id: "app-radiant", name: "Radiant", owner: "Ancillary" },
     { id: "app-resolute", name: "Resolute", owner: "Revenue Cycle" },
+    { id: "app-compliance", name: "Annual Compliance Curriculum", owner: "Compliance Office" },
   ];
 
   const trainingRequirements = [
@@ -161,6 +179,8 @@ const LMS_DATA = (function () {
     { id: "tr-riverbend-rn", campaign_id: "camp-riverbend", role: "Inpatient RN", application_id: "app-inpatient", title: "Riverbend RN Foundation Mapping", rule: "Draft requirement pending roster validation", assigned: 420, readiness: 0, risk: "medium", color: "ochre", code: "RB-IP-RN-100", cover_label: "RIVERBEND RN" },
     { id: "tr-riverbend-ed", campaign_id: "camp-riverbend", role: "ED Registrar", application_id: "app-prelude", title: "Riverbend ED Registration Intake", rule: "Draft requirement pending access validation", assigned: 144, readiness: 0, risk: "medium", color: "ochre", code: "RB-ED-REG-120", cover_label: "RIVERBEND ED" },
     { id: "tr-wave2-ma", campaign_id: "camp-ambulatory-wave2", role: "Ambulatory MA", application_id: "app-ambulatory", title: "Ambulatory MA Intake Workflow", rule: "Not released until site list is approved", assigned: 0, readiness: 0, risk: "low", color: "ink", code: "AMB-MA-100", cover_label: "AMBULATORY" },
+    { id: "tr-comp-hipaa", campaign_id: "camp-compliance-2026", role: "All staff", application_id: "app-compliance", title: "HIPAA Privacy & Security Attestation", rule: "Complete before the attestation deadline", assigned: 1470, readiness: 86, risk: "medium", color: "ink", code: "CMP-HIPAA-100", cover_label: "HIPAA" },
+    { id: "tr-comp-safety", campaign_id: "camp-compliance-2026", role: "Clinical staff", application_id: "app-compliance", title: "Workplace Safety Refresher", rule: "Required for clinical divisions each cycle", assigned: 812, readiness: 85, risk: "medium", color: "olive", code: "CMP-SAFE-110", cover_label: "SAFETY" },
   ];
 
   const learners = [
@@ -172,6 +192,17 @@ const LMS_DATA = (function () {
     { id: "l-006", name: "Aria Sundqvist", role: "Radiology Tech", department_id: "dep-radiology", facility_id: "fac-main", manager: "P. Chen", lms: "matched", epic_id: "matched", completion: 64, status: "in_progress", exception: null },
     { id: "l-007", name: "Zara Khouri", role: "Scheduler", department_id: "dep-ambulatory", facility_id: "fac-north", manager: "C. Nguyen", lms: "matched", epic_id: "matched", completion: 91, status: "in_progress", exception: null },
     { id: "l-008", name: "Léo Martin", role: "Billing Specialist", department_id: "dep-revcycle", facility_id: "fac-main", manager: "J. Abrams", lms: "matched", epic_id: "matched", completion: 100, status: "completed", exception: null },
+    // Compliance assignees — carry time_in_course_minutes so the stuck rule
+    // ("> threshold in course, not completed", src/compliance.js) is DERIVED,
+    // never hand-flagged. lc-103/lc-104 are over threshold and incomplete;
+    // lc-106 never started (a nudge, not a rescue — must NOT flag as stuck).
+    { id: "lc-101", name: "Maya Chen", role: "Registered Nurse", department_id: "dep-comp-clinical", facility_id: "fac-northstar-org", manager: "S. Patel", lms: "matched", epic_id: "matched", completion: 100, status: "completed", exception: null, requirement_id: "tr-comp-hipaa", time_in_course_minutes: 48 },
+    { id: "lc-102", name: "Derrick Boateng", role: "Pharmacy Technician", department_id: "dep-comp-ancillary", facility_id: "fac-northstar-org", manager: "L. Romero", lms: "matched", epic_id: "matched", completion: 100, status: "completed", exception: null, requirement_id: "tr-comp-hipaa", time_in_course_minutes: 52 },
+    { id: "lc-103", name: "Sofia Reyes", role: "Charge Nurse", department_id: "dep-comp-clinical", facility_id: "fac-northstar-org", manager: "S. Patel", lms: "matched", epic_id: "matched", completion: 45, status: "exception", exception: "Stuck in course", requirement_id: "tr-comp-hipaa", time_in_course_minutes: 210 },
+    { id: "lc-104", name: "Ethan Kowalski", role: "Billing Specialist", department_id: "dep-comp-admin", facility_id: "fac-northstar-org", manager: "J. Abrams", lms: "matched", epic_id: "matched", completion: 30, status: "exception", exception: "Stuck in course", requirement_id: "tr-comp-hipaa", time_in_course_minutes: 187 },
+    { id: "lc-105", name: "Amara Diallo", role: "Radiology Tech", department_id: "dep-comp-ancillary", facility_id: "fac-northstar-org", manager: "P. Chen", lms: "matched", epic_id: "matched", completion: 72, status: "in_progress", exception: null, requirement_id: "tr-comp-safety", time_in_course_minutes: 95 },
+    { id: "lc-106", name: "Greg Halvorsen", role: "Director of Facilities", department_id: "dep-comp-leadership", facility_id: "fac-northstar-org", manager: "Board Office", lms: "matched", epic_id: "matched", completion: 0, status: "not_started", exception: null, requirement_id: "tr-comp-hipaa", time_in_course_minutes: 0 },
+    { id: "lc-107", name: "Priya Nair", role: "HIM Analyst", department_id: "dep-comp-admin", facility_id: "fac-northstar-org", manager: "J. Abrams", lms: "matched", epic_id: "matched", completion: 88, status: "in_progress", exception: null, requirement_id: "tr-comp-hipaa", time_in_course_minutes: 64 },
   ];
 
   const sessions = [
@@ -194,6 +225,11 @@ const LMS_DATA = (function () {
     { id: "e-309", severity: "medium", type: "Out-of-scope course", owner: "Priya Anand", department_id: "dep-radiology", learner_id: "l-007", due: shiftIso("2026-06-04"), status: "resolved", notes: "Imported completion maps to no required Radiant course — held from readiness credit.", resolution_reason: "Mapped to the correct Radiant curriculum item; credit restored." },
     { id: "e-310", severity: "high", type: "Role change re-trigger", owner: "Mira Okafor", department_id: "dep-radiology", learner_id: "l-008", due: shiftIso("2026-06-01"), status: "resolved", notes: "Tech moved to a lead role; new curriculum requirements re-opened.", resolution_reason: "Lead curriculum assigned and acknowledged." },
     { id: "e-311", severity: "medium", type: "Credential lapse", owner: "Access Team", department_id: "dep-pharmacy", learner_id: null, due: shiftIso("2026-06-05"), status: "open", notes: "Pharmacist license attestation expires before go-live." },
+    // Compliance-campaign exceptions — the stuck flag feeds the SAME governed
+    // queue (compliance.test.mjs asserts every derived-stuck assignee has one).
+    { id: "e-401", severity: "high", type: "Stuck learner", owner: "Compliance Office", department_id: "dep-comp-clinical", learner_id: "lc-103", due: shiftIso("2026-06-05"), status: "open", notes: "Assignee exceeded the configured time-in-course threshold without completing the attestation." },
+    { id: "e-402", severity: "high", type: "Stuck learner", owner: "Compliance Office", department_id: "dep-comp-admin", learner_id: "lc-104", due: shiftIso("2026-06-06"), status: "open", notes: "Time in course is past the stuck threshold and completion has stalled below half." },
+    { id: "e-403", severity: "medium", type: "Overdue completion", owner: "Compliance Office", department_id: "dep-comp-leadership", learner_id: "lc-106", due: shiftIso("2026-06-08"), status: "open", notes: "Leadership cohort has not started the annual attestation." },
     { id: "e-312", severity: "low", type: "Missing LMS account", owner: "Daniel Reeve", department_id: "dep-revcycle", learner_id: null, due: shiftIso("2026-06-06"), status: "resolved", notes: "Two Prelude/Resolute staff not yet provisioned in the LMS.", resolution_reason: "Both staff provisioned in the LMS." },
     { id: "e-313", severity: "high", type: "Session capacity", owner: "Priya Anand", department_id: "dep-ambulatory", learner_id: null, due: shiftIso("2026-06-02"), status: "open", notes: "Ambulatory EpicCare class is over capacity; needs a second offering." },
     { id: "e-314", severity: "medium", type: "Provisioning pending", owner: "Access Team", department_id: "dep-ambulatory", learner_id: null, due: shiftIso("2026-06-03"), status: "resolved", notes: "Epic access requests pending approval for float-pool nurses.", resolution_reason: "Access approved and granted for the float pool." },
@@ -501,6 +537,7 @@ const LMS_DATA = (function () {
     { id: "ms-training", campaign_id: activeCampaignId, milestone_type: "training_deadline", title: "Training deadline", due_at: shiftTimestamp("2026-07-01T17:00:00Z"), status: "upcoming", owner_name: "Training Ops", notes: "All critical-role assignments complete." },
     { id: "ms-golive", campaign_id: activeCampaignId, milestone_type: "go_live", title: "Go-live", due_at: shiftTimestamp("2026-07-15T08:00:00Z"), status: "upcoming", owner_name: "PMO", notes: "Activation and command center coverage begins." },
     { id: "ms-riverbend-import", campaign_id: "camp-riverbend", milestone_type: "import_cadence", title: "Roster intake cadence", due_at: shiftTimestamp("2026-06-07T12:00:00Z"), status: "upcoming", owner_name: "Data Team", notes: "Weekly manual CSV refresh." },
+    { id: "ms-compliance-deadline", campaign_id: "camp-compliance-2026", milestone_type: "deadline", title: "Attestation deadline", due_at: shiftTimestamp("2026-06-30T17:00:00Z"), status: "upcoming", owner_name: "Compliance Office", notes: "All assignees complete or escalated by the deadline." },
   ];
 
   const integrationHealth = [
@@ -555,8 +592,8 @@ const LMS_DATA = (function () {
   const scenarioPacks = [
     { id: "pack-epic", template_id: "tpl-epic-go-live", name: "Epic Go-Live Command Center", industry: "Healthcare", status: "active", best_for: "Hospital EHR activation and credential readiness", buyer_signal: "Reduce training tickets and command center escalation load", demo_campaign_id: "camp-st-anne" },
     { id: "pack-acquisition", template_id: "tpl-acquisition", name: "Acquisition Workforce Transition", industry: "Healthcare / Enterprise", status: "planning", best_for: "Old-org to parent-org role mapping and account readiness", buyer_signal: "Make messy acquired-role overlap reviewable before launch", demo_campaign_id: "camp-riverbend" },
-    { id: "pack-compliance", template_id: "tpl-compliance", name: "Regulatory Compliance Cycle", industry: "Regulated teams", status: "concept", best_for: "HIPAA, safety, privacy, and recurring mandatory learning", buyer_signal: "Campaign-level assignment proof, escalation, and audit packets", demo_campaign_id: "camp-st-anne" },
-    { id: "pack-enablement", template_id: "tpl-sales-enablement", name: "Role-Based Enablement Rollout", industry: "Commercial teams", status: "concept", best_for: "Product launch training by territory, role, and manager", buyer_signal: "One readiness model across learners, managers, content, and rollout approvals", demo_campaign_id: "camp-ambulatory-wave2" },
+    { id: "pack-compliance", template_id: "tpl-compliance", name: "Regulatory Compliance Cycle", industry: "Regulated teams", status: "active", best_for: "HIPAA, safety, privacy, and recurring mandatory learning", buyer_signal: "Campaign-level assignment proof, escalation, and audit packets", demo_campaign_id: "camp-compliance-2026" },
+    { id: "pack-enablement", template_id: "tpl-sales-enablement", name: "Role-Based Enablement Rollout", industry: "Commercial teams", status: "concept", best_for: "Product launch training by territory, role, and manager", buyer_signal: "One readiness model across learners, managers, content, and rollout approvals", demo_campaign_id: null },
   ];
 
   const catalogEntities = {

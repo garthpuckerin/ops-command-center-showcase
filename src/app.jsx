@@ -320,7 +320,7 @@ function routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampai
   // first synchronous paint (e.g. a `#org-settings` deep link as a learner).
   if (!viewAllowedForRole(view, role)) view = "home";
   if (view === "walkthrough") return <DemoWalkthroughScreen campaignId={campaignId} onNav={setView} />;
-  if (view === "scenarios") return <ScenarioPacksScreen campaignId={campaignId} onNav={setView} />;
+  if (view === "scenarios") return <ScenarioPacksScreen campaignId={campaignId} onNav={setView} setCampaignId={setCampaignId} />;
   if (view === "setup") return <CampaignSetupScreen campaignId={campaignId} />;
   if (view === "catalog-map") return <CurriculumMapScreen campaignId={campaignId} />;
   if (view === "readiness") return <ReadinessScreen campaignId={campaignId} />;
