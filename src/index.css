@@ -320,7 +320,10 @@
   }
   /* One step darker than the --paper-2 sidebar (GT hovers paper→paper-tint the
      same way). --paper-2 would be invisible here since the sidebar IS --paper-2. */
-  .side-link:hover { background: var(--hover); color: var(--ink); }
+  /* The active item keeps its solid inverted fill on hover — the generic overlay
+     would wash out its background and hide the (light) icon. */
+  .side-link:hover:not(.side-link-on) { background: var(--hover); color: var(--ink); }
+  .side-link-on:hover { background: color-mix(in oklch, var(--ink) 88%, var(--accent)); }
   /* Active nav item = clean inverted fill in BOTH themes (GT parity): ink bg +
      paper text. In dark that resolves to a light bar with dark text — no accent.
      (--ink/--paper flip with the theme, so one rule covers both.) */
@@ -444,6 +447,9 @@
     cursor: pointer;
     outline: none;
   }
+  /* Native dropdown options: give them an explicit themed surface so the (light,
+     in dark mode) text isn't rendered on the browser-default light popup. */
+  .campaign-switcher select option { background: var(--paper); color: var(--ink); }
 
   .whats-new {
     display: inline-flex; align-items: center; gap: 10px;
@@ -1166,6 +1172,17 @@
     border: 1px solid oklch(100% 0 0 / 0.4); padding: 1px 6px;
   }
   .cover-ochre .cover-code { border-color: oklch(0% 0 0 / 0.4); }
+  /* Prominent focal figure for a cover (e.g. the readiness % on the home hero). */
+  .cover-figure {
+    position: absolute; left: 20px; bottom: 18px;
+    display: flex; flex-direction: column;
+    font-family: var(--serif); font-size: 68px; line-height: 0.92;
+    color: currentColor;
+  }
+  .cover-figure-sub {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; opacity: 0.85; margin-top: 8px;
+  }
   .cover-sm { width: 88px; flex-shrink: 0; }
   .cover-sm .cover-mark { font-size: 8.5px; left: 7px; top: 7px; }
   .cover-sm .cover-code { font-size: 9px; right: 7px; bottom: 7px; padding: 0 4px; }

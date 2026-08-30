@@ -36,7 +36,10 @@ function CommandCenterScreen({ onNav, campaignId }) {
           <div className="cover cover-accent cover-lg" style={{ height: 280 }}>
             <div className="cover-grid" />
             <div className="cover-mark mono">READINESS RISK</div>
-            <div className="cover-code mono">{pct(m.criticalRoleReadiness)}</div>
+            <div className="cover-figure">
+              {pct(m.criticalRoleReadiness)}
+              <span className="cover-figure-sub">critical-role readiness</span>
+            </div>
           </div>
           <div className="focal-body">
             <Eyebrow n={1}>Highest risk today</Eyebrow>
