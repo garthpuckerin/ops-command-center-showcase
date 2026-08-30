@@ -59,8 +59,13 @@ drift crept in.
 
 - **Nav active**: ink fill + paper text in BOTH themes (inverts cleanly in dark;
   no accent).
-- **Hover**: one step of surface contrast (e.g. sidebar `--paper-2` → `--paper-3`).
-  Ghost buttons hover to `--paper-3`. Never hover to the element's own background.
+- **Hover** is ONE model: every surface/row/tile/nav/icon/ghost-button hover uses
+  `background: var(--hover)` — a translucent-ink overlay (`color-mix(--ink 6%)`)
+  that darkens in light and lightens in dark, so it is visible on ANY base surface
+  (paper, paper-2, paper-3, a tint) in EITHER theme. Never hover to an absolute
+  surface token (`--paper-2` on a `--paper-2` surface is invisible — that was the
+  bug). Cards additionally set `border-color: var(--ink)`. All link variants
+  underline to `--ink`. Solid/accent buttons darken to `--accent-deep`.
 - **Selected row/tile**: `--paper-2`/`--accent-tint` + a 3px inset accent rail.
 - **Focus**: the global `:focus-visible` ring (incl. `a`); don't `outline:none` a
   real control without a `:focus-within` fallback.

@@ -66,6 +66,11 @@
     --ink-on-accent: var(--paper);        /* foreground on an accent fill */
     --scrollbar-thumb:       color-mix(in oklch, var(--ink) 20%, transparent);
     --scrollbar-thumb-hover: color-mix(in oklch, var(--ink) 34%, transparent);
+    /* Universal hover overlay — darkens any surface in light, lightens it in dark
+       (--ink flips), so a hover is visible on paper, paper-2, paper-3, or a tint,
+       in either theme. Every surface/row/tile/icon hover uses these. */
+    --hover:        color-mix(in oklch, var(--ink) 6%, transparent);
+    --hover-strong: color-mix(in oklch, var(--ink) 11%, transparent);
 
     --side-w: 248px;
     /* Content cap — fills up to here, then centers on ultrawide (matches GT). */
@@ -315,7 +320,7 @@
   }
   /* One step darker than the --paper-2 sidebar (GT hovers paper→paper-tint the
      same way). --paper-2 would be invisible here since the sidebar IS --paper-2. */
-  .side-link:hover { background: var(--paper-3); color: var(--ink); }
+  .side-link:hover { background: var(--hover); color: var(--ink); }
   /* Active nav item = clean inverted fill in BOTH themes (GT parity): ink bg +
      paper text. In dark that resolves to a light bar with dark text — no accent.
      (--ink/--paper flip with the theme, so one rule covers both.) */
@@ -334,7 +339,7 @@
     padding: 7px 10px; background: transparent; border: none; cursor: pointer;
     color: var(--ink-2); font-size: 12.5px; text-align: left;
   }
-  .role-btn:hover { background: var(--paper-2); }
+  .role-btn:hover { background: var(--hover); }
   .role-btn-on { background: var(--accent-tint); color: var(--ink); font-weight: 500; }
   .role-btn-on::after {
     content: "active"; margin-left: auto; font-family: var(--mono); font-size: 9.5px;
@@ -475,7 +480,7 @@
     display: grid; place-items: center; cursor: pointer; color: var(--ink-2);
     position: relative;
   }
-  .iconbtn:hover { color: var(--ink); border-color: var(--ink); background: var(--paper-2); }
+  .iconbtn:hover { color: var(--ink); border-color: var(--ink); background: var(--hover); }
   .iconbtn-dot {
     position: absolute; top: 6px; right: 6px; width: 6px; height: 6px;
     background: var(--accent); border-radius: 50%;
@@ -584,7 +589,7 @@
     text-align: left;
     cursor: pointer;
   }
-  .role-floater-option:hover { background: var(--paper-2); color: var(--ink); }
+  .role-floater-option:hover { background: var(--hover); color: var(--ink); }
   .role-floater-option-on { background: var(--accent-tint); color: var(--ink); }
 
   .tour-card {
@@ -730,7 +735,7 @@
     font: inherit;
   }
   .walkthrough-step:last-child { border-bottom: 0; }
-  .walkthrough-step:hover { background: var(--paper-2); color: var(--ink); }
+  .walkthrough-step:hover { background: var(--hover); color: var(--ink); }
   .walkthrough-step-on {
     background: var(--ink);
     color: var(--paper);
@@ -781,7 +786,7 @@
     font: inherit;
     color: var(--ink);
   }
-  .theme-card:hover { border-color: var(--ink); background: var(--paper-2); }
+  .theme-card:hover { border-color: var(--ink); background: var(--hover); }
   .theme-swatch {
     width: 100%;
     height: 32px;
@@ -887,7 +892,7 @@
     color: var(--ink);
   }
   .btn-ghost { background: transparent; border-color: var(--rule); color: var(--ink-2); }
-  .btn-ghost:hover { border-color: var(--ink); color: var(--ink); background: var(--paper-3); }
+  .btn-ghost:hover { border-color: var(--ink); color: var(--ink); background: var(--hover); }
   .btn-sm { padding: 6px 10px; font-size: 12px; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -1050,7 +1055,7 @@
     line-height: 1;
     transition: background .12s ease, border-color .12s ease, color .12s ease;
   }
-  .icon-btn:hover { background: var(--paper-2); border-color: var(--ink); color: var(--ink); }
+  .icon-btn:hover { background: var(--hover); border-color: var(--ink); color: var(--ink); }
   .profile-section { display: grid; gap: 12px; }
   .profile-campaign {
     display: flex;
@@ -1211,7 +1216,7 @@
     color: var(--ink-2);
   }
   .tbl-row:last-child { border-bottom: 0; }
-  .tbl-row.is-clickable:hover { background: var(--paper-2); }
+  .tbl-row.is-clickable:hover { background: var(--hover); }
   /* Master-detail selection: a clickable row shows a pointer, and the row whose
      detail is open is highlighted with an accent rail so the pairing is clear. */
   .tbl-row.is-clickable { cursor: pointer; }
@@ -1225,7 +1230,7 @@
   .rosterbar { display: flex; align-items: center; gap: 10px; }
   .rosterbar .bar-wrap { flex: 1; }
   .link { cursor: pointer; }
-  .link:hover { text-decoration: underline; text-decoration-color: var(--accent); }
+  .link:hover { color: var(--ink); text-decoration: underline; }
 
   /* ────────────────────────────────────────────────────────────────
      Stat numbers / streak
@@ -1252,7 +1257,7 @@
     transition: border-color .15s, transform .15s;
     border-radius: 2px;
   }
-  .catalog-card:hover { border-color: var(--ink); }
+  .catalog-card:hover { border-color: var(--ink); background: var(--hover); }
   .catalog-card .cover { border-radius: 0; }
   .catalog-card-body { padding: var(--pad-card-sm); display: flex; flex-direction: column; gap: 8px; }
   .catalog-card-eyebrow {
@@ -1439,7 +1444,7 @@
   }
   .session-event:hover {
     border-color: var(--ink);
-    background: var(--paper-2);
+    background: var(--hover);
   }
   .session-event-low { border-left-color: var(--olive); }
   .session-event-medium { border-left-color: var(--ochre); }
@@ -1563,7 +1568,7 @@
     color: var(--ink);
     cursor: pointer;
   }
-  .report-card:hover { border-color: var(--ink); background: var(--paper-2); }
+  .report-card:hover { border-color: var(--ink); background: var(--hover); }
   .report-card-on {
     border-color: var(--ink);
     box-shadow: inset 3px 0 0 var(--accent);
