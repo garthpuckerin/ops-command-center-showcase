@@ -604,6 +604,14 @@ export async function createCampaignFromTemplate(templateId, values) {
   }));
   LMS_DATA.campaignSetupSections = [...(LMS_DATA.campaignSetupSections || []), ...sections];
 
+  // One starter team owns everything (its "Unassigned" alias matches the
+  // seeded sections' owner) until the campaign defines its activation model —
+  // some campaigns run six teams, some run one.
+  LMS_DATA.teams = [
+    ...(LMS_DATA.teams || []),
+    { id: `team-${id}`, campaign_id: id, name: "Program Team", focus: "Owns all launch criteria until the activation model is defined", lead: "Unassigned", members: ["Unassigned"] },
+  ];
+
   const leadUser = LMS_DATA.sessionUsers?.lead || (LMS_DATA.users || []).find(user => user.role === "lead");
   LMS_DATA.campaignAccess = [
     { user_id: leadUser?.id || "u-api-lead", campaign_id: created.id, scope: "campaign", role: "Campaign Lead", permissions: ["campaign:view", "exception:manage", "report:export"] },

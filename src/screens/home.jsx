@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { LMS_DATA as D } from '../data.js'
 import { cls, statusTone, statusLabel, fmt, fmtDate, Eyebrow, Rule, Pill, Icon, Card, StatNumber, Button, RequirementCover } from '../components.jsx'
-import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, campaignSetupSummary, campaignTemplate, campaignTerms, isOpenException, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill, setupSectionsForCampaign, triggerLabel } from './_shared.jsx'
+import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, campaignSetupSummary, campaignTemplate, campaignTerms, isOpenException, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill, setupSectionsForCampaign, teamForOwner, triggerLabel } from './_shared.jsx'
 import { isStuckLearner, stuckThresholdMinutes } from '../compliance.js'
 import { SessionsScreen } from './sessions.jsx'
 
@@ -243,11 +243,12 @@ function RoleHomeScreen({ onNav, campaignId }) {
         </div>
         <Section eyebrow="01 · Owner follow-up" title="Setup sections by owner">
           <Card padded={false}>
-            <Table columns={["Section", "Owner", "Status", "Due"]} widths={["1.4fr", "1fr", "150px", "110px"]}>
+            <Table columns={["Section", "Owner", "Team", "Status", "Due"]} widths={["1.3fr", "0.9fr", "1fr", "150px", "110px"]}>
               {sections.map(section => (
                 <Row key={section.id}>
                   <Cell><span className="strong">{section.section}</span></Cell>
                   <Cell>{section.owner}</Cell>
+                  <Cell><span className="muted">{teamForOwner(campaignId, section.owner)?.name || "—"}</span></Cell>
                   <Cell><Pill tone={statusTone(section.status)} dot block>{statusLabel(section.status)}</Pill></Cell>
                   <Cell><span className="mono small">{fmtDate(section.due)}</span></Cell>
                 </Row>

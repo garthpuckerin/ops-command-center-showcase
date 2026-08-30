@@ -3,6 +3,7 @@
 import React from 'react'
 import { LMS_DATA as D } from '../data.js'
 import { computeReadiness as computeReadinessPure } from '../scoring.js'
+import { teamForOwner as teamForOwnerPure, teamRollup as teamRollupPure, teamsForCampaign as teamsForCampaignPure } from '../teams.js'
 import { cls, statusTone, statusLabel, fmtDate, Eyebrow, Pill, Card } from '../components.jsx'
 
 const byId = (items, id) => items.find(x => x.id === id);
@@ -26,6 +27,12 @@ function campaignTemplate(campaignId) {
 function campaignTerms(campaignId) {
   return { ...DEFAULT_TERMS, ...(campaignTemplate(campaignId)?.terminology || {}) };
 }
+
+// Thin wrappers binding the live dataset to the pure team-ownership model in
+// ../teams.js (same pattern as computeReadiness).
+const teamsForCampaign = (campaignId) => teamsForCampaignPure(D, campaignId);
+const teamForOwner = (campaignId, owner) => teamForOwnerPure(D, campaignId, owner);
+const teamRollup = (campaignId) => teamRollupPure(D, campaignId);
 
 // Status/risk pills share a uniform width so they line up in columns: the
 // severity scale (low…critical) uses one width, and the longer status set
@@ -128,6 +135,7 @@ function CampaignAccessNotice({ campaign, onNav }) {
       </div>
       <div className="campaign-notice-meta">
         <Metric k="Your role" v={triggerLabel(campaign.homeSummary?.user_campaign_role || "member")} />
+        <Metric k="Teams" v={<span className="mono">{teamsForCampaign(campaign.id).length}</span>} />
         <Metric k="Phase" v={campaign.phase} />
         <Metric k={terms.launch_label} v={fmtDate(campaign.goLiveDate)} />
         <Metric k="Setup gate" v={<button className="linkbtn strong" onClick={() => onNav?.("setup")}>{setup.blocked ? `${setup.blocked} blocked` : `${setup.approved}/${setup.total} approved`}</button>} />
@@ -295,5 +303,5 @@ function Cell({ children, label }) { return <div className="tbl-cell" data-label
 
 
 export {
-  byId, facilityById, departmentById, appById, userById, campaignById, campaignTemplate, campaignTerms, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
+  byId, facilityById, departmentById, appById, userById, campaignById, campaignTemplate, campaignTerms, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, teamForOwner, teamRollup, teamsForCampaign, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
 };

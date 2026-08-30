@@ -104,6 +104,9 @@ const LMS_DATA = (function () {
     { id: "setup-st-anne-matrix", campaign_id: "camp-st-anne", section: "Course and role matrix", owner: "Training Ops", status: "needs_review", evidence: "7 role tracks active; ED and pharmacy need final review.", due: shiftIso("2026-06-05"), signoff: null },
     { id: "setup-st-anne-access", campaign_id: "camp-st-anne", section: "Accounts and access", owner: "Access Team", status: "blocked", evidence: "Missing Epic IDs and duplicate LMS accounts block launch confidence.", due: shiftIso("2026-06-04"), signoff: null },
     { id: "setup-st-anne-writeback", campaign_id: "camp-st-anne", section: "Write-back policy", owner: "Readiness Lead", status: "approved", evidence: "Manual export only until connector approval.", due: shiftIso("2026-05-29"), signoff: "Readiness Lead" },
+    // Campaign-added criterion beyond the template's six — the gate is the
+    // campaign's, the template only seeds it (see Ambulatory running 3).
+    { id: "setup-st-anne-coverage", campaign_id: "camp-st-anne", section: "Command center coverage plan", owner: "J. Whitfield", status: "in_progress", evidence: "Activation-week floor coverage rostered for nursing and ED.", due: shiftIso("2026-06-10"), signoff: null },
 
     { id: "setup-riverbend-details", campaign_id: "camp-riverbend", section: "Campaign details", owner: "Program Admin", status: "approved", evidence: "Acquisition template selected with cutover date.", due: shiftIso("2026-06-15"), signoff: "Program Admin" },
     { id: "setup-riverbend-roster", campaign_id: "camp-riverbend", section: "Roster intake", owner: "HRIS", status: "in_progress", evidence: "Riverbend ED and Nursing files are loaded for review.", due: shiftIso("2026-06-21"), signoff: null },
@@ -117,6 +120,29 @@ const LMS_DATA = (function () {
     { id: "setup-compliance-details", campaign_id: "camp-compliance-2026", section: "Campaign details", owner: "Compliance Office", status: "approved", evidence: "Annual cycle scoped with the attestation deadline.", due: shiftIso("2026-05-18"), signoff: "Compliance Office" },
     { id: "setup-compliance-population", campaign_id: "camp-compliance-2026", section: "Assignment population", owner: "HRIS", status: "approved", evidence: "All active employees assigned across 4 divisions.", due: shiftIso("2026-05-22"), signoff: "HRIS" },
     { id: "setup-compliance-detection", campaign_id: "camp-compliance-2026", section: "Detection thresholds", owner: "Compliance Office", status: "approved", evidence: "Stuck-assignee threshold set to 120 minutes without completion.", due: shiftIso("2026-05-24"), signoff: "Compliance Office" },
+  ];
+
+  // The activation model: per-campaign owning teams. Ownership of criteria and
+  // blockers DERIVES from each record's owner string via `members` aliases
+  // (src/teams.js) — no team_id copies on rows. The counts are the story:
+  // St. Anne ran SIX teams each owning different criteria; the compliance
+  // cycle runs ONE — the platform bends to each campaign's model.
+  const teams = [
+    { id: "team-sta-readiness", campaign_id: "camp-st-anne", name: "Readiness Leadership", focus: "Go/no-go criteria, escalation, and executive reporting", lead: "Mira Okafor", members: ["Mira Okafor", "Readiness Lead"] },
+    { id: "team-sta-pmo", campaign_id: "camp-st-anne", name: "Operations PMO", focus: "Facilities, departments, and the milestone plan", lead: "T. Osei", members: ["Operations PMO", "PMO"] },
+    { id: "team-sta-hris", campaign_id: "camp-st-anne", name: "HRIS & Data", focus: "Roster truth, identity feeds, and import cadence", lead: "K. Yamada", members: ["HRIS", "Data Team"] },
+    { id: "team-sta-training", campaign_id: "camp-st-anne", name: "Training Operations", focus: "Curriculum, sessions, trainers, and completion chase", lead: "Daniel Reeve", members: ["Training Ops", "Daniel Reeve", "Priya Anand"] },
+    { id: "team-sta-access", campaign_id: "camp-st-anne", name: "Access & Identity", focus: "Accounts, credentials, and provisioning", lead: "N. Farouk", members: ["Access Team"] },
+    { id: "team-sta-golive", campaign_id: "camp-st-anne", name: "Go-Live Command Center", focus: "Activation-week floor support and coverage", lead: "J. Whitfield", members: ["J. Whitfield"] },
+
+    { id: "team-rb-program", campaign_id: "camp-riverbend", name: "Program Office", focus: "Cutover plan and campaign governance", lead: "L. Moreau", members: ["Program Admin"] },
+    { id: "team-rb-data", campaign_id: "camp-riverbend", name: "HRIS & Data", focus: "Roster intake and identity reconciliation", lead: "K. Yamada", members: ["HRIS", "Data Team"] },
+    { id: "team-rb-training", campaign_id: "camp-riverbend", name: "Training Operations", focus: "Old-org role mapping into parent tracks", lead: "Daniel Reeve", members: ["Training Ops"] },
+
+    { id: "team-amb-program", campaign_id: "camp-ambulatory-wave2", name: "Program Office", focus: "Wave scoping, matrix design, and rollout plan", lead: "L. Moreau", members: ["Program Admin", "Training Ops"] },
+    { id: "team-amb-ops", campaign_id: "camp-ambulatory-wave2", name: "Ambulatory Operations", focus: "Site list, clinic readiness, and local owners", lead: "R. Calloway", members: ["Ambulatory Ops"] },
+
+    { id: "team-comp-office", campaign_id: "camp-compliance-2026", name: "Compliance Office", focus: "Assignment, completion tracking, and escalation for the annual cycle", lead: "D. Okonkwo", members: ["Compliance Office", "HRIS"] },
   ];
 
   const sessionUsers = {
@@ -631,6 +657,7 @@ const LMS_DATA = (function () {
     campaignTemplates,
     campaignAccess,
     campaignSetupSections,
+    teams,
     goLiveDate,
     users,
     sessionUsers,

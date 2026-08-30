@@ -5,12 +5,13 @@ import { LMS_DATA as D } from '../data.js'
 import * as LMS_API from '../api-client.js'
 import { statusTone, statusLabel, fmtDate, Eyebrow, Rule, Pill, Card, StatNumber, Button } from '../components.jsx'
 import { isoFromToday } from '../dates.js'
-import { Cell, KV, PageHeader, Row, Section, Table, campaignById, campaignSetupSummary, riskPill, setupSectionsForCampaign } from './_shared.jsx'
+import { Cell, KV, PageHeader, Row, Section, Table, campaignById, campaignSetupSummary, riskPill, setupSectionsForCampaign, teamForOwner, teamRollup } from './_shared.jsx'
 
 function CampaignSetupScreen({ campaignId }) {
   const campaign = campaignById(campaignId);
   const sections = setupSectionsForCampaign(campaignId);
   const summary = campaignSetupSummary(campaignId);
+  const rollup = teamRollup(campaignId);
   const launchReady = summary.total > 0 && summary.approved === summary.total;
   const nextSection =
     sections.find(s => s.status === "blocked") ||
@@ -66,13 +67,36 @@ function CampaignSetupScreen({ campaignId }) {
         </Card>
       </div>
 
-      <Section eyebrow="03" title="Setup checklist">
+      <Section eyebrow="03 · Activation model" title="Owning teams">
         <Card padded={false}>
-          <Table columns={["Section", "Owner", "Status", "Evidence", "Due"]} widths={["1.2fr", "1fr", "130px", "1.7fr", "110px"]}>
+          <Table columns={["Team", "Focus", "Lead", "Criteria", "Open blockers"]} widths={["1.1fr", "1.8fr", "120px", "90px", "120px"]}>
+            {rollup.rows.length === 0 && (
+              <Row><Cell>No owning teams defined for this campaign yet.</Cell><Cell /><Cell /><Cell /><Cell /></Row>
+            )}
+            {rollup.rows.map(({ team, criteria, openBlockers }) => (
+              <Row key={team.id}>
+                <Cell><span className="strong">{team.name}</span></Cell>
+                <Cell><span className="muted">{team.focus}</span></Cell>
+                <Cell>{team.lead}</Cell>
+                <Cell><span className="mono">{criteria}</span></Cell>
+                <Cell><span className="mono">{openBlockers}</span></Cell>
+              </Row>
+            ))}
+          </Table>
+        </Card>
+        {(rollup.unassignedCriteria > 0 || rollup.unassignedBlockers > 0) && (
+          <p className="muted small">{rollup.unassignedCriteria} criteria and {rollup.unassignedBlockers} open blockers are not yet owned by a team.</p>
+        )}
+      </Section>
+
+      <Section eyebrow="04" title="Setup checklist">
+        <Card padded={false}>
+          <Table columns={["Section", "Owner", "Team", "Status", "Evidence", "Due"]} widths={["1.2fr", "0.9fr", "0.9fr", "130px", "1.5fr", "110px"]}>
             {sections.map(section => (
               <Row key={section.id}>
                 <Cell><span className="strong">{section.section}</span><div className="muted small">Signoff · {section.signoff || "pending"}</div></Cell>
                 <Cell>{section.owner}</Cell>
+                <Cell><span className="muted">{teamForOwner(campaignId, section.owner)?.name || "—"}</span></Cell>
                 <Cell><Pill tone={statusTone(section.status)} dot block>{statusLabel(section.status)}</Pill></Cell>
                 <Cell><span className="muted">{section.evidence}</span></Cell>
                 <Cell><span className="mono small">{fmtDate(section.due)}</span></Cell>
