@@ -18,7 +18,7 @@ function SessionsScreen({ me, role, campaignId }) {
       <PageHeader
         eyebrow="Session Operations"
         title="Trainer, classroom, and capacity control."
-        sub="Flags overbooked sessions, trainer conflicts, underfilled labs, and classroom constraints."
+        sub="Schedules arrive from the source scheduling system via the session_schedule import — monitored here, not authored. This surface flags over-capacity sessions, trainer conflicts, underfilled labs, and classroom constraints."
       />
       <SessionControlBar
         view={view}

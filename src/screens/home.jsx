@@ -32,7 +32,7 @@ function CommandCenterScreen({ onNav, campaignId }) {
       <CampaignAccessNotice campaign={campaign} onNav={onNav} />
 
       <Card className="focal" padded={false}>
-        <div className="focal-grid">
+        <div className="focal-grid" data-tour="home-focal">
           <div className="cover cover-accent cover-lg" style={{ height: 280 }}>
             <div className="cover-grid" />
             <div className="cover-mark mono">READINESS RISK</div>

@@ -30,6 +30,23 @@ function statusTone(status) {
     case "published":   return "olive";
     case "draft":       return "ochre";
     case "archived":    return "muted";
+    case "resolved":    return "muted";
+    // Connectors (Org settings)
+    case "mock":         return "olive";
+    case "configurable": return "olive";
+    case "planned":      return "ochre";
+    case "future":       return "muted";
+    // Integration health (feed status + freshness)
+    case "warning":     return "ochre";
+    case "pending":     return "muted";
+    case "stale":       return "ochre";
+    case "fresh":       return "olive";
+    // Notifications / escalation rules / milestones
+    case "unread":      return "ochre";
+    case "read":        return "muted";
+    case "active":      return "olive";
+    case "paused":      return "muted";
+    case "upcoming":    return "muted";
     default:            return "muted";
   }
 }
@@ -42,6 +59,10 @@ function statusLabel(s) {
     approved: "Approved", needs_review: "Needs review", blocked: "Blocked",
     pending_review: "Pending", rejected: "Rejected",
     failed: "Failed", published: "Published", draft: "Draft", archived: "Archived",
+    resolved: "Resolved",
+    mock: "Mock", configurable: "Configurable", planned: "Planned", future: "Future",
+    warning: "Warning", pending: "Pending", stale: "Stale", fresh: "Fresh",
+    unread: "Unread", read: "Read", active: "Active", paused: "Paused", upcoming: "Upcoming",
   })[s] || s;
 }
 

@@ -52,7 +52,7 @@ function OrgSettingsScreen({ t, setTweak }) {
             {(org.connectors || []).map(conn => (
               <Row key={conn.id}>
                 <Cell><span className="strong">{conn.name}</span></Cell>
-                <Cell><Pill tone={conn.status === "mock" || conn.status === "configurable" ? "olive" : conn.status === "planned" ? "ochre" : "muted"} mono>{conn.status}</Pill></Cell>
+                <Cell>{riskPill(conn.status)}</Cell>
                 <Cell><span className="muted">{conn.scope}</span></Cell>
               </Row>
             ))}
@@ -68,7 +68,7 @@ function OrgSettingsScreen({ t, setTweak }) {
                 <Cell><span className="mono small">{field.data_type}</span></Cell>
                 <Cell>{field.allowed_entity_types.join(", ")}</Cell>
                 <Cell><span className="muted">{field.source_aliases.join(", ")}</span></Cell>
-                <Cell><Pill tone={field.is_sensitive ? "red" : "olive"} mono>{field.is_sensitive ? "Yes" : "No"}</Pill></Cell>
+                <Cell><Pill tone={field.is_sensitive ? "red" : "olive"} dot sev>{field.is_sensitive ? "Yes" : "No"}</Pill></Cell>
               </Row>
             ))}
           </Table>
@@ -198,7 +198,7 @@ function NotificationsScreen({ campaignId, onDataChanged }) {
               </Cell>
               <Cell>{riskPill(n.severity)}</Cell>
               <Cell><span className="mono small">{triggerLabel(n.source_type)}</span></Cell>
-              <Cell><Pill tone={n.status === "unread" ? "ochre" : "muted"} mono>{triggerLabel(n.status)}</Pill></Cell>
+              <Cell>{riskPill(n.status)}</Cell>
               <Cell><span className="mono small">{String(n.created_at || "").slice(0, 16).replace("T", " ")}</span></Cell>
             </Row>
           ))}
@@ -216,7 +216,7 @@ function NotificationsScreen({ campaignId, onDataChanged }) {
               <Cell><span className="mono small">{triggerLabel(rule.trigger_type)}</span></Cell>
               <Cell><span className="mono small">{JSON.stringify(rule.parameters || {})}</span></Cell>
               <Cell>{riskPill(rule.severity)}</Cell>
-              <Cell><Pill tone={rule.is_active ? "olive" : "muted"} mono>{rule.is_active ? "Active" : "Paused"}</Pill></Cell>
+              <Cell>{riskPill(rule.is_active ? "active" : "paused")}</Cell>
             </Row>
           ))}
         </Table>
@@ -252,7 +252,7 @@ function TimelineScreen({ campaignId }) {
               <Cell><span className="mono small">{triggerLabel(m.milestone_type)}</span></Cell>
               <Cell><span className="mono small">{String(m.due_at || "").slice(0, 10)}</span></Cell>
               <Cell>{m.owner_name || "Unassigned"}</Cell>
-              <Cell><Pill tone={m.status === "complete" ? "olive" : "muted"} mono>{triggerLabel(m.status)}</Pill></Cell>
+              <Cell>{riskPill(m.status)}</Cell>
             </Row>
           ))}
         </Table>
@@ -282,10 +282,10 @@ function IntegrationHealthScreen({ campaignId }) {
             <Row key={`${item.source}-${item.import_type}`}>
               <Cell><span className="mono small">{item.source}</span></Cell>
               <Cell>{triggerLabel(item.import_type)}</Cell>
-              <Cell><Pill tone={item.status === "completed" ? "olive" : "red"} mono>{triggerLabel(item.status)}</Pill></Cell>
+              <Cell>{riskPill(item.status)}</Cell>
               <Cell><span className="mono small">{item.last_import_at ? String(item.last_import_at).slice(0, 16).replace("T", " ") : "Never"}</span></Cell>
               <Cell><span className="mono small">{item.accepted_count}/{item.row_count}</span></Cell>
-              <Cell>{item.is_stale ? <Pill tone="ochre" mono>Stale</Pill> : <Pill tone="olive" mono>Fresh</Pill>}</Cell>
+              <Cell>{riskPill(item.is_stale ? "stale" : "fresh")}</Cell>
             </Row>
           ))}
         </Table>

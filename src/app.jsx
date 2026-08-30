@@ -541,33 +541,34 @@ function RoleFloater({ role, setRole, open, setOpen, onStartTour }) {
 
 function tourStepsForRole(role) {
   const common = [
-    { view: "home", target: "campaign-switcher", title: "Selected campaign", body: "Use this selector to move between active, planning, and draft campaigns while keeping each view focused on the same operating context." },
-    { view: "home", target: "theme-toggle", title: "Presentation mode", body: "Toggle the darker presentation theme when the room, projector, or audience needs higher contrast." },
-    { view: "home", target: "role-floater", title: "Change perspective", body: "Switch between learner, trainer, and readiness lead views to show how the same campaign feels to different users." },
+    { view: "home", target: "campaign-switcher", title: "Selected campaign", body: "Move between active, planning, and draft campaigns — every screen stays scoped to the same operating context." },
+    { view: "home", target: "theme-toggle", title: "Presentation mode", body: "Switch between light and dark (with three accent palettes) when the room, projector, or audience needs different contrast." },
+    { view: "home", target: "role-floater", title: "Change perspective", body: "Switch persona to see enforced RBAC read-scope in action: a learner or trainer sees only their own records, and admin surfaces leave the nav entirely — the role changes what you can reach, not just what you can do." },
   ];
   if (role === "learner") {
     return [
       { view: "home", target: "nav-home", title: "Learner readiness", body: "Learner mode starts with assigned campaign training and account readiness, not the entire LMS history." },
-      { view: "learners", target: "nav-learners", title: "Learner record", body: "The learner profile keeps assigned and completed campaign courses separate so outstanding work is obvious." },
+      { view: "learners", target: "nav-learners", title: "Your record", body: "Read-scope in action: a learner sees only their own reconciliation record, with assigned and completed campaign courses kept separate." },
       ...common,
     ];
   }
   if (role === "trainer") {
     return [
-      { view: "home", target: "nav-home", title: "Trainer dashboard", body: "This opens with the sessions assigned to the trainer and the delivery risks that need attention today." },
-      { view: "sessions", target: "nav-sessions", title: "Session calendar", body: "Review class capacity, room placement, timing, trainer coverage, and attendance risk before learners arrive." },
-      { view: "exceptions", target: "nav-exceptions", title: "Delivery blockers", body: "Capacity issues, trainer conflicts, and learner exceptions are collected here so the trainer can resolve what affects class delivery." },
+      { view: "home", target: "nav-home", title: "Trainer dashboard", body: "Opens with the sessions assigned to this trainer and the delivery risks that need attention today." },
+      { view: "sessions", target: "nav-sessions", title: "Session calendar", body: "Class capacity, room, timing, and trainer coverage — imported from the scheduling system and monitored here for over-capacity and conflicts, not authored in the app." },
+      { view: "exceptions", target: "nav-exceptions", title: "Delivery blockers", body: "Capacity issues, trainer conflicts, and learner exceptions collect into one queue — Start and Resolve move real state, with owners and resolution notes." },
       ...common,
     ];
   }
   return [
-    { view: "walkthrough", target: "nav-walkthrough", title: "Executive story", body: "Use this guided storyline to introduce the product vision, then open each operating area from one place." },
-    { view: "scenarios", target: "nav-scenarios", title: "Scenario packs", body: "Show that Epic go-live is one packaged campaign type, alongside acquisition onboarding, compliance cycles, and enablement rollouts." },
-    { view: "setup", target: "nav-setup", title: "Launch gate", body: "Confirm that owners, evidence, signoff, and blockers are reviewed before the campaign becomes trusted launch truth." },
-    { view: "catalog-map", target: "nav-catalog-map", title: "Courses and roles", body: "Inspect courses, roles, programs, curricula, and assigned learners separately before approving recommendations." },
-    { view: "people", target: "nav-people", title: "People lookup", body: "Find learners and staff directly, filter by campaign-relevant fields, and open profile context without relying on the source LMS." },
-    { view: "exceptions", target: "risk-banner", title: "Work the risk", body: "Identity, capacity, completion, and scheduling issues become a shared work queue instead of scattered tickets." },
-    { view: "org-settings", target: "nav-org-settings", title: "Deployment posture", body: "Review theme, connector, local AI, and custom-field settings that matter before a beta or client demo." },
+    { view: "home", target: "home-focal", title: "Where readiness stands", body: "The command center leads with the deterministic critical-role readiness figure and the highest-risk areas to work before launch — the go/no-go answer at a glance." },
+    { view: "setup", target: "nav-setup", title: "Launch gate", body: "Owners, evidence, signoff, and blockers are reviewed before a campaign becomes trusted launch truth — the gate actually gates go-live." },
+    { view: "imports", target: "nav-imports", title: "Messy import, reconciled", body: "Paste a rough CSV: the wizard masks sensitive columns and flags bad rows, and on apply it creates the valid learners while raising a reconciliation exception for the mismatches." },
+    { view: "exceptions", target: "nav-exceptions", title: "Work the queue to zero", body: "Identity, capacity, completion, and scheduling problems become one governed work queue — Start and Resolve move real state, and the open-blocker count moves with it." },
+    { view: "scoring", target: "nav-scoring", title: "Readiness, explained", body: "Readiness is a deterministic score, not a black box — adjust a weight and it recomputes live from the same formula the dashboard uses, with every driver shown." },
+    { view: "ai", target: "nav-ai", title: "Governed AI", body: "Assistants suggest only: they cite the exact records they used, carry a confidence, and can never mutate anything — a human stages every result." },
+    { view: "writebacks", target: "nav-writebacks", title: "Approve before write-back", body: "Nothing reaches the system of record without a reviewer approving the staged payload — approve or reject with a note." },
+    { view: "org-settings", target: "nav-org-settings", title: "Deployment posture", body: "Theme, connector, local-AI, and custom-field settings that matter before a beta or client demo — a governed, client-safe deployment path." },
     ...common,
   ];
 }

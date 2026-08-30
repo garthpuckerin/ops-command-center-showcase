@@ -190,30 +190,6 @@ function formatSessionStart(value) {
 }
 
 
-function ReadinessTable({ departments }) {
-  return (
-    <Card padded={false}>
-      <Table columns={["Department", "Facility", "Required", "Complete", "In progress", "Not started", "Exceptions", "Risk"]} widths={["1.2fr", "1.2fr", "90px", "90px", "100px", "100px", "90px", "90px"]}>
-        {departments.length === 0 && (
-          <Row><Cell>No departments in this campaign yet — start with roster intake and matrix design.</Cell><Cell /><Cell /><Cell /><Cell /><Cell /><Cell /><Cell /></Row>
-        )}
-        {departments.map(d => (
-          <Row key={d.id}>
-            <Cell><span className="strong">{d.name}</span></Cell>
-            <Cell><span className="muted">{facilityNameById(d.facility_id)}</span></Cell>
-            <Cell><span className="mono">{d.required}</span></Cell>
-            <Cell><span className="mono">{d.complete}</span></Cell>
-            <Cell><span className="mono">{d.in_progress}</span></Cell>
-            <Cell><span className="mono">{d.not_started}</span></Cell>
-            <Cell><span className="mono">{openExceptionsForDepartment(d.id)}</span></Cell>
-            <Cell>{riskPill(d.risk)}</Cell>
-          </Row>
-        ))}
-      </Table>
-    </Card>
-  );
-}
-
 function PageHeader({ eyebrow, title, sub, action }) {
   return (
     <header className="page-header">
@@ -304,5 +280,5 @@ function Cell({ children, label }) { return <div className="tbl-cell" data-label
 
 
 export {
-  byId, facilityById, departmentById, appById, userById, campaignById, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, ReadinessTable, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
+  byId, facilityById, departmentById, appById, userById, campaignById, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
 };

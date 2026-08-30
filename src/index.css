@@ -1124,7 +1124,7 @@
   .session-filter-select {
     border: 1px solid var(--rule);
     background: var(--paper);
-    padding: 6px 8px;
+    padding: 8px 12px;
   }
   .session-filter-select span {
     color: var(--muted);
@@ -1136,6 +1136,20 @@
     border: 0;
     padding: 0;
     min-width: 104px;
+  }
+  /* The People search label carries an <input> (siblings carry <select>) — give
+     it the same borderless-inside-the-box reset so it isn't browser-default and
+     cramped, and let it grow to fill the .grow field. */
+  .session-filter-select input {
+    flex: 1;
+    border: 0;
+    padding: 0;
+    min-width: 104px;
+    background: transparent;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--ink);
+    outline: none;
   }
 
   /* ────────────────────────────────────────────────────────────────

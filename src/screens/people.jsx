@@ -151,7 +151,7 @@ function PeopleFilterBar({ filters, setFilters, campaignId }) {
   return (
     <Card className="filterbar people-filterbar">
       <div className="filterbar-row">
-        <label className="session-filter-select grow">
+        <label className="select-inline session-filter-select grow">
           <span>Search</span>
           <input value={filters.q} onChange={e => set("q", e.target.value)} placeholder="Name, email, employee ID, LMS, Epic" />
         </label>
