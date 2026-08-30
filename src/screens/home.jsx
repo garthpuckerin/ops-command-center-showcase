@@ -2,12 +2,14 @@
 // Split from screens.jsx (pure code-move); screens.jsx re-exports as a barrel.
 import React, { useState } from 'react'
 import { LMS_DATA as D } from '../data.js'
-import { cls, statusLabel, fmt, fmtDate, Eyebrow, Rule, Pill, Icon, Card, StatNumber, Button, RequirementCover } from '../components.jsx'
-import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, isOpenException, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill } from './_shared.jsx'
+import { cls, statusTone, statusLabel, fmt, fmtDate, Eyebrow, Rule, Pill, Icon, Card, StatNumber, Button, RequirementCover } from '../components.jsx'
+import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, campaignSetupSummary, campaignTemplate, campaignTerms, isOpenException, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill, setupSectionsForCampaign, triggerLabel } from './_shared.jsx'
 import { SessionsScreen } from './sessions.jsx'
 
 function CommandCenterScreen({ onNav, campaignId }) {
   const campaign = campaignById(campaignId);
+  const template = campaignTemplate(campaignId);
+  const terms = campaignTerms(campaignId);
   const m = campaignMetrics(campaignId);
   const scoped = campaignData(campaignId);
   const critical = scoped.exceptions.filter(e => e.severity === "critical" && isOpenException(e));
@@ -16,14 +18,14 @@ function CommandCenterScreen({ onNav, campaignId }) {
   return (
     <div className="screen">
       <PageHeader
-        eyebrow={`Campaign · ${campaign.status} · ${campaign.phase}`}
+        eyebrow={`${template?.name || "Campaign"} · ${campaign.status} · ${campaign.phase}`}
         title={<>Command Center</>}
-        sub={`${campaign.name} goes live in ${m.daysToGoLive} days. Campaign data is scoped by RBAC and filtered to assigned personnel.`}
+        sub={`${campaign.name} reaches ${terms.launch_label.toLowerCase()} in ${m.daysToGoLive} days. Campaign data is scoped by RBAC and filtered to assigned personnel.`}
         action={<Button kind="solid" iconRight="chev" onClick={() => onNav("reports")}>Export brief</Button>}
       />
 
       <div className="stat-grid stat-grid-4">
-        <Card><StatNumber value={m.daysToGoLive} sub="days to go-live" hint={m.goLiveDate} /></Card>
+        <Card><StatNumber value={m.daysToGoLive} sub={`days to ${terms.launch_label.toLowerCase()}`} hint={m.goLiveDate} /></Card>
         <Card><StatNumber value={pct(m.overallReadiness)} sub="overall readiness" hint={`${fmt(m.totalLearners)} assigned learners`} /></Card>
         <Card><StatNumber value={pct(m.criticalRoleReadiness)} sub="critical roles" hint="ED, inpatient, pharmacy, radiology" /></Card>
         <Card><StatNumber value={m.openExceptions} sub="open exceptions" hint={`${critical.length} critical blockers`} /></Card>
@@ -108,9 +110,15 @@ function CommandCenterScreen({ onNav, campaignId }) {
 }
 
 
+// Per-campaign home shape. Each campaign's homeSummary configures WHICH layout
+// the lead lands on (default_home_view) and the viewer's role IN that campaign
+// (user_campaign_role) — so switching campaigns changes the home's shape, not
+// just its numbers. Layouts derive from the same live records their target
+// screens use; nothing here is a second copy of a count.
 function RoleHomeScreen({ onNav, campaignId }) {
   const campaign = campaignById(campaignId);
   const view = campaign.homeSummary?.default_home_view || "executive_summary";
+  const roleLabel = triggerLabel(campaign.homeSummary?.user_campaign_role || "campaign member");
   if (view === "readiness_lead_queue") {
     // Derive from the same live metrics the command center uses, so re-scoring
     // and import-apply move these cards too (fall back to seeded summary only
@@ -118,7 +126,7 @@ function RoleHomeScreen({ onNav, campaignId }) {
     const m = campaignMetrics(campaignId);
     return (
       <div className="screen">
-        <PageHeader eyebrow="Readiness lead" title="Queue-first campaign home." sub={`${campaign.name}: open blockers, risk drivers, and ready-to-work queues.`} />
+        <PageHeader eyebrow={roleLabel} title="Queue-first campaign home." sub={`${campaign.name}: open blockers, risk drivers, and ready-to-work queues.`} />
         <div className="stat-grid stat-grid-4">
           <Card><StatNumber value={Math.round(m.criticalRoleReadiness)} sub="readiness score" hint="configured scoring" /></Card>
           <Card><StatNumber value={m.openExceptions} sub="open exceptions" hint="queue workload" /></Card>
@@ -134,11 +142,27 @@ function RoleHomeScreen({ onNav, campaignId }) {
     );
   }
   if (view === "analyst_import_reconciliation") {
+    // Intake-first home: this campaign's configured shape is roster intake, so
+    // the home leads with intake state — launch gate, role mappings, and the
+    // import cadence — from the same records the setup/catalog/health screens read.
+    const terms = campaignTerms(campaignId);
+    const m = campaignMetrics(campaignId);
+    const setup = campaignSetupSummary(campaignId);
+    const roleMappings = (D.catalogEntities?.roles || []).filter(r => r.campaign_id === campaignId);
+    const mappingsToReview = roleMappings.filter(r => ["needs_review", "blocked"].includes(r.status)).length;
+    const pendingFeeds = (D.integrationHealth || []).filter(i => i.campaign_id === campaignId && i.status !== "completed").length;
     return (
       <div className="screen">
-        <PageHeader eyebrow="Analyst" title="Import and reconciliation home." sub={`${campaign.name}: validate source files, row errors, identity mismatches, and scoring inputs.`} />
+        <PageHeader eyebrow={roleLabel} title="Import and reconciliation home." sub={`${campaign.name}: validate source files, row errors, identity mismatches, and scoring inputs.`} />
+        <div className="stat-grid stat-grid-4">
+          <Card><StatNumber value={m.daysToGoLive} sub={`days to ${terms.launch_label.toLowerCase()}`} hint={m.goLiveDate} /></Card>
+          <Card><StatNumber value={`${setup.approved}/${setup.total}`} sub="setup sections approved" hint={setup.blocked ? `${setup.blocked} blocked` : "launch gate"} /></Card>
+          <Card><StatNumber value={mappingsToReview} sub="role mappings to review" hint={`${roleMappings.length} mapped ${roleMappings.length === 1 ? "role" : "roles"}`} /></Card>
+          <Card><StatNumber value={pendingFeeds} sub="pending import feeds" hint="manual CSV cadence" /></Card>
+        </div>
         <div className="focal-actions">
           <Button kind="solid" iconRight="arrow" onClick={() => onNav("imports")}>Open import wizard</Button>
+          <Button kind="ghost" onClick={() => onNav("setup")}>Review launch gate</Button>
           <Button kind="ghost" onClick={() => onNav("scoring")}>Tune scoring</Button>
           <Button kind="ghost" onClick={() => onNav("reports")}>Preview reports</Button>
         </div>
@@ -146,11 +170,37 @@ function RoleHomeScreen({ onNav, campaignId }) {
     );
   }
   if (view === "manager_team_followup") {
+    // Follow-up-first home: early-phase work is chasing section owners, so the
+    // home leads with the owner checklist from the setup gate records.
+    const setup = campaignSetupSummary(campaignId);
+    const sections = setupSectionsForCampaign(campaignId);
+    const scoped = campaignData(campaignId);
     return (
       <div className="screen">
-        <PageHeader eyebrow="Manager" title="Team follow-up home." sub={`${campaign.name}: department risk, learner follow-up, and exception ownership.`} />
+        <PageHeader eyebrow={roleLabel} title="Team follow-up home." sub={`${campaign.name}: owner follow-up, department risk, and exception ownership.`} />
+        <div className="stat-grid stat-grid-4">
+          <Card><StatNumber value={`${setup.approved}/${setup.total}`} sub="setup sections approved" hint="launch gate" /></Card>
+          <Card><StatNumber value={setup.blocked} sub="blocked sections" hint="owner follow-up needed" /></Card>
+          <Card><StatNumber value={scoped.departments.length} sub="departments loaded" hint="population intake" /></Card>
+          <Card><StatNumber value={scoped.requirements.length} sub="requirements drafted" hint="course and role matrix" /></Card>
+        </div>
+        <Section eyebrow="01 · Owner follow-up" title="Setup sections by owner">
+          <Card padded={false}>
+            <Table columns={["Section", "Owner", "Status", "Due"]} widths={["1.4fr", "1fr", "150px", "110px"]}>
+              {sections.map(section => (
+                <Row key={section.id}>
+                  <Cell><span className="strong">{section.section}</span></Cell>
+                  <Cell>{section.owner}</Cell>
+                  <Cell><Pill tone={statusTone(section.status)} dot block>{statusLabel(section.status)}</Pill></Cell>
+                  <Cell><span className="mono small">{fmtDate(section.due)}</span></Cell>
+                </Row>
+              ))}
+            </Table>
+          </Card>
+        </Section>
         <div className="focal-actions">
-          <Button kind="solid" iconRight="arrow" onClick={() => onNav("departments")}>Review departments</Button>
+          <Button kind="solid" iconRight="arrow" onClick={() => onNav("setup")}>Open setup gate</Button>
+          <Button kind="ghost" onClick={() => onNav("departments")}>Review departments</Button>
           <Button kind="ghost" onClick={() => onNav("learners")}>Open learners</Button>
         </div>
       </div>

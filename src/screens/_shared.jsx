@@ -14,6 +14,19 @@ const campaignById = id => byId(D.campaigns, id);
 const facilityNameById = id => facilityById(id)?.name || "Unassigned facility";
 const departmentNameById = id => departmentById(id)?.name || "Unassigned department";
 
+// Template binding — the campaign's template configures its vocabulary. Every
+// scoped screen should take its launch/learner/blocker words from here, not
+// hardcode "go-live": an acquisition campaign counts down to a "Cutover", a
+// compliance campaign to a "Deadline". Falls back to neutral labels for
+// campaigns created without a binding.
+const DEFAULT_TERMS = { launch_label: "Go-live", learner_label: "Learner", blocker_label: "Blocker" };
+function campaignTemplate(campaignId) {
+  return byId(D.campaignTemplates || [], campaignById(campaignId)?.template_id);
+}
+function campaignTerms(campaignId) {
+  return { ...DEFAULT_TERMS, ...(campaignTemplate(campaignId)?.terminology || {}) };
+}
+
 // Status/risk pills share a uniform width so they line up in columns: the
 // severity scale (low…critical) uses one width, and the longer status set
 // (open, blocked, needs review, …) uses a wider one — each uniform within its
@@ -103,6 +116,7 @@ function campaignMetrics(campaignId) {
 
 function CampaignAccessNotice({ campaign, onNav }) {
   const setup = campaignSetupSummary(campaign.id);
+  const terms = campaignTerms(campaign.id);
   return (
     <Card className="campaign-notice">
       <div className="campaign-notice-main">
@@ -113,8 +127,9 @@ function CampaignAccessNotice({ campaign, onNav }) {
         </div>
       </div>
       <div className="campaign-notice-meta">
+        <Metric k="Your role" v={triggerLabel(campaign.homeSummary?.user_campaign_role || "member")} />
         <Metric k="Phase" v={campaign.phase} />
-        <Metric k="Go-live" v={fmtDate(campaign.goLiveDate)} />
+        <Metric k={terms.launch_label} v={fmtDate(campaign.goLiveDate)} />
         <Metric k="Setup gate" v={<button className="linkbtn strong" onClick={() => onNav?.("setup")}>{setup.blocked ? `${setup.blocked} blocked` : `${setup.approved}/${setup.total} approved`}</button>} />
       </div>
     </Card>
@@ -280,5 +295,5 @@ function Cell({ children, label }) { return <div className="tbl-cell" data-label
 
 
 export {
-  byId, facilityById, departmentById, appById, userById, campaignById, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
+  byId, facilityById, departmentById, appById, userById, campaignById, campaignTemplate, campaignTerms, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
 };

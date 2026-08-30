@@ -518,6 +518,7 @@ export async function createCampaignFromTemplate(templateId, values) {
   const created = {
     id: `campaign-${Date.now()}`,
     name: values.name,
+    template_id: template?.id || templateId,
     status: statusTitle(values.status || "planning"),
     goLiveDate: fmtDateOnly(values.go_live_at),
     phase: template?.terminology?.launch_label ? `${template.terminology.launch_label} setup` : "Campaign setup",
