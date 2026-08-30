@@ -513,19 +513,97 @@ export async function reviewWriteBackJob(campaignId, jobId, decision, reviewerNo
   return existing;
 }
 
+// Monotonic suffix so two creations in the same millisecond cannot collide.
+let createSeq = 0;
+
 export async function createCampaignFromTemplate(templateId, values) {
   const template = (LMS_DATA.campaignTemplates || []).find(item => item.id === templateId);
+  const id = `campaign-${Date.now()}-${++createSeq}`;
+  const goLiveDate = fmtDateOnly(values.go_live_at);
+  const templateScoring = template?.scoring_profile || {};
   const created = {
-    id: `campaign-${Date.now()}`,
+    id,
     name: values.name,
     template_id: template?.id || templateId,
     status: statusTitle(values.status || "planning"),
-    goLiveDate: fmtDateOnly(values.go_live_at),
+    goLiveDate,
     phase: template?.terminology?.launch_label ? `${template.terminology.launch_label} setup` : "Campaign setup",
     readiness: 0,
+    readinessScore: 0,
     risk: "low",
+    // The template's structure is INSTANTIATED, not just previewed: scoring
+    // thresholds seed from the template (weights/penalty keep house defaults),
+    // and the campaign opens on the template's home layout.
+    scoringProfile: {
+      completion_threshold: Number(templateScoring.completion_threshold) || 90,
+      critical_role_threshold: Number(templateScoring.critical_role_threshold) || 95,
+      identity_mismatch_penalty: 1,
+      blocker_severity_weights: { critical: 8, high: 5, medium: 2 },
+    },
+    homeSummary: {
+      user_campaign_role: "program_admin",
+      default_home_view: template?.default_home_view || "executive_summary",
+      cards: { open_exceptions: 0, departments_at_risk: 0, sessions_due: 0, readiness_score: 0 },
+    },
   };
   LMS_DATA.campaigns = [created, ...(LMS_DATA.campaigns || [])];
+
+  // Starter requirements become real requirement rows — empty (assigned 0),
+  // honestly, until a roster is imported and roles are mapped.
+  const requirements = (template?.requirements || []).map((req, i) => ({
+    id: `tr-${id}-${i + 1}`,
+    campaign_id: id,
+    role: "All roles",
+    application_id: null,
+    title: req.requirement_name,
+    rule: "Seeded from the template — map roles and applications during setup",
+    assigned: 0,
+    readiness: 0,
+    risk: "low",
+    color: "ink",
+    code: `TPL-${String(template?.scenario_type || "req").toUpperCase().slice(0, 4)}-${100 + i}`,
+    cover_label: String(req.requirement_name || "REQUIREMENT").toUpperCase().slice(0, 12),
+  }));
+  LMS_DATA.trainingRequirements = [...(LMS_DATA.trainingRequirements || []), ...requirements];
+
+  // Default reports become campaign-scoped report rows that fill in with data.
+  const reports = (template?.default_reports || []).map((report, i) => ({
+    id: `report-${id}-${i + 1}`,
+    campaign_id: id,
+    title: report.title,
+    desc: `Default ${template?.name || "template"} report, seeded at campaign creation.`,
+    cadence: "On demand",
+    owner: "Command Center",
+    format: "graphical",
+    audience: "Operations",
+    filterConfig: {},
+    columnConfig: [],
+    groupingConfig: {},
+    sortConfig: [],
+    preview: {
+      headline: "No data yet",
+      summary: "This report fills in as the campaign loads its population and completion data.",
+      metrics: [],
+      bars: [],
+    },
+  }));
+  LMS_DATA.reports = [...(LMS_DATA.reports || []), ...reports];
+
+  // The launch gate is seeded with the template's sections — unowned,
+  // unsigned, first section in progress — so the new campaign's setup screen
+  // shows the template's SHAPE, not an empty checklist.
+  const sections = (template?.setup_sections || []).map((section, i) => ({
+    id: `setup-${id}-${i + 1}`,
+    campaign_id: id,
+    section,
+    owner: "Unassigned",
+    status: i === 0 ? "in_progress" : "not_started",
+    evidence: "Seeded from the template at campaign creation.",
+    due: goLiveDate || null,
+    signoff: null,
+  }));
+  LMS_DATA.campaignSetupSections = [...(LMS_DATA.campaignSetupSections || []), ...sections];
+
   const leadUser = LMS_DATA.sessionUsers?.lead || (LMS_DATA.users || []).find(user => user.role === "lead");
   LMS_DATA.campaignAccess = [
     { user_id: leadUser?.id || "u-api-lead", campaign_id: created.id, scope: "campaign", role: "Campaign Lead", permissions: ["campaign:view", "exception:manage", "report:export"] },

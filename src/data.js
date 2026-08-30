@@ -33,6 +33,8 @@ const LMS_DATA = (function () {
       scoring_profile: { completion_threshold: 95, critical_role_threshold: 98, blocker_weight: 3 },
       default_reports: [{ title: "Daily Readiness Brief" }, { title: "At-Risk Learners" }],
       requirements: [{ requirement_name: "EpicCare RN Foundation" }, { requirement_name: "Registration Foundations" }],
+      default_home_view: "executive_summary",
+      setup_sections: ["Campaign details", "Locations and departments", "Learner population", "Course and role matrix", "Accounts and access", "Write-back policy"],
     },
     {
       id: "tpl-acquisition",
@@ -44,6 +46,8 @@ const LMS_DATA = (function () {
       scoring_profile: { completion_threshold: 90, critical_role_threshold: 95, blocker_weight: 2 },
       default_reports: [{ title: "Onboarding Readiness" }],
       requirements: [{ requirement_name: "Acquisition Orientation" }],
+      default_home_view: "analyst_import_reconciliation",
+      setup_sections: ["Campaign details", "Roster intake", "Old org role mapping", "Course and role matrix"],
     },
     {
       id: "tpl-compliance",
@@ -56,6 +60,8 @@ const LMS_DATA = (function () {
       detection: { stuck_after_minutes: 120 },
       default_reports: [{ title: "Compliance Completion" }],
       requirements: [{ requirement_name: "Annual Compliance Attestation" }],
+      default_home_view: "compliance_completion",
+      setup_sections: ["Campaign details", "Assignment population", "Detection thresholds"],
     },
     {
       id: "tpl-sales-enablement",
@@ -67,6 +73,8 @@ const LMS_DATA = (function () {
       scoring_profile: { completion_threshold: 85, critical_role_threshold: 90, blocker_weight: 2 },
       default_reports: [{ title: "Enablement Readiness" }],
       requirements: [{ requirement_name: "Product Positioning Certification" }],
+      default_home_view: "executive_summary",
+      setup_sections: ["Campaign details", "Territory and role mapping", "Content readiness", "Manager rollout plan"],
     },
   ];
   const activeCampaignId = "camp-st-anne";

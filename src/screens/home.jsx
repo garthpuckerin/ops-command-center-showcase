@@ -198,6 +198,9 @@ function RoleHomeScreen({ onNav, campaignId }) {
         <Section eyebrow="01 · Completion watch" title={`${terms.learner_label} completion and stuck flags`}>
           <Card padded={false}>
             <Table columns={[terms.learner_label, "Division", "Completion", "Time in course", "Status"]} widths={["1.3fr", "1.2fr", "110px", "130px", "140px"]}>
+              {assignees.length === 0 && (
+                <Row><Cell>{`No ${learnerWord}s in this campaign yet — import the assignment population to start completion tracking.`}</Cell><Cell /><Cell /><Cell /><Cell /></Row>
+              )}
               {assignees.map(l => {
                 const flagged = isStuckLearner(l, threshold);
                 return (

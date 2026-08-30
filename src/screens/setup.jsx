@@ -166,6 +166,7 @@ function CampaignCreateScreen({ setView, setCampaignId, onDataChanged }) {
             <KV k="Terminology" v={Object.values(active?.terminology || {}).join(", ")} />
             <KV k="Default reports" v={(active?.default_reports || []).map(r => r.title).join(", ")} />
             <KV k="Starter requirements" v={(active?.requirements || []).map(r => r.requirement_name).join(", ")} />
+            <KV k="Setup gate" v={(active?.setup_sections || []).join(", ")} />
           </div>
           <div className="focal-actions">
             <Button kind="solid" iconRight="arrow" disabled={working || !active || !name || !slug} onClick={createFromTemplate}>Create campaign</Button>
