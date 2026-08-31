@@ -514,6 +514,23 @@
      mobile breakpoint below. Additive: desktop layout is untouched. */
   .nav-toggle { display: none; }
   .nav-backdrop { display: none; }
+
+  /* Surface-scoped authority: on the phone drawer, workstation-only surfaces
+     carry a small "desk" mark so the scoping reads as policy, not breakage.
+     Hidden on desktop where those surfaces are fully live. */
+  .desk-mark { display: none; }
+  @media (max-width: 720px) {
+    .side-link .desk-mark {
+      display: inline-block;
+      margin-left: auto;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--rule);
+      padding: 1px 5px;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .side { transition: none; }
   }

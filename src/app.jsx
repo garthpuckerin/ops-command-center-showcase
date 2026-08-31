@@ -85,6 +85,62 @@ function viewAllowedForRole(view, role) {
 
 const UI_STATE_KEY = "lms_ops_command_center_ui_state";
 
+// ── Surface-scoped authority ────────────────────────────────────────────────
+// The phone is the monitoring/triage companion: readiness, the exception
+// queue, sessions, and alerts travel. Surfaces that stage or approve
+// mutations against systems of record — or reconfigure the campaign — need
+// the full-context workstation view, so on the phone they render a
+// deliberate desk-only state instead of the authoring UI. Authority is
+// scoped by surface the same way viewAllowedForRole scopes it by role.
+const DESK_ONLY_VIEWS = {
+  imports: { label: "Import wizard", why: "Reviewing a masked CSV preview and its row errors needs the full-width validation table before anything is applied." },
+  writebacks: { label: "Write-back approvals", why: "Approving a staged payload into a system of record requires reading the full payload — not a thumb-sized summary of it." },
+  scoring: { label: "Scoring configuration", why: "Changing scoring weights moves the go/no-go number everywhere; tune it where every driver is visible at once." },
+  ai: { label: "AI assist staging", why: "Reviewing AI suggestions against their cited records is a side-by-side job." },
+  "org-settings": { label: "Org settings", why: "Deployment, connector, and custom-field configuration are administrative changes." },
+  "new-campaign": { label: "Campaign creation", why: "Instantiating a template — scoring, requirements, reports, launch gate — deserves a reviewed setup, not a phone form." },
+};
+
+function useIsMobile() {
+  const query = "(max-width: 720px)";
+  const [mobile, setMobile] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = (e) => setMobile(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return mobile;
+}
+
+// The desk-only state is a designed screen, not a dead end: it names the
+// surface, says why it stays at the desk, shows the live count waiting
+// there, and routes the visitor to the work a phone IS for.
+function DeskOnlyScreen({ view, campaignId, onNav }) {
+  const info = DESK_ONLY_VIEWS[view];
+  const pendingApprovals = (LMS_DATA.writebackJobs || []).filter(j => (!j.campaign_id || j.campaign_id === campaignId) && !["approved", "rejected"].includes(j.approval_status)).length;
+  const waiting = view === "writebacks" && pendingApprovals > 0
+    ? `${pendingApprovals} staged ${pendingApprovals === 1 ? "payload is" : "payloads are"} waiting for desk review.`
+    : null;
+  return (
+    <div className="screen">
+      <PageHeader
+        eyebrow="Workstation surface"
+        title={`${info.label} stays at the desk.`}
+        sub="The phone is the monitoring and triage companion. High-authority actions are scoped by surface the same way visibility is scoped by role."
+      />
+      <Card>
+        <p className="muted small" style={{ lineHeight: 1.7 }}>{info.why}</p>
+        {waiting && <p className="strong small">{waiting}</p>}
+        <div className="focal-actions">
+          <Button kind="solid" iconRight="arrow" onClick={() => onNav("exceptions")}>Open triage queue</Button>
+          <Button kind="ghost" onClick={() => onNav("home")}>Campaign home</Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [entered, setEntered] = useState(readEntered);
@@ -96,6 +152,7 @@ function App() {
   const [rolePanelOpen, setRolePanelOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [tour, setTour] = useState({ active: false, step: 0 });
+  const isMobile = useIsMobile();
   const didMountRole = React.useRef(false);
   const closeNav = React.useCallback(() => setNavOpen(false), []);
   const me = LMS_DATA.sessionUsers[role];
@@ -197,7 +254,7 @@ function App() {
     );
   }
 
-  const screen = routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampaignId, () => setDataVersion(v => v + 1));
+  const screen = routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampaignId, () => setDataVersion(v => v + 1), isMobile);
   const blockerSummary = campaignBlockerSummary(campaignId);
   const startTour = () => setTour({ active: true, step: 0 });
 
@@ -253,13 +310,18 @@ class ScreenErrorBoundary extends React.Component {
   }
 }
 
+// Mirrors the structure of the shared screens' PageHeader (_shared.jsx): the
+// .page-header grid expects ONE content child — without the inner wrapper the
+// eyebrow/title/sub scatter into grid columns.
 function PageHeader({ eyebrow, title, sub }) {
   return (
-    <div className="page-header">
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <h1>{title}</h1>
-      {sub && <p className="muted">{sub}</p>}
-    </div>
+    <header className="page-header">
+      <div>
+        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+        <h1 className="display-lg">{title}</h1>
+        {sub && <p className="page-sub">{sub}</p>}
+      </div>
+    </header>
   );
 }
 
@@ -314,11 +376,14 @@ function campaignBlockerSummary(campaignId) {
   };
 }
 
-function routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampaignId, onDataChanged) {
+function routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampaignId, onDataChanged, isMobile) {
   // RBAC read-scope: a view outside this role's scope falls back to home. The
   // normalizing effect in App also rewrites the state, but this guards the very
   // first synchronous paint (e.g. a `#org-settings` deep link as a learner).
   if (!viewAllowedForRole(view, role)) view = "home";
+  // Surface-scoped authority: workstation surfaces render the desk-only state
+  // on the phone companion — deep links and drawer navigation included.
+  if (isMobile && DESK_ONLY_VIEWS[view]) return <DeskOnlyScreen view={view} campaignId={campaignId} onNav={setView} />;
   if (view === "walkthrough") return <DemoWalkthroughScreen campaignId={campaignId} onNav={setView} />;
   if (view === "scenarios") return <ScenarioPacksScreen campaignId={campaignId} onNav={setView} setCampaignId={setCampaignId} />;
   if (view === "setup") return <CampaignSetupScreen campaignId={campaignId} />;
@@ -381,6 +446,7 @@ function Sidebar({ role, setRole, view, setView, me, open = false, onSignOut }) 
                 onClick={() => setView(n.id)}>
                 <Icon name={n.icon} size={16} />
                 <span>{n.label}</span>
+                {DESK_ONLY_VIEWS[n.id] && <span className="desk-mark mono" aria-label="Workstation surface">desk</span>}
               </button>
             ))}
           </div>
@@ -468,7 +534,7 @@ function MobileTabBar({ role, view, setView, onOpenMenu }) {
     lead: [
       { id: "home", label: "Home", icon: "home" },
       { id: "exceptions", label: "Queue", icon: "flag" },
-      { id: "writebacks", label: "Approvals", icon: "shield" },
+      { id: "notifications", label: "Alerts", icon: "bell" },
       { id: "readiness", label: "Readiness", icon: "pulse" },
     ],
     trainer: [
