@@ -56,6 +56,26 @@ test('ambulatory draft home is the team follow-up layout with the setup-owner ch
   ).toBeVisible()
 })
 
+test('exception filter options are campaign-scoped (no cross-campaign owner/type leakage)', async ({ page }) => {
+  // The Owner/Type dropdowns must derive from THIS campaign's queue: before
+  // the fix, "Compliance Office" and stuck_learner appeared on the Epic
+  // campaign's filterbar (invisible while every exception was St. Anne's).
+  await seedState(page, { role: 'lead', view: 'exceptions', campaignId: 'camp-st-anne' })
+  await page.goto('/')
+  await expect(page.locator('.main').getByText('Open blockers and escalations.')).toBeVisible()
+  await expect(page.locator('.filterbar option', { hasText: 'Compliance Office' })).toHaveCount(0)
+  await expect(page.locator('.filterbar option', { hasText: 'stuck_learner' })).toHaveCount(0)
+})
+
+test('the compliance queue keeps its own filter options', async ({ page }) => {
+  await seedState(page, { role: 'lead', view: 'exceptions', campaignId: 'camp-compliance-2026' })
+  await page.goto('/')
+  await expect(page.locator('.filterbar option', { hasText: 'Compliance Office' })).toHaveCount(1)
+  await expect(page.locator('.filterbar option', { hasText: 'stuck_learner' })).toHaveCount(1)
+  // And none of the Epic campaign's owners bleed in.
+  await expect(page.locator('.filterbar option', { hasText: 'Mira Okafor' })).toHaveCount(0)
+})
+
 test('st-anne home is still the executive Command Center (flagship unchanged)', async ({ page }) => {
   await seedState(page, { role: 'lead', view: 'home', campaignId: 'camp-st-anne' })
   await page.goto('/')

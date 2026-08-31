@@ -426,25 +426,25 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
           <Icon name="menu" size={16} />
         </button>
         <Pill tone="muted" mono>You are · {ROLE_LABELS[role]}</Pill>
-        <span className="muted small">{desc[role]}</span>
+        <span className="muted small" title={desc[role]}>{desc[role]}</span>
       </div>
       <div className="topbar-right">
         <span className="mobile-hide"><Pill tone="muted" mono>Mock data</Pill></span>
         <label className="campaign-switcher" data-tour="campaign-switcher">
           <span className="mono">Campaign</span>
-          <select value={campaignId} onChange={(e) => setCampaignId(e.target.value)}>
+          <select value={campaignId} title={campaigns.find(c => c.id === campaignId)?.name} onChange={(e) => setCampaignId(e.target.value)}>
             {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </label>
         {showNew && (
-          <button className="whats-new" data-tour="risk-banner" onClick={() => setView("exceptions")}>
+          <button className="whats-new" data-tour="risk-banner" title={blockerSummary.label} onClick={() => setView("exceptions")}>
             <span className="wn-mark mono">{blockerSummary.total ? "RISK" : "CLEAR"}</span>
             <span className="wn-text">{blockerSummary.label}</span>
             <Icon name="chev" size={12} />
           </button>
         )}
-        <button className="iconbtn mobile-hide" title="Toggle dark mode" data-tour="theme-toggle" onClick={() => setTweak("themeMode", (t.themeMode || "light") === "dark" ? "light" : "dark")}>
-          <Icon name={(t.themeMode || "light") === "dark" ? "check" : "dot"} size={16} />
+        <button className="iconbtn mobile-hide" title={(t.themeMode || "light") === "dark" ? "Switch to light mode" : "Switch to dark mode"} data-tour="theme-toggle" onClick={() => setTweak("themeMode", (t.themeMode || "light") === "dark" ? "light" : "dark")}>
+          <Icon name={(t.themeMode || "light") === "dark" ? "sun" : "moon"} size={16} />
         </button>
         <span className="mobile-hide"><Button kind="ghost" size="sm" icon="play" onClick={onStartTour}>Tour</Button></span>
         {role === "lead" && <span className="mobile-hide"><Button kind="ghost" size="sm" icon="plus" onClick={() => setView("new-campaign")}>Campaign</Button></span>}

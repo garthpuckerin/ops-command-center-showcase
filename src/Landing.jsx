@@ -54,7 +54,7 @@ export const Landing = ({ onEnter, themeMode = 'light', onToggleTheme }) => {
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              <Icon name={isDark ? 'check' : 'dot'} size={16} />
+              <Icon name={isDark ? 'sun' : 'moon'} size={16} />
             </button>
           )}
         </div>

@@ -227,13 +227,13 @@ function CsvPreview({ preview }) {
         ))}
         <div className="sheet-row-head mono">1</div>
         {preview.columns.map(col => (
-          <div key={col} className="sheet-cell sheet-header">{humanizeColumn(col)}</div>
+          <div key={col} className="sheet-cell sheet-header" title={humanizeColumn(col)}>{humanizeColumn(col)}</div>
         ))}
         {preview.rows.map((row, idx) => (
           <React.Fragment key={idx}>
             <div className="sheet-row-head mono">{idx + 2}</div>
             {row.map((cell, cIdx) => (
-              <div key={`${idx}-${cIdx}`} className="sheet-cell">{cell}</div>
+              <div key={`${idx}-${cIdx}`} className="sheet-cell" title={cell == null ? undefined : String(cell)}>{cell}</div>
             ))}
           </React.Fragment>
         ))}

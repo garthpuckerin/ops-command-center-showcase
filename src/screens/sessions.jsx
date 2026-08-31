@@ -234,7 +234,7 @@ function SessionsCalendar({ rows, view, anchorDate }) {
                 return (
                   <button key={s.id} className={cls("session-event", `session-event-${s.risk}`)} title={s.conflict || "No conflict flagged"}>
                     <span className="session-event-time mono">{sessionTime(s.starts)}</span>
-                    <span className="session-event-title">{s.title}</span>
+                    <span className="session-event-title" title={s.title}>{s.title}</span>
                     <span className="session-event-meta">{facilityNameById(s.facility_id)} · {s.room}</span>
                     <span className="session-event-meta">{trainer.first_name} {trainer.last_name} · {s.registered}/{s.capacity}</span>
                   </button>

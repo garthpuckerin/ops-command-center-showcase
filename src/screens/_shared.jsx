@@ -299,7 +299,21 @@ function Row({ children, selected, onSelect, _labels }) {
     </div>
   );
 }
-function Cell({ children, label }) { return <div className="tbl-cell" data-label={label || undefined}>{children}</div>; }
+// Extract the plain text of a cell's React tree so truncated cells can carry a
+// native title tooltip — .tbl-cell ellipsizes on desktop, and clipped text with
+// no way to read the rest is a dead end.
+function textOf(node) {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join(" ");
+  if (React.isValidElement(node)) return textOf(node.props?.children);
+  return "";
+}
+
+function Cell({ children, label }) {
+  const text = textOf(children).replace(/\s+/g, " ").trim();
+  return <div className="tbl-cell" data-label={label || undefined} title={text || undefined}>{children}</div>;
+}
 
 
 export {

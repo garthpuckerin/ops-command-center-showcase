@@ -19,11 +19,15 @@ function ExceptionsScreen({ campaignId, onDataChanged }) {
     department: "all",
     due: "all",
   });
-  const queue = (D.exceptionQueue || scoped.exceptions).filter(e => {
+  // Campaign scope FIRST, then user filters — the filter dropdowns below must
+  // also derive from the scoped list, or another campaign's owners/types leak
+  // into this campaign's filterbar (e.g. "Compliance Office" on the Epic queue).
+  const scopedQueue = (D.exceptionQueue || scoped.exceptions).filter(e => {
     if (e.campaign_id && e.campaign_id !== campaignId) return false;
     if (!e.campaign_id && !scoped.departments.some(d => d.id === e.department_id)) return false;
-    return exceptionMatchesFilters(e, filters);
+    return true;
   });
+  const queue = scopedQueue.filter(e => exceptionMatchesFilters(e, filters));
   const [activeId, setActiveId] = React.useState(queue[0]?.queue_item_id || queue[0]?.id);
   React.useEffect(() => {
     if (queue.length && !queue.some(e => (e.queue_item_id || e.id) === activeId)) {
@@ -31,8 +35,8 @@ function ExceptionsScreen({ campaignId, onDataChanged }) {
     }
   }, [campaignId, queue.length, activeId]);
   const active = queue.find(e => (e.queue_item_id || e.id) === activeId) || queue[0];
-  const owners = ["all", ...new Set((D.exceptionQueue || scoped.exceptions).map(e => e.owner).filter(Boolean))];
-  const types = ["all", ...new Set((D.exceptionQueue || scoped.exceptions).map(e => e.exception_type || e.type).filter(Boolean))];
+  const owners = ["all", ...new Set(scopedQueue.map(e => e.owner).filter(Boolean))];
+  const types = ["all", ...new Set(scopedQueue.map(e => e.exception_type || e.type).filter(Boolean))];
 
   async function updateException(item, updates) {
     const itemId = item.queue_item_id || item.id;

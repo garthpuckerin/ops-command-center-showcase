@@ -446,6 +446,8 @@
     text-overflow: ellipsis;
     cursor: pointer;
     outline: none;
+    /* Value hugs the chevron and uses the full box width (label sits left). */
+    text-align: right;
   }
   /* Native dropdown options: give them an explicit themed surface so the (light,
      in dark mode) text isn't rendered on the browser-default light popup. */
@@ -479,6 +481,22 @@
        tooltips are retained). Prevents the previous 2-row jumble ~1180–1500px. */
     .topbar-right .btn span { display: none; }
     .topbar-right .btn { padding-left: 9px; padding-right: 9px; }
+  }
+
+  /* Uniform header-control height: every interactive control in the bar
+     (campaign switcher, RISK banner, Tour/Campaign buttons, icon buttons,
+     avatar at size 32) sits at the same 32px — only the informational pills
+     ("You are", "Mock data") keep their own pill height. Desktop only: on
+     phones the switcher stays a full-size touch target. */
+  @media (min-width: 721px) {
+    .topbar-right .campaign-switcher,
+    .topbar-right .whats-new,
+    .topbar-right .btn {
+      height: 32px;
+      box-sizing: border-box;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
   }
 
   .iconbtn {

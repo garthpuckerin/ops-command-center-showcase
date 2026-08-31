@@ -178,6 +178,8 @@ function Icon({ name, size = 16 }) {
     case "filter":   return <svg {...p}><path d="M4 5h16l-6 8v5l-4 2v-7Z"/></svg>;
     case "sort":     return <svg {...p}><path d="M8 4v16M5 17l3 3 3-3"/><path d="M16 20V4M13 7l3-3 3 3"/></svg>;
     case "menu":     return <svg {...p}><path d="M4 6h16M4 12h16M4 18h16"/></svg>;
+    case "sun":      return <svg {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>;
+    case "moon":     return <svg {...p}><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>;
     case "logo":     return (
       <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4z"/><path d="M16.5 17.5 13 21l3.5-7L20 13Z"/></svg>
     );
