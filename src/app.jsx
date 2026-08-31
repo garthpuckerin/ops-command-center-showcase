@@ -223,10 +223,10 @@ function App() {
 
   useEffect(() => {
     if (!tour.active) return;
-    const steps = tourStepsForRole(role);
+    const steps = tourStepsForRole(role, isMobile);
     const step = steps[tour.step];
     if (step?.view && step.view !== view) setView(step.view);
-  }, [tour.active, tour.step, role]);
+  }, [tour.active, tour.step, role, isMobile]);
 
   // Launch demo — enter the app and remember it for subsequent visits.
   const enterDemo = React.useCallback(() => {
@@ -272,7 +272,7 @@ function App() {
       </main>
       <RoleFloater role={role} setRole={setRole} open={rolePanelOpen} setOpen={setRolePanelOpen} onStartTour={startTour} />
       <MobileTabBar role={role} view={view} setView={setView} onOpenMenu={() => setNavOpen(true)} />
-      {tour.active && <GuidedTour role={role} tour={tour} setTour={setTour} view={view} />}
+      {tour.active && <GuidedTour role={role} tour={tour} setTour={setTour} view={view} isMobile={isMobile} />}
       {import.meta.env.DEV && <TweaksUI t={t} setTweak={setTweak} />}
     </div>
   );
@@ -605,7 +605,18 @@ function RoleFloater({ role, setRole, open, setOpen, onStartTour }) {
   );
 }
 
-function tourStepsForRole(role) {
+// On the phone companion the tour skips workstation surfaces (their steps
+// would narrate UI the phone deliberately gates) and controls the phone
+// header hides (the theme toggle).
+const MOBILE_DROPPED_TOUR_TARGETS = new Set(["theme-toggle"]);
+
+function tourStepsForRole(role, isMobile = false) {
+  const steps = allTourStepsForRole(role);
+  if (!isMobile) return steps;
+  return steps.filter(s => !DESK_ONLY_VIEWS[s.view] && !MOBILE_DROPPED_TOUR_TARGETS.has(s.target));
+}
+
+function allTourStepsForRole(role) {
   const common = [
     { view: "home", target: "campaign-switcher", title: "Selected campaign", body: "Move between active, planning, and draft campaigns — every screen stays scoped to the same operating context." },
     { view: "home", target: "theme-toggle", title: "Presentation mode", body: "Switch between light and dark (with three accent palettes) when the room, projector, or audience needs different contrast." },
@@ -639,8 +650,8 @@ function tourStepsForRole(role) {
   ];
 }
 
-function GuidedTour({ role, tour, setTour, view }) {
-  const steps = tourStepsForRole(role);
+function GuidedTour({ role, tour, setTour, view, isMobile = false }) {
+  const steps = tourStepsForRole(role, isMobile);
   const step = steps[Math.min(tour.step, steps.length - 1)] || steps[0];
 
   useEffect(() => {

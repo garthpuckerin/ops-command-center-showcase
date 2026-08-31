@@ -136,8 +136,9 @@ function RoleHomeScreen({ onNav, campaignId }) {
         </div>
         <div className="focal-actions">
           <Button kind="solid" iconRight="arrow" onClick={() => onNav("exceptions")}>Open work queue</Button>
-          <Button kind="ghost" onClick={() => onNav("imports")}>Review imports</Button>
-          <Button kind="ghost" onClick={() => onNav("writebacks")}>Review write-backs</Button>
+          {/* Workstation surfaces aren't advertised on the phone companion. */}
+          <span className="mobile-hide"><Button kind="ghost" onClick={() => onNav("imports")}>Review imports</Button></span>
+          <span className="mobile-hide"><Button kind="ghost" onClick={() => onNav("writebacks")}>Review write-backs</Button></span>
         </div>
       </div>
     );
@@ -162,9 +163,11 @@ function RoleHomeScreen({ onNav, campaignId }) {
           <Card><StatNumber value={pendingFeeds} sub="pending import feeds" hint="manual CSV cadence" /></Card>
         </div>
         <div className="focal-actions">
-          <Button kind="solid" iconRight="arrow" onClick={() => onNav("imports")}>Open import wizard</Button>
+          {/* The wizard and scoring are workstation surfaces — not advertised
+              on the phone companion, where the launch gate leads instead. */}
+          <span className="mobile-hide"><Button kind="solid" iconRight="arrow" onClick={() => onNav("imports")}>Open import wizard</Button></span>
           <Button kind="ghost" onClick={() => onNav("setup")}>Review launch gate</Button>
-          <Button kind="ghost" onClick={() => onNav("scoring")}>Tune scoring</Button>
+          <span className="mobile-hide"><Button kind="ghost" onClick={() => onNav("scoring")}>Tune scoring</Button></span>
           <Button kind="ghost" onClick={() => onNav("reports")}>Preview reports</Button>
         </div>
       </div>
@@ -382,7 +385,7 @@ function DemoWalkthroughScreen({ campaignId, onNav }) {
           </div>
           <div className="focal-actions">
             <Button kind="solid" iconRight="arrow" onClick={() => onNav(active?.route)}>Open this screen</Button>
-            <Button kind="ghost" onClick={() => onNav("org-settings")}>Deployment settings</Button>
+            <span className="mobile-hide"><Button kind="ghost" onClick={() => onNav("org-settings")}>Deployment settings</Button></span>
           </div>
         </Card>
       </div>

@@ -57,6 +57,45 @@ test.describe('phone companion', () => {
   })
 })
 
+test.describe('phone companion — advertised authority', () => {
+  test.use({ viewport: { width: 375, height: 812 } })
+
+  test('role-home CTAs do not advertise workstation surfaces on the phone', async ({ page }) => {
+    await seedState(page, { role: 'lead', view: 'home', campaignId: 'camp-riverbend' })
+    await page.goto('/')
+
+    await expect(page.locator('.main').getByText('Import and reconciliation home.')).toBeVisible()
+    // The desk CTAs exist for the workstation but are hidden on the phone.
+    await expect(page.getByRole('button', { name: 'Open import wizard' })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Tune scoring' })).toBeHidden()
+    // The monitoring paths remain.
+    await expect(page.getByRole('button', { name: 'Review launch gate' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Preview reports' })).toBeVisible()
+  })
+
+  test('the phone tour never walks a desk-gated surface', async ({ page }) => {
+    await seedState(page, { role: 'lead', view: 'home', campaignId: 'camp-st-anne' })
+    await page.goto('/')
+
+    await page.getByRole('button', { name: 'Toggle demo role switcher' }).click()
+    await page.getByRole('button', { name: 'Start tour' }).click()
+    const dialog = page.locator('.tour-card')
+    await expect(dialog).toBeVisible()
+
+    for (let i = 0; i < 12; i++) {
+      await expect(
+        page.locator('.main').getByText('stays at the desk.'),
+        'a tour step must never narrate a surface the phone gates'
+      ).toHaveCount(0)
+      const next = dialog.getByRole('button', { name: /^(Next|Finish)$/ })
+      const label = (await next.innerText()).trim()
+      await next.click()
+      if (label === 'Finish') break
+    }
+    await expect(dialog, 'the tour completes').toHaveCount(0)
+  })
+})
+
 test.describe('workstation', () => {
   test('the same surface keeps full authority at the desk', async ({ page }) => {
     await seedState(page, { role: 'lead', view: 'writebacks', campaignId: 'camp-st-anne' })
@@ -67,5 +106,12 @@ test.describe('workstation', () => {
       'desk retains approve authority'
     ).toBeVisible()
     await expect(page.locator('.main').getByText('stays at the desk.')).toHaveCount(0)
+  })
+
+  test('the desk keeps its role-home CTAs', async ({ page }) => {
+    await seedState(page, { role: 'lead', view: 'home', campaignId: 'camp-riverbend' })
+    await page.goto('/')
+    await expect(page.getByRole('button', { name: 'Open import wizard' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Tune scoring' })).toBeVisible()
   })
 })
