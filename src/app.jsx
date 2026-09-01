@@ -506,10 +506,6 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
             <Icon name="chev" size={12} />
           </button>
         )}
-        <button className="iconbtn mobile-hide" title={(t.themeMode || "light") === "dark" ? "Switch to light mode" : "Switch to dark mode"} data-tour="theme-toggle" onClick={() => setTweak("themeMode", (t.themeMode || "light") === "dark" ? "light" : "dark")}>
-          <Icon name={(t.themeMode || "light") === "dark" ? "sun" : "moon"} size={16} />
-        </button>
-        <span className="mobile-hide"><Button kind="ghost" size="sm" icon="play" onClick={onStartTour}>Tour</Button></span>
         {/* Campaign controls sit together: the switcher next to the new-campaign
             button, well clear of the RISK banner. */}
         <label className="campaign-switcher" data-tour="campaign-switcher">
@@ -519,6 +515,11 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
           </select>
         </label>
         {role === "lead" && <span className="mobile-hide"><Button kind="ghost" size="sm" icon="plus" onClick={() => setView("new-campaign")}>Campaign</Button></span>}
+        {/* Utility cluster: theme and tour live with search and notifications. */}
+        <button className="iconbtn mobile-hide" title={(t.themeMode || "light") === "dark" ? "Switch to light mode" : "Switch to dark mode"} data-tour="theme-toggle" onClick={() => setTweak("themeMode", (t.themeMode || "light") === "dark" ? "light" : "dark")}>
+          <Icon name={(t.themeMode || "light") === "dark" ? "sun" : "moon"} size={16} />
+        </button>
+        <span className="mobile-hide"><Button kind="ghost" size="sm" icon="play" onClick={onStartTour}>Tour</Button></span>
         <button className="iconbtn" title="Notifications" onClick={() => setView("notifications")}>
           <Icon name="bell" size={16} />
           {unreadNotifications > 0 && <span className="iconbtn-dot" />}
