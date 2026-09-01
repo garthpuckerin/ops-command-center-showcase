@@ -496,12 +496,6 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
       </div>
       <div className="topbar-right">
         <span className="mobile-hide"><Pill tone="muted" mono>Mock data</Pill></span>
-        <label className="campaign-switcher" data-tour="campaign-switcher">
-          <span className="mono">Campaign</span>
-          <select value={campaignId} title={campaigns.find(c => c.id === campaignId)?.name} onChange={(e) => setCampaignId(e.target.value)}>
-            {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
         {showNew && (
           <button className="whats-new" data-tour="risk-banner" title={blockerSummary.label} onClick={() => setView("exceptions")}>
             <span className="wn-mark mono">{blockerSummary.total ? "RISK" : "CLEAR"}</span>
@@ -513,6 +507,14 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
           <Icon name={(t.themeMode || "light") === "dark" ? "sun" : "moon"} size={16} />
         </button>
         <span className="mobile-hide"><Button kind="ghost" size="sm" icon="play" onClick={onStartTour}>Tour</Button></span>
+        {/* Campaign controls sit together: the switcher next to the new-campaign
+            button, well clear of the RISK banner. */}
+        <label className="campaign-switcher" data-tour="campaign-switcher">
+          <span className="mono">Campaign</span>
+          <select value={campaignId} title={campaigns.find(c => c.id === campaignId)?.name} onChange={(e) => setCampaignId(e.target.value)}>
+            {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </label>
         {role === "lead" && <span className="mobile-hide"><Button kind="ghost" size="sm" icon="plus" onClick={() => setView("new-campaign")}>Campaign</Button></span>}
         <button className="iconbtn" title="Notifications" onClick={() => setView("notifications")}>
           <Icon name="bell" size={16} />
