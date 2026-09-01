@@ -145,6 +145,31 @@ const LMS_DATA = (function () {
     { id: "team-comp-office", campaign_id: "camp-compliance-2026", name: "Compliance Office", focus: "Assignment, completion tracking, and escalation for the annual cycle", lead: "D. Okonkwo", members: ["Compliance Office", "HRIS"] },
   ];
 
+  // ── Team & access: governed provisioning vocabulary ───────────────────────
+  // Mirrors the production engine's role model (Role rows + RoleAssignments;
+  // invites are queued with a validated role). Every role grants the SAME
+  // NUMBER of permissions by design — the invite screen's grant preview must
+  // never change size when a selection changes (invites.test.mjs enforces it).
+  const orgRoles = [
+    { id: "administrator", name: "Administrator", desc: "Org configuration, deployment posture, and access control.", permissions: ["org:configure", "user:manage", "campaign:create", "writeback:approve", "report:export"] },
+    { id: "coordinator", name: "Coordinator", desc: "Campaign setup, rosters, and session logistics.", permissions: ["campaign:manage", "import:run", "session:manage", "learner:view", "report:view"] },
+    { id: "instructor", name: "Instructor", desc: "Session delivery, attendance, and delivery blockers.", permissions: ["session:view", "session:deliver", "exception:view", "learner:view", "report:view"] },
+    { id: "readiness_lead", name: "Readiness Lead", desc: "Readiness, exception triage, and escalation.", permissions: ["readiness:view", "exception:manage", "import:run", "campaign:view", "report:export"] },
+    { id: "learner", name: "Learner", desc: "Own record and assigned training only.", permissions: ["learner:self", "campaign:view", "training:complete", "record:view", "profile:edit"] },
+  ];
+  const campaignRoleOptions = [
+    { id: "campaign_lead", name: "Campaign Lead", permissions: ["campaign:view", "readiness:view", "exception:manage", "report:export"] },
+    { id: "program_admin", name: "Program Admin", permissions: ["campaign:view", "campaign:manage", "readiness:view", "report:view"] },
+    { id: "trainer", name: "Trainer", permissions: ["campaign:view", "session:view", "session:deliver", "exception:view"] },
+    { id: "learner", name: "Learner", permissions: ["campaign:view", "learner:self", "training:complete", "record:view"] },
+  ];
+  // Staged invites — queued records, visible and revocable; a person exists
+  // nowhere in the system until their invite is accepted.
+  const invitations = [
+    { id: "inv-001", email: "r.calloway@example.org", name: "Rae Calloway", org_role: "coordinator", campaign_id: "camp-ambulatory-wave2", campaign_role: "program_admin", status: "queued", invited_by: "Mira Okafor", created_at: shiftTimestamp("2026-05-27T09:20:00Z") },
+    { id: "inv-002", email: "d.mercer@example.org", name: "Dana Mercer", org_role: "instructor", campaign_id: "camp-st-anne", campaign_role: "trainer", status: "accepted", invited_by: "Mira Okafor", created_at: shiftTimestamp("2026-05-24T14:05:00Z") },
+  ];
+
   const sessionUsers = {
     learner: users.find(u => u.id === "u-004"),
     trainer: users.find(u => u.id === "u-002"),
@@ -658,6 +683,9 @@ const LMS_DATA = (function () {
     campaignAccess,
     campaignSetupSections,
     teams,
+    orgRoles,
+    campaignRoleOptions,
+    invitations,
     goLiveDate,
     users,
     sessionUsers,

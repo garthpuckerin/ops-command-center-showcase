@@ -38,7 +38,7 @@ function LearnersScreen({ me, role, campaignId }) {
   );
 }
 
-function PeopleDirectoryScreen({ campaignId }) {
+function PeopleDirectoryScreen({ campaignId, onNav }) {
   const pageSize = 50;
   const [filters, setFilters] = React.useState(defaultPeopleFilters(campaignId));
   const [page, setPage] = React.useState({ items: [], total: 0, limit: pageSize, offset: 0, has_more: false });
@@ -96,6 +96,7 @@ function PeopleDirectoryScreen({ campaignId }) {
         eyebrow="People Directory"
         title="Find any person by operational criteria."
         sub="Tenant-scoped lookup across imported learner records, managers, facilities, departments, campaign participation, identity mappings, and custom fields."
+        action={onNav && <Button kind="solid" icon="plus" onClick={() => onNav("people-invite")}>Invite people</Button>}
       />
       <PeopleFilterBar filters={filters} setFilters={setFilters} campaignId={campaignId} />
       <div className="stat-grid stat-grid-3">

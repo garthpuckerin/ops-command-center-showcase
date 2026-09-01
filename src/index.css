@@ -1599,7 +1599,10 @@
   .kv { display: grid; grid-template-columns: 1fr 1.4fr; padding: 9px 0; border-bottom: 1px dashed var(--rule); font-size: 13px; }
   .kv:last-child { border-bottom: 0; }
   .kv-k { color: var(--muted); }
-  .kv-v { color: var(--ink-2); }
+  .kv-v { color: var(--ink-2); min-width: 0; }
+  /* Single-line value with a tooltip — for panels that must keep a fixed
+     height no matter how long the selected value's name is. */
+  .oneline { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ────────────────────────────────────────────────────────────────
      Admin

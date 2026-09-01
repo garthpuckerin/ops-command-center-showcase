@@ -8,6 +8,7 @@ import {
   LearnersScreen, SessionsScreen, ExceptionsScreen, ReportsScreen, RoleHomeScreen, CampaignCreateScreen,
   WriteBacksScreen, ScoringScreen, NotificationsScreen, TimelineScreen, IntegrationHealthScreen,
   AiAssistantsScreen, LearnerHomeScreen, TrainerHomeScreen, SettingsScreen, OrgSettingsScreen,
+  InvitePeopleScreen,
 } from './screens.jsx'
 import { Icon, Eyebrow, Pill, Rule, Button, Avatar, Card } from './components.jsx'
 import { useTweaks, TweaksPanel, TweakSection, TweakColor, TweakRadio, TweakToggle } from './tweaks-panel.jsx'
@@ -69,7 +70,7 @@ const ROLE_LABELS = {
 // Views reachable outside a role's nav (shared entry points): "settings" is on
 // the user menu for everyone; "new-campaign" is a lead-only authoring action.
 // Everything else must appear in ROLE_NAV[role] to be reachable.
-const SHARED_VIEWS = { all: ["home", "settings"], lead: ["new-campaign"] };
+const SHARED_VIEWS = { all: ["home", "settings"], lead: ["new-campaign", "people-invite"] };
 
 // RBAC read-scope guard. A view is reachable for a role only if it is in that
 // role's nav or an allowed shared view. This closes the deep-link/hash vector:
@@ -99,6 +100,7 @@ const DESK_ONLY_VIEWS = {
   ai: { label: "AI assist staging", why: "Reviewing AI suggestions against their cited records is a side-by-side job." },
   "org-settings": { label: "Org settings", why: "Deployment, connector, and custom-field configuration are administrative changes." },
   "new-campaign": { label: "Campaign creation", why: "Instantiating a template — scoring, requirements, reports, launch gate — deserves a reviewed setup, not a phone form." },
+  "people-invite": { label: "Invite people", why: "Granting roles and campaign access is an administrative act — review the full grant at the workstation before queueing it." },
 };
 
 function useIsMobile() {
@@ -393,7 +395,7 @@ function routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampai
   if (view === "facilities") return <FacilitiesScreen campaignId={campaignId} />;
   if (view === "matrix") return <TrainingMatrixScreen campaignId={campaignId} />;
   if (view === "imports") return <ImportsScreen campaignId={campaignId} onDataChanged={onDataChanged} />;
-  if (view === "people") return <PeopleDirectoryScreen campaignId={campaignId} />;
+  if (view === "people") return <PeopleDirectoryScreen campaignId={campaignId} onNav={setView} />;
   if (view === "learners") return <LearnersScreen me={me} role={role} campaignId={campaignId} />;
   if (view === "sessions") return <SessionsScreen me={me} role={role} campaignId={campaignId} />;
   if (view === "exceptions") return <ExceptionsScreen campaignId={campaignId} onDataChanged={onDataChanged} />;
@@ -406,6 +408,7 @@ function routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampai
   if (view === "ai") return <AiAssistantsScreen campaignId={campaignId} />;
   if (view === "org-settings") return <OrgSettingsScreen campaignId={campaignId} t={t} setTweak={setTweak} />;
   if (view === "new-campaign") return <CampaignCreateScreen setView={setView} setCampaignId={setCampaignId} onDataChanged={onDataChanged} />;
+  if (view === "people-invite") return <InvitePeopleScreen setView={setView} campaignId={campaignId} onDataChanged={onDataChanged} />;
   if (view === "settings") return <SettingsScreen me={me} t={t} setTweak={setTweak} />;
   if (role === "learner") return <LearnerHomeScreen me={me} onNav={setView} campaignId={campaignId} />;
   if (role === "trainer") return <TrainerHomeScreen me={me} onNav={setView} campaignId={campaignId} />;

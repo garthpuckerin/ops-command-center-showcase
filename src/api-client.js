@@ -516,6 +516,38 @@ export async function reviewWriteBackJob(campaignId, jobId, decision, reviewerNo
 // Monotonic suffix so two creations in the same millisecond cannot collide.
 let createSeq = 0;
 
+// Governed provisioning — mirrors the engine's POST /users/bulk-invite:
+// invites are QUEUED (202 semantics) with a validated role; unknown roles are
+// rejected; nothing is provisioned until an invite is accepted. Revocation is
+// an audit state, not a deletion.
+export async function queueInvites(values) {
+  const role = (LMS_DATA.orgRoles || []).find(r => r.id === values.org_role);
+  if (!role) throw new Error(`Unknown role: ${values.org_role}`);
+  const campaignRole = (LMS_DATA.campaignRoleOptions || []).find(r => r.id === values.campaign_role);
+  if (!campaignRole) throw new Error(`Unknown campaign role: ${values.campaign_role}`);
+  const inviter = LMS_DATA.sessionUsers?.lead;
+  const emails = [...new Set((values.emails || []).map(e => String(e).trim().toLowerCase()).filter(e => e.includes("@")))];
+  const created = emails.map(email => ({
+    id: `inv-${Date.now()}-${++createSeq}`,
+    email,
+    name: null,
+    org_role: role.id,
+    campaign_id: values.campaign_id,
+    campaign_role: campaignRole.id,
+    status: "queued",
+    invited_by: inviter ? `${inviter.first_name} ${inviter.last_name}` : "Administrator",
+  }));
+  LMS_DATA.invitations = [...created, ...(LMS_DATA.invitations || [])];
+  return created;
+}
+
+export async function revokeInvite(inviteId) {
+  const invite = (LMS_DATA.invitations || []).find(i => i.id === inviteId);
+  if (!invite) throw new Error(`Unknown invite: ${inviteId}`);
+  invite.status = "revoked";
+  return invite;
+}
+
 export async function createCampaignFromTemplate(templateId, values) {
   const template = (LMS_DATA.campaignTemplates || []).find(item => item.id === templateId);
   const id = `campaign-${Date.now()}-${++createSeq}`;
