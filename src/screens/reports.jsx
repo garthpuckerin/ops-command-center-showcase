@@ -7,7 +7,10 @@ import { cls, Eyebrow, Rule, Pill, Bar, Card, Button } from '../components.jsx'
 import { Cell, KV, PageHeader, Row, Table, campaignById, pct, riskPill } from './_shared.jsx'
 
 function ReportsScreen({ campaignId, onDataChanged }) {
-  const scopedReports = D.reports.filter(r => !r.campaign_id || r.campaign_id === campaignId);
+  // Campaign-scoped only — a report without a campaign is not "everyone's",
+  // it is nobody's; the old global fallback rendered St. Anne's package under
+  // every other campaign.
+  const scopedReports = D.reports.filter(r => r.campaign_id === campaignId);
   const [activeId, setActiveId] = React.useState(scopedReports[0]?.id);
   const [showBuilder, setShowBuilder] = React.useState(false);
   const [builder, setBuilder] = React.useState({
@@ -22,7 +25,7 @@ function ReportsScreen({ campaignId, onDataChanged }) {
       setActiveId(scopedReports[0].id);
     }
   }, [campaignId, activeId, scopedReports]);
-  const active = scopedReports.find(r => r.id === activeId) || scopedReports[0] || D.reports[0];
+  const active = scopedReports.find(r => r.id === activeId) || scopedReports[0] || null;
   const campaign = campaignById(campaignId);
 
   async function saveBuilderReport() {
@@ -95,6 +98,14 @@ function ReportsScreen({ campaignId, onDataChanged }) {
           </div>
         </Card>
       )}
+      {!active && (
+        <Card>
+          <Eyebrow n={1}>No reports yet</Eyebrow>
+          <h2 className="display-sm">This campaign has no reporting package.</h2>
+          <p className="muted small">Campaigns created from a template arrive with their default reports; use the Report builder above to add one here.</p>
+        </Card>
+      )}
+      {active && (
       <div className="report-layout">
         <div className="report-picker">
           {scopedReports.map(r => (
@@ -115,6 +126,7 @@ function ReportsScreen({ campaignId, onDataChanged }) {
         </div>
         <ReportPreview report={active} />
       </div>
+      )}
     </div>
   );
 }

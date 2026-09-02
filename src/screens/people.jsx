@@ -38,7 +38,7 @@ function LearnersScreen({ me, role, campaignId }) {
   );
 }
 
-function PeopleDirectoryScreen({ campaignId, onNav }) {
+function PeopleDirectoryScreen({ campaignId, onNav, focusSearchNonce = 0 }) {
   const pageSize = 50;
   const [filters, setFilters] = React.useState(defaultPeopleFilters(campaignId));
   const [page, setPage] = React.useState({ items: [], total: 0, limit: pageSize, offset: 0, has_more: false });
@@ -98,7 +98,7 @@ function PeopleDirectoryScreen({ campaignId, onNav }) {
         sub="Tenant-scoped lookup across imported learner records, managers, facilities, departments, campaign participation, identity mappings, and custom fields."
         action={onNav && <Button kind="solid" icon="plus" onClick={() => onNav("people-invite")}>Invite people</Button>}
       />
-      <PeopleFilterBar filters={filters} setFilters={setFilters} campaignId={campaignId} />
+      <PeopleFilterBar filters={filters} setFilters={setFilters} campaignId={campaignId} focusNonce={focusSearchNonce} />
       <div className="stat-grid stat-grid-3">
         <Card><StatNumber value={fmt(page.total)} sub="matching records" hint="paged, not fully hydrated" /></Card>
         <Card><StatNumber value={fmt(loaded)} sub="loaded" hint={page.has_more ? "more available" : "current result set"} /></Card>
@@ -143,7 +143,13 @@ function PeopleDirectoryScreen({ campaignId, onNav }) {
   );
 }
 
-function PeopleFilterBar({ filters, setFilters, campaignId }) {
+function PeopleFilterBar({ filters, setFilters, campaignId, focusNonce = 0 }) {
+  // The header's Quick search lands here with the field focused; the nonce
+  // re-focuses on every press even when the directory is already open.
+  const searchRef = React.useRef(null);
+  React.useEffect(() => {
+    if (focusNonce > 0) searchRef.current?.focus();
+  }, [focusNonce]);
   const departments = D.departments.filter(d => !filters.campaign_id || filters.campaign_id === "all" || d.campaign_id === filters.campaign_id);
   const facilities = D.facilities.filter(f => !filters.campaign_id || filters.campaign_id === "all" || f.campaign_id === filters.campaign_id);
   const managers = ["all", ...new Set((D.learners || []).map(l => l.manager_name || l.manager).filter(Boolean))].sort();
@@ -154,7 +160,7 @@ function PeopleFilterBar({ filters, setFilters, campaignId }) {
       <div className="filterbar-row">
         <label className="select-inline session-filter-select grow">
           <span>Search</span>
-          <input value={filters.q} onChange={e => set("q", e.target.value)} placeholder="Name, email, employee ID, LMS, Epic" />
+          <input ref={searchRef} value={filters.q} onChange={e => set("q", e.target.value)} placeholder="Name, email, employee ID, LMS, Epic" />
         </label>
         <FilterSelect label="Manager" value={filters.manager} onChange={v => set("manager", v)}>
           {managers.map(manager => <option key={manager} value={manager}>{manager === "all" ? "All" : manager}</option>)}

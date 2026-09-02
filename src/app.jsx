@@ -8,7 +8,7 @@ import {
   LearnersScreen, SessionsScreen, ExceptionsScreen, ReportsScreen, RoleHomeScreen, CampaignCreateScreen,
   WriteBacksScreen, ScoringScreen, NotificationsScreen, TimelineScreen, IntegrationHealthScreen,
   AiAssistantsScreen, LearnerHomeScreen, TrainerHomeScreen, SettingsScreen, OrgSettingsScreen,
-  InvitePeopleScreen,
+  InvitePeopleScreen, campaignTemplate,
 } from './screens.jsx'
 import { Icon, Eyebrow, Pill, Rule, Button, Avatar, Card } from './components.jsx'
 import { useTweaks, TweaksPanel, TweakSection, TweakColor, TweakRadio, TweakToggle } from './tweaks-panel.jsx'
@@ -154,6 +154,8 @@ function App() {
   const [rolePanelOpen, setRolePanelOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [tour, setTour] = useState({ active: false, step: 0 });
+  // Bumps on every Quick search press so People Directory re-focuses its field.
+  const [searchNonce, setSearchNonce] = useState(0);
   const isMobile = useIsMobile();
   const didMountRole = React.useRef(false);
   const closeNav = React.useCallback(() => setNavOpen(false), []);
@@ -256,16 +258,17 @@ function App() {
     );
   }
 
-  const screen = routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampaignId, () => setDataVersion(v => v + 1), isMobile);
+  const screen = routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampaignId, () => setDataVersion(v => v + 1), isMobile, searchNonce);
+  const quickSearch = () => { setView("people"); setSearchNonce(n => n + 1); };
   const blockerSummary = campaignBlockerSummary(campaignId);
   const startTour = () => setTour({ active: true, step: 0 });
 
   return (
     <div className="shell">
-      <Sidebar role={role} setRole={setRole} view={view} setView={setView} me={me} open={navOpen} onClose={closeNav} onSignOut={signOut} />
+      <Sidebar role={role} setRole={setRole} view={view} setView={setView} me={me} open={navOpen} onClose={closeNav} onSignOut={signOut} campaignId={campaignId} />
       {navOpen && <div className="nav-backdrop" onClick={closeNav} aria-hidden="true" />}
       <main className="main">
-        <Topbar me={me} role={role} setView={setView} showNew={t.showNew} campaignId={campaignId} setCampaignId={setCampaignId} campaigns={availableCampaigns} blockerSummary={blockerSummary} apiStatus={apiStatus} t={t} setTweak={setTweak} onStartTour={startTour} onToggleNav={() => setNavOpen(o => !o)} />
+        <Topbar me={me} role={role} setView={setView} showNew={t.showNew} campaignId={campaignId} setCampaignId={setCampaignId} campaigns={availableCampaigns} blockerSummary={blockerSummary} apiStatus={apiStatus} t={t} setTweak={setTweak} onStartTour={startTour} onToggleNav={() => setNavOpen(o => !o)} onQuickSearch={quickSearch} />
         <div className="content">
           <ScreenErrorBoundary resetKey={`${role}:${view}:${campaignId}`}>
             {screen}
@@ -378,7 +381,7 @@ function campaignBlockerSummary(campaignId) {
   };
 }
 
-function routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampaignId, onDataChanged, isMobile) {
+function routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampaignId, onDataChanged, isMobile, searchNonce = 0) {
   // RBAC read-scope: a view outside this role's scope falls back to home. The
   // normalizing effect in App also rewrites the state, but this guards the very
   // first synchronous paint (e.g. a `#org-settings` deep link as a learner).
@@ -395,7 +398,7 @@ function routeScreen(view, role, me, setView, t, setTweak, campaignId, setCampai
   if (view === "facilities") return <FacilitiesScreen campaignId={campaignId} />;
   if (view === "matrix") return <TrainingMatrixScreen campaignId={campaignId} />;
   if (view === "imports") return <ImportsScreen campaignId={campaignId} onDataChanged={onDataChanged} />;
-  if (view === "people") return <PeopleDirectoryScreen campaignId={campaignId} onNav={setView} />;
+  if (view === "people") return <PeopleDirectoryScreen campaignId={campaignId} onNav={setView} focusSearchNonce={searchNonce} />;
   if (view === "learners") return <LearnersScreen me={me} role={role} campaignId={campaignId} />;
   if (view === "sessions") return <SessionsScreen me={me} role={role} campaignId={campaignId} />;
   if (view === "exceptions") return <ExceptionsScreen campaignId={campaignId} onDataChanged={onDataChanged} />;
@@ -419,8 +422,11 @@ function cls(...args) {
   return args.filter(Boolean).join(" ");
 }
 
-function Sidebar({ role, setRole, view, setView, me, open = false, onSignOut }) {
+function Sidebar({ role, setRole, view, setView, me, open = false, onSignOut, campaignId }) {
   const nav = ROLE_NAV[role];
+  // The brand line names the CURRENT campaign's template, not a fixed
+  // "Epic go-live" — the sidebar follows the campaign like every other surface.
+  const scenarioLabel = `${campaignTemplate(campaignId)?.name || "Campaign"} scenario`;
   const groupedNav = nav.reduce((groups, item) => {
     const group = item.group || "Navigation";
     if (!groups.some(g => g.name === group)) groups.push({ name: group, items: [] });
@@ -434,7 +440,7 @@ function Sidebar({ role, setRole, view, setView, me, open = false, onSignOut }) 
         <span className="brand-mark"><Icon name="logo" size={18} /></span>
         <div className="brand-text">
           <div className="brand-name">LMS Ops <em>Command Center</em></div>
-          <div className="brand-sub mono">Epic go-live scenario</div>
+          <div className="brand-sub mono" title={scenarioLabel}>{scenarioLabel}</div>
         </div>
       </div>
 
@@ -480,12 +486,13 @@ function Sidebar({ role, setRole, view, setView, me, open = false, onSignOut }) 
   );
 }
 
-function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaigns, blockerSummary, apiStatus, t, setTweak, onStartTour, onToggleNav }) {
+function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaigns, blockerSummary, apiStatus, t, setTweak, onStartTour, onToggleNav, onQuickSearch }) {
   const unreadNotifications = (LMS_DATA.notifications || []).filter(n => n.campaign_id === campaignId && n.status === "unread").length;
+  const scenario = (campaignTemplate(campaignId)?.name || "campaign").toLowerCase();
   const desc = {
     learner: "Viewing assigned training and account readiness.",
     trainer: "Viewing sessions, capacity, and training exceptions.",
-    lead: "Viewing enterprise go-live readiness and escalation risk.",
+    lead: `Viewing ${scenario} readiness and escalation risk.`,
   };
   return (
     <header className="topbar">
@@ -524,7 +531,7 @@ function Topbar({ me, role, setView, showNew, campaignId, setCampaignId, campaig
           <Icon name="bell" size={16} />
           {unreadNotifications > 0 && <span className="iconbtn-dot" />}
         </button>
-        <button className="iconbtn mobile-hide" title="Quick search"><Icon name="search" size={16} /></button>
+        <button className="iconbtn mobile-hide" title="Quick search — People Directory" aria-label="Quick search" onClick={onQuickSearch}><Icon name="search" size={16} /></button>
         <Avatar user={me} size={32} />
       </div>
       </div>

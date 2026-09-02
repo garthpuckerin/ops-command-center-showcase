@@ -305,9 +305,46 @@ const LMS_DATA = (function () {
   // the live numbers (a partial {departments, exceptions} is all it reads).
   const activeScoring = computeReadiness({ departments, exceptions }, activeCampaignId, activeCampaign.scoringProfile || {});
 
+  // Reports are campaign-scoped — a report carries its campaign_id so one
+  // campaign's package never renders under another. The compliance report's
+  // figures DERIVE from the compliance departments (no hand-typed bars).
+  const complianceDepartments = departments.filter(d => d.campaign_id === "camp-compliance-2026");
+  const complianceRequired = complianceDepartments.reduce((s, d) => s + d.required, 0);
+  const complianceComplete = complianceDepartments.reduce((s, d) => s + d.complete, 0);
+  const complianceCompletionPct = complianceRequired ? Math.round((complianceComplete / complianceRequired) * 100) : 0;
+  const complianceOpen = exceptions.filter(e => complianceDepartments.some(d => d.id === e.department_id) && !["resolved", "closed"].includes(e.status)).length;
+
   const reports = [
     {
+      id: "r-006",
+      campaign_id: "camp-compliance-2026",
+      title: "Compliance Completion",
+      desc: "Attestation completion by division, stuck assignees, and escalations against the deadline.",
+      cadence: "Weekly",
+      owner: "Compliance Office",
+      format: "graphical",
+      audience: "Compliance & leadership",
+      filterConfig: {},
+      columnConfig: [{ key: "metric", label: "Metric" }, { key: "value", label: "Value" }],
+      groupingConfig: {},
+      sortConfig: [],
+      preview: {
+        headline: `${complianceCompletionPct}% attestation completion`,
+        summary: "Two assignees are past the time-in-course threshold without completing; the leadership cohort has not started.",
+        metrics: [
+          { label: "Completion", value: `${complianceCompletionPct}%`, tone: "olive" },
+          { label: "Stuck assignees", value: "2", tone: "terracotta" },
+          { label: "Open exceptions", value: `${complianceOpen}`, tone: "red" },
+        ],
+        bars: complianceDepartments.map(d => {
+          const value = d.required ? Math.round((d.complete / d.required) * 100) : 0;
+          return { label: d.name, value, tone: value >= 90 ? "olive" : value >= 85 ? "ochre" : "terracotta" };
+        }),
+      },
+    },
+    {
       id: "r-001",
+      campaign_id: activeCampaignId,
       title: "Daily Readiness Brief",
       desc: "Executive summary of completion, exceptions, and risk by department.",
       cadence: "Daily",
@@ -337,6 +374,7 @@ const LMS_DATA = (function () {
     },
     {
       id: "r-002",
+      campaign_id: activeCampaignId,
       title: "At-Risk Learner Export",
       desc: "Learners missing required training, accounts, or Epic identifiers.",
       cadence: "On demand",
@@ -363,6 +401,7 @@ const LMS_DATA = (function () {
     },
     {
       id: "r-003",
+      campaign_id: activeCampaignId,
       title: "Department Readiness Packet",
       desc: "Manager-facing follow-up list grouped by department and role.",
       cadence: "Twice weekly",
@@ -391,6 +430,7 @@ const LMS_DATA = (function () {
     },
     {
       id: "r-004",
+      campaign_id: activeCampaignId,
       title: "Completion Reconciliation",
       desc: "Compares LMS completion exports against the command-center matrix.",
       cadence: "Daily",
@@ -408,6 +448,7 @@ const LMS_DATA = (function () {
     },
     {
       id: "r-005",
+      campaign_id: activeCampaignId,
       title: "Open Blockers",
       desc: "Critical and high issues that require escalation before go-live.",
       cadence: "Daily",
@@ -638,8 +679,8 @@ const LMS_DATA = (function () {
   };
 
   const demoWalkthrough = [
-    { id: "tour-position", order: 1, title: "Position the product", route: "scenarios", persona: "Executive buyer", point: "This is a campaign readiness platform — not an LMS and not an Epic-only utility. It is the operations layer above your systems of record.", proof: "Scenario packs show Epic go-live, acquisition onboarding, compliance cycles, and enablement campaigns from one engine." },
-    { id: "tour-setup", order: 2, title: "Trust the launch gate", route: "setup", persona: "Program sponsor", point: "No campaign dashboard is trusted until its setup sections are owned, evidenced, and signed off.", proof: "Each gate section carries an owner, evidence, status, and a launch-blocking flag — the gate actually gates go-live." },
+    { id: "tour-position", order: 1, title: "Position the product", route: "scenarios", persona: "Executive buyer", point: "This is an LMS-shaped, campaign-configurable operations command center — not another LMS, and not an Epic-only utility. It sits above your systems of record, and the campaign is the unit of configuration: templates bend the same engine to each operation.", proof: "Scenario packs open two live operations — an Epic go-live and an annual compliance cycle — from one engine, with acquisition and enablement templates staged behind them." },
+    { id: "tour-setup", order: 2, title: "Trust the launch gate", route: "setup", persona: "Program sponsor", point: "No campaign dashboard is trusted until its setup sections are owned, evidenced, and signed off — by named teams, not free-text owners.", proof: "Each gate section carries an owner, evidence, status, and a launch-blocking flag, and the owning teams roll up their criteria and open blockers live — six teams on the go-live, one on the compliance cycle." },
     { id: "tour-import", order: 3, title: "Turn a messy roster into clean records", route: "imports", persona: "Training operations", point: "Paste an imperfect CSV: the wizard previews it — masking sensitive columns and flagging bad rows — before anything is applied.", proof: "Apply creates the valid learners AND raises a reconciliation exception for the mismatches; the open-blocker count moves live. 'Allow messy to create efficiency.'" },
     { id: "tour-exceptions", order: 4, title: "Drive the exception queue to zero", route: "exceptions", persona: "Command center lead", point: "Identity, capacity, completion, and scheduling problems become one governed work queue instead of scattered tickets.", proof: "Start and Resolve move real state — with owners, escalation, and resolution notes — and the campaign's open-blocker count updates in step." },
     { id: "tour-scoring", order: 5, title: "Explain the readiness number", route: "scoring", persona: "Readiness lead", point: "Readiness is a deterministic, explainable score — not a black box and not an AI guess.", proof: "Adjust a scoring weight and the number recomputes live from the same formula the dashboard and readiness rollup use; every driver is shown." },

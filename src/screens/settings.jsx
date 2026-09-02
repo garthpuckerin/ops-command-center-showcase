@@ -300,7 +300,7 @@ function AiAssistantsScreen({ campaignId }) {
   const [result, setResult] = React.useState(null);
   const [running, setRunning] = React.useState(null);
   const [staged, setStaged] = React.useState(false);
-  const scopedReports = D.reports.filter(r => r.campaign_id === campaignId || !r.campaign_id);
+  const scopedReports = D.reports.filter(r => r.campaign_id === campaignId);
   const scopedLearners = campaignData(campaignId).learners;
   const scopedImports = (D.imports || []).filter(i => i.campaign_id === campaignId);
   const scopedNotifications = (D.notifications || []).filter(n => n.campaign_id === campaignId);

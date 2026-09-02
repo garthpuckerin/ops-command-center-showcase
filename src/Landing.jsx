@@ -18,18 +18,18 @@ const FEATURES = [
   },
   {
     icon: 'pulse',
-    title: 'Epic go-live readiness',
-    body: 'Run the cross-functional coordination of an EHR go-live: hundreds of departments, facilities, roles, and training tracks that all have to hit ready at the same time.',
+    title: 'Two live operations, one engine',
+    body: 'An Epic go-live and an annual compliance cycle run side by side: go-live readiness and a launch gate for one; a deadline countdown, per-assignee completion, and stuck-learner detection for the other.',
   },
   {
-    icon: 'sort',
-    title: 'Training matrix & exception queues',
-    body: 'Completion tracking across cohorts with department and facility scorecards, plus a shared exception queue that turns scattered issues into one triage workflow.',
+    icon: 'catalog',
+    title: 'The campaign is the unit of configuration',
+    body: 'Templates set terminology, scoring, gate criteria, and home layout; teams own the criteria — six on the go-live, one on the compliance cycle. Create a campaign and it arrives already shaped.',
   },
   {
     icon: 'flag',
-    title: 'Timeline & escalation reporting',
-    body: 'A milestone and escalation timeline with stakeholder visibility, an import/validation pipeline, and go-live readiness reporting ready to export.',
+    title: 'Governed by design',
+    body: 'Deterministic, explainable readiness scoring; a messy-import → reconcile → resolve pipeline; approve-before-write-back; suggestion-only AI that cites its records; provisioning that queues, never silently creates.',
   },
 ];
 
@@ -42,7 +42,7 @@ export const Landing = ({ onEnter, themeMode = 'light', onToggleTheme }) => {
           <span className="brand-mark"><Icon name="logo" size={18} /></span>
           <div className="brand-text">
             <div className="brand-name">LMS Ops <em>Command Center</em></div>
-            <div className="brand-sub mono">Epic go-live scenario</div>
+            <div className="brand-sub mono">Campaign-configurable operations</div>
           </div>
         </div>
         <div className="landing-top-actions">
@@ -64,14 +64,14 @@ export const Landing = ({ onEnter, themeMode = 'light', onToggleTheme }) => {
         <section className="landing-hero">
           <Eyebrow n={1}>Operations cockpit · mock data</Eyebrow>
           <h1 className="display-lg landing-headline">
-            The cockpit for complex <em>go-live readiness</em>.
+            One engine. <em>Every campaign its own shape.</em>
           </h1>
           <p className="lead landing-lead">
-            A configurable operations command center for multi-stakeholder
-            implementation workflows. The live demo runs an EHR go-live —
-            bringing departments, facilities, roles, training, and exceptions
-            into one coordinated, role-scoped view for the people who have to
-            land it together.
+            An LMS-shaped, campaign-configurable operations command center for
+            multi-stakeholder implementations. The live demo runs two operations
+            from the same engine — an Epic go-live and an annual compliance
+            cycle — each with its own terminology, launch gate, owning teams,
+            and home, all role-scoped for the people who have to land it together.
           </p>
           <div className="landing-cta-row">
             <Button kind="solid" iconRight="chev" onClick={onEnter}>Launch demo</Button>
@@ -91,7 +91,7 @@ export const Landing = ({ onEnter, themeMode = 'light', onToggleTheme }) => {
       </main>
 
       <footer className="landing-foot mono">
-        <span>LMS Ops Command Center — operations readiness demo</span>
+        <span>LMS Ops Command Center — campaign operations demo</span>
         <span>Sanitized · fixtures only</span>
       </footer>
     </div>

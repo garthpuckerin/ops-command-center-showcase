@@ -8,7 +8,7 @@
 //
 // Asserts (app):
 //   1. The app shell renders with the "LMS Ops Command Center" brand mark.
-//   2. The sidebar sub-label "Epic go-live scenario" is visible (stable fixture).
+//   2. The sidebar sub-label names the default campaign's template ("Epic Go-Live scenario").
 //   3. ZERO browser console errors, ZERO page errors, ZERO failed network requests.
 //
 // Any failed request or console error is a genuine defect (residual backend
@@ -79,12 +79,14 @@ test('fixtures-only render with zero console/page/network errors', async ({ page
 
   // 2. Scenario sub-label — equally stable; confirms the shell is fully rendered
   //    and the correct app variant loaded (not a blank page or error fallback).
+  // The brand line follows the current campaign's template (default campaign
+  // is the Epic Go-Live flagship).
   await expect(
     page.locator('.brand-sub'),
-    'Sidebar scenario label "Epic go-live scenario" should be visible'
+    'Sidebar scenario label should be visible'
   ).toBeVisible()
 
-  await expect(page.locator('.brand-sub')).toContainText('Epic go-live scenario')
+  await expect(page.locator('.brand-sub')).toContainText('Epic Go-Live scenario')
 
   // 3. Strict error assertions — any entry here is a real defect
   assertZeroErrors(errors)
