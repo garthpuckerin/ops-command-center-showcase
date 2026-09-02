@@ -601,6 +601,28 @@ const LMS_DATA = (function () {
       is_active: true,
       created_at: shiftTimestamp("2026-05-26T12:00:00Z"),
     },
+    // Compliance-campaign rules: the stuck-assignee detector (threshold matches
+    // the campaign's detection config) and a division completion threshold.
+    {
+      id: "rule-stuck-assignee",
+      campaign_id: "camp-compliance-2026",
+      name: "Stuck assignee",
+      trigger_type: "stuck_assignee",
+      parameters: { minutes: 120 },
+      severity: "high",
+      is_active: true,
+      created_at: shiftTimestamp("2026-05-24T10:00:00Z"),
+    },
+    {
+      id: "rule-comp-division-threshold",
+      campaign_id: "camp-compliance-2026",
+      name: "Division below threshold",
+      trigger_type: "department_below_threshold",
+      parameters: { completion_threshold: 85 },
+      severity: "medium",
+      is_active: true,
+      created_at: shiftTimestamp("2026-05-24T10:05:00Z"),
+    },
   ];
 
   const notifications = [
@@ -629,6 +651,32 @@ const LMS_DATA = (function () {
       source_type: "campaign_department",
       source_id: "dep-ed",
       created_at: shiftTimestamp("2026-05-26T12:07:00Z"),
+    },
+    {
+      id: "notif-comp-stuck",
+      campaign_id: "camp-compliance-2026",
+      rule_id: "rule-stuck-assignee",
+      title: "Stuck assignees",
+      message: "2 assignees have exceeded the 120-minute time-in-course threshold without completing the attestation.",
+      notification_type: "escalation",
+      severity: "high",
+      status: "unread",
+      source_type: "campaign_exception",
+      source_id: "e-401",
+      created_at: shiftTimestamp("2026-05-27T08:15:00Z"),
+    },
+    {
+      id: "notif-comp-leadership",
+      campaign_id: "camp-compliance-2026",
+      rule_id: "rule-comp-division-threshold",
+      title: "Division below threshold",
+      message: "Leadership is at 78% attestation completion against the configured 85% division threshold.",
+      notification_type: "escalation",
+      severity: "medium",
+      status: "read",
+      source_type: "campaign_department",
+      source_id: "dep-comp-leadership",
+      created_at: shiftTimestamp("2026-05-26T16:40:00Z"),
     },
   ];
 
