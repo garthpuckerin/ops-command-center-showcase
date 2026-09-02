@@ -4,6 +4,7 @@ dist/
 .turbo/
 test-results/
 playwright-report/
+.claude/
 *.log
 .DS_Store
 
