@@ -81,10 +81,13 @@ const LMS_DATA = (function () {
   const goLiveDate = campaigns.find(c => c.id === activeCampaignId).goLiveDate;
 
   const users = [
-    { id: "u-001", first_name: "Mira", last_name: "Okafor", email: "mira.okafor@example.org", role: "lead", avatar: "MO", title: "Readiness Lead" },
-    { id: "u-002", first_name: "Daniel", last_name: "Reeve", email: "daniel.reeve@example.org", role: "trainer", avatar: "DR", title: "Principal Trainer" },
+    // Acting personas follow the sibling-showcase convention (GT: "Demo
+    // Administrator"): the switchable users are generic Demo personas; the
+    // named people in the fixtures (team leads, owners, trainers) are colleagues.
+    { id: "u-001", first_name: "Demo", last_name: "Lead", email: "demo.lead@example.org", role: "lead", avatar: "DL", title: "Readiness Lead" },
+    { id: "u-002", first_name: "Demo", last_name: "Trainer", email: "demo.trainer@example.org", role: "trainer", avatar: "DT", title: "Principal Trainer" },
     { id: "u-003", first_name: "Priya", last_name: "Anand", email: "priya.anand@example.org", role: "trainer", avatar: "PA", title: "Credentialed Trainer" },
-    { id: "u-004", first_name: "Owen", last_name: "Voss", email: "owen.voss@example.org", role: "learner", avatar: "OV", title: "Inpatient RN" },
+    { id: "u-004", first_name: "Demo", last_name: "Learner", email: "demo.learner@example.org", role: "learner", avatar: "DN", title: "Inpatient RN" },
   ];
 
   const campaignAccess = [
@@ -128,10 +131,10 @@ const LMS_DATA = (function () {
   // St. Anne ran SIX teams each owning different criteria; the compliance
   // cycle runs ONE — the platform bends to each campaign's model.
   const teams = [
-    { id: "team-sta-readiness", campaign_id: "camp-st-anne", name: "Readiness Leadership", focus: "Go/no-go criteria, escalation, and executive reporting", lead: "Mira Okafor", members: ["Mira Okafor", "Readiness Lead"] },
+    { id: "team-sta-readiness", campaign_id: "camp-st-anne", name: "Readiness Leadership", focus: "Go/no-go criteria, escalation, and executive reporting", lead: "Mira Okafor", members: ["Mira Okafor", "Readiness Lead", "Demo Lead"] },
     { id: "team-sta-pmo", campaign_id: "camp-st-anne", name: "Operations PMO", focus: "Facilities, departments, and the milestone plan", lead: "T. Osei", members: ["Operations PMO", "PMO"] },
     { id: "team-sta-hris", campaign_id: "camp-st-anne", name: "HRIS & Data", focus: "Roster truth, identity feeds, and import cadence", lead: "K. Yamada", members: ["HRIS", "Data Team"] },
-    { id: "team-sta-training", campaign_id: "camp-st-anne", name: "Training Operations", focus: "Curriculum, sessions, trainers, and completion chase", lead: "Daniel Reeve", members: ["Training Ops", "Daniel Reeve", "Priya Anand"] },
+    { id: "team-sta-training", campaign_id: "camp-st-anne", name: "Training Operations", focus: "Curriculum, sessions, trainers, and completion chase", lead: "Daniel Reeve", members: ["Training Ops", "Daniel Reeve", "Priya Anand", "Demo Trainer"] },
     { id: "team-sta-access", campaign_id: "camp-st-anne", name: "Access & Identity", focus: "Accounts, credentials, and provisioning", lead: "N. Farouk", members: ["Access Team"] },
     { id: "team-sta-golive", campaign_id: "camp-st-anne", name: "Go-Live Command Center", focus: "Activation-week floor support and coverage", lead: "J. Whitfield", members: ["J. Whitfield"] },
 
@@ -243,7 +246,7 @@ const LMS_DATA = (function () {
   ];
 
   const learners = [
-    { id: "l-001", name: "Owen Voss", role: "Inpatient RN", department_id: "dep-nursing", facility_id: "fac-main", manager: "S. Patel", lms: "matched", epic_id: "matched", completion: 78, status: "in_progress", exception: null },
+    { id: "l-001", name: "Demo Learner", role: "Inpatient RN", department_id: "dep-nursing", facility_id: "fac-main", manager: "S. Patel", lms: "matched", epic_id: "matched", completion: 78, status: "in_progress", exception: null },
     { id: "l-002", name: "Hana El-Amin", role: "Inpatient RN", department_id: "dep-ed", facility_id: "fac-ed", manager: "M. Torres", lms: "matched", epic_id: "missing", completion: 42, status: "exception", exception: "Missing Epic ID" },
     { id: "l-003", name: "Jonas Park", role: "Provider", department_id: "dep-ed", facility_id: "fac-ed", manager: "R. Singh", lms: "duplicate", epic_id: "matched", completion: 21, status: "exception", exception: "Duplicate LMS account" },
     { id: "l-004", name: "Imani Walsh", role: "Front Desk Registrar", department_id: "dep-ambulatory", facility_id: "fac-north", manager: "C. Nguyen", lms: "matched", epic_id: "matched", completion: 100, status: "completed", exception: null },

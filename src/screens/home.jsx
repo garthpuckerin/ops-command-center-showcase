@@ -286,7 +286,7 @@ function LearnerHomeScreen({ me, onNav, campaignId }) {
   }
   return (
     <div className="screen">
-      <PageHeader eyebrow="Required Training" title={<>Your go-live readiness, <em>{me?.first_name || "Learner"}.</em></>} sub="A learner-facing view of assigned training, account status, and remaining blockers." />
+      <PageHeader eyebrow="Required Training" title={<>Your go-live readiness, <em>{me ? `${me.first_name} ${me.last_name}` : "Learner"}.</em></>} sub="A learner-facing view of assigned training, account status, and remaining blockers." />
       <Card className="focal" padded={false}>
         <div className="focal-grid">
           <RequirementCover requirement={requirement} size="lg" />
@@ -317,7 +317,7 @@ function TrainerHomeScreen({ me, onNav, campaignId }) {
   const risky = mySessions.filter(s => s.risk !== "low");
   return (
     <div className="screen">
-      <PageHeader eyebrow="Trainer Dashboard" title={<>Session operations, <em>{me.first_name}.</em></>} sub={`${mySessions.length} sessions assigned · ${risky.length} need attention.`} />
+      <PageHeader eyebrow="Trainer Dashboard" title={<>Session operations, <em>{me.first_name} {me.last_name}.</em></>} sub={`${mySessions.length} sessions assigned · ${risky.length} need attention.`} />
       <div className="stat-grid stat-grid-4">
         <Card><StatNumber value={mySessions.length} sub="assigned sessions" /></Card>
         <Card><StatNumber value={risky.length} sub="flagged sessions" /></Card>
