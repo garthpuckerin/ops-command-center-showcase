@@ -362,7 +362,11 @@
 
   .main { display: flex; flex-direction: column; min-width: 0; }
   .content {
-    padding: 28px 48px calc(88px + env(safe-area-inset-bottom, 0px));
+    /* Horizontal safe-area insets: on a landscape phone the Dynamic Island /
+       notch sits at the left or right edge (viewport-fit=cover), so every
+       edge-touching surface pads by max(design gutter, inset). No effect on
+       desktop (insets are 0). */
+    padding: 28px max(48px, env(safe-area-inset-right, 0px)) calc(88px + env(safe-area-inset-bottom, 0px)) max(48px, env(safe-area-inset-left, 0px));
     max-width: var(--maxw);
     width: 100%;
     margin: 0 auto;
@@ -384,7 +388,7 @@
     max-width: var(--maxw);
     margin: 0 auto;
     width: 100%;
-    padding: 14px 48px;
+    padding: 14px max(48px, env(safe-area-inset-right, 0px)) 14px max(48px, env(safe-area-inset-left, 0px));
   }
   /* Left info shrinks (its description truncates) so the control group keeps its
      row; min-width:0 lets it shrink below content width. */
@@ -543,7 +547,7 @@
     grid-auto-columns: 1fr;
     background: var(--paper);
     border-top: 1px solid var(--rule);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom) env(safe-area-inset-left, 0px);
     box-shadow: 0 -6px 20px oklch(0% 0 0 / 0.05);
   }
   .mobile-tab {
@@ -570,7 +574,7 @@
 
   .role-floater {
     position: fixed;
-    right: 22px;
+    right: max(22px, env(safe-area-inset-right, 0px));
     bottom: 22px;
     z-index: 35;
     display: grid;
@@ -1802,6 +1806,8 @@
       z-index: 60;
       transform: translateX(-100%);
       transition: transform 0.22s ease;
+      /* Drawer hugs the left edge — keep its content clear of a landscape notch/island. */
+      padding-left: max(18px, env(safe-area-inset-left, 0px));
     }
     .side.is-open { transform: translateX(0); }
 
@@ -1818,11 +1824,11 @@
     .nav-toggle { display: grid; flex-shrink: 0; }
 
     /* Let the topbar wrap and its groups shrink so nothing clips. */
-    .topbar-inner { flex-wrap: wrap; padding-inline: 24px; }
+    .topbar-inner { flex-wrap: wrap; padding-inline: max(24px, env(safe-area-inset-left, 0px)) max(24px, env(safe-area-inset-right, 0px)); }
     .topbar-left { flex: 1 1 auto; min-width: 0; }
     .topbar-left .small { max-width: 100%; }
     .topbar-right { width: 100%; justify-content: space-between; flex-wrap: wrap; }
-    .role-floater { right: 16px; bottom: 16px; }
+    .role-floater { right: max(16px, env(safe-area-inset-right, 0px)); bottom: 16px; }
     .campaign-switcher { min-width: min(100%, 320px); flex: 1; }
     .campaign-notice,
     .campaign-notice-meta,
@@ -1850,8 +1856,8 @@
   }
 
   @media (max-width: 720px) {
-    .content { padding-inline: 18px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
-    .topbar-inner { padding-inline: 18px; }
+    .content { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+    .topbar-inner { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); }
     /* Grid utilities collapse to a single column on phones. */
     .grid-2, .grid-3, .card-grid-2 { grid-template-columns: 1fr; }
 
@@ -1976,7 +1982,7 @@
     display: flex; flex-direction: column;
     max-width: var(--maxw);
     margin: 0 auto;
-    padding: 22px 48px 40px;
+    padding: 22px max(48px, env(safe-area-inset-right, 0px)) 40px max(48px, env(safe-area-inset-left, 0px));
     width: 100%;
   }
   .landing-top {
@@ -2024,12 +2030,12 @@
   }
 
   @media (max-width: 980px) {
-    .landing { padding-inline: 24px; }
+    .landing { padding-inline: max(24px, env(safe-area-inset-left, 0px)) max(24px, env(safe-area-inset-right, 0px)); }
     .landing-main { padding: 44px 0; gap: var(--pad-section); }
     .landing-features { grid-template-columns: 1fr; }
   }
   @media (max-width: 720px) {
-    .landing { padding-inline: 18px; }
+    .landing { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); }
     .landing-main { padding: 28px 0; }
     .landing-top { flex-wrap: wrap; }
     .landing-foot { flex-direction: column; align-items: flex-start; gap: 6px; }
