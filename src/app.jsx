@@ -439,7 +439,7 @@ function Sidebar({ role, setRole, view, setView, me, open = false, onSignOut, ca
       <div className="side-brand">
         <span className="brand-mark"><Icon name="logo" size={18} /></span>
         <div className="brand-text">
-          <div className="brand-name">LMS Ops <em>Command Center</em></div>
+          <div className="brand-name">Ops <em>Command Center</em></div>
           <div className="brand-sub mono" title={scenarioLabel}>{scenarioLabel}</div>
         </div>
       </div>

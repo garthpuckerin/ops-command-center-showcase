@@ -41,7 +41,7 @@ export const Landing = ({ onEnter, themeMode = 'light', onToggleTheme }) => {
         <div className="landing-brand">
           <span className="brand-mark"><Icon name="logo" size={18} /></span>
           <div className="brand-text">
-            <div className="brand-name">LMS Ops <em>Command Center</em></div>
+            <div className="brand-name">Ops <em>Command Center</em></div>
             <div className="brand-sub mono">Campaign-configurable operations</div>
           </div>
         </div>
@@ -91,7 +91,7 @@ export const Landing = ({ onEnter, themeMode = 'light', onToggleTheme }) => {
       </main>
 
       <footer className="landing-foot mono">
-        <span>LMS Ops Command Center — campaign operations demo</span>
+        <span>Ops Command Center — campaign operations demo</span>
         <span>Sanitized · fixtures only</span>
       </footer>
     </div>
