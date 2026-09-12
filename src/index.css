@@ -254,7 +254,7 @@
     border-right: 1px solid var(--rule);
     padding: 22px 18px;
     display: flex; flex-direction: column; gap: 22px;
-    position: sticky; top: 0; height: 100vh;
+    position: sticky; top: 0; height: 100vh; height: 100dvh;
     overflow: hidden;
   }
   .side-brand { display: flex; align-items: center; gap: 12px; padding: 2px 4px 12px; border-bottom: 1px solid var(--rule); }
