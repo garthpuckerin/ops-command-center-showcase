@@ -46,8 +46,15 @@ for (const [vpName, width, height] of VIEWPORTS) {
     } catch (e) {}
   })
 
+  // NOTE: navigating this SPA to a URL that differs ONLY by hash is a
+  // same-document navigation in Chromium — it updates location.hash but does
+  // NOT remount the app, and app.jsx has no hashchange listener, so the
+  // rendered view never actually changes. Every screen after the first in this
+  // loop was silently re-scanning the previous screen's DOM. A cache-busting
+  // query param forces a real full navigation so initialView() re-reads the
+  // hash on every iteration.
   for (const view of SCREENS) {
-    await page.goto(BASE + '/#' + view, { waitUntil: 'domcontentloaded' })
+    await page.goto(BASE + '/?_=' + Date.now() + '#' + view, { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('.side-link', { timeout: 10000 }).catch(() => note(vpName, view, 'shell never rendered'))
     await page.waitForTimeout(250)
 
