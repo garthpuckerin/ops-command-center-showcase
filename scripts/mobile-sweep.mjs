@@ -87,7 +87,11 @@ for (const [vpName, width, height, tier] of VIEWPORTS) {
       }
 
       // 2. Nested scroll regions. Allowed: the main content column, the
-      // off-canvas nav drawer, and any dialog/drawer surface.
+      // off-canvas nav drawer, any dialog/drawer surface, and native form
+      // controls (textarea/select) that are DESIGNED to scroll their own
+      // content once it exceeds their rows/size — that's expected browser
+      // behavior, not the "forgotten overflow override" bug class this scan
+      // targets.
       for (const el of document.querySelectorAll('*')) {
         if (!vis(el)) continue
         const cs = getComputedStyle(el)
@@ -95,6 +99,7 @@ for (const [vpName, width, height, tier] of VIEWPORTS) {
         const scrollsY = /(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 2
         const allowedScroll = el.classList.contains('main') || el.classList.contains('content') ||
           el.closest('.side') || // the nav drawer and its scrolling nav list are allowed to scroll
+          el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' ||
           el === document.documentElement || el === document.body || el.closest('[role="dialog"], .drawer-panel, .profile-drawer, .nav-backdrop')
         if (allowedScroll) continue
         if (scrollsX) out.push(`x-scroll region: ${label(el)} (${el.scrollWidth}>${el.clientWidth})`)
