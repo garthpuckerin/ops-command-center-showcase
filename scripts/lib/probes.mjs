@@ -12,15 +12,25 @@ export const TOUCH_TARGET_ALLOWLIST = []
 
 /* First real CONTENT on a screen: a card, a result row, a record — never a
  * control (the filter bar is a Card, so it is excluded by name). */
-export const CONTENT_SELECTOR = '.screen .card:not(.filterbar), .screen .tbl-row, .screen .queue-row, .screen .person-card, .screen .empty-state'
+export const CONTENT_SELECTOR = '.screen .card:not(.filterbar), .screen .tbl-row, .screen .queue-row, .screen .person-card, .screen .report-card, .screen .empty-state'
 
 export function measure({ contentSelector, allow }) {
   const vw = window.innerWidth
   const vh = window.innerHeight
+  // Chrome still lays out the contents of a CLOSED <details> (they are only
+  // skipped for paint) and reports them visible — but nobody can see or tap
+  // them, so they do not count. Only the closed disclosure's summary does.
+  const inClosedDetails = (el) => {
+    for (let d = el.closest('details:not([open])'); d; d = d.parentElement && d.parentElement.closest('details:not([open])')) {
+      const summary = d.querySelector(':scope > summary')
+      if (!summary || !summary.contains(el)) return true
+    }
+    return false
+  }
   const visible = (el) => {
     const r = el.getBoundingClientRect()
     const s = getComputedStyle(el)
-    return r.width > 1 && r.height > 1 && r.right > 1 && r.left < vw - 1 && s.visibility !== 'hidden' && s.display !== 'none'
+    return r.width > 1 && r.height > 1 && r.right > 1 && r.left < vw - 1 && s.visibility !== 'hidden' && s.display !== 'none' && !inClosedDetails(el)
   }
   const label = (el) => `${el.tagName.toLowerCase()}.${(typeof el.className === 'string' ? el.className : '').trim().split(/\s+/).slice(0, 2).join('.')}`
   const fixedAncestor = (el) => {
@@ -30,6 +40,18 @@ export function measure({ contentSelector, allow }) {
     return null
   }
 
+  // What a person sees of an element's right edge: an ancestor that clips
+  // (overflow other than visible — an ellipsised table cell) hides the rest.
+  // Measuring the unclipped box once reported truncated #setup cell text as
+  // "past the viewport" at 1024–1280px.
+  const visibleRight = (el) => {
+    let right = el.getBoundingClientRect().right
+    for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+      if (getComputedStyle(n).overflowX !== 'visible') right = Math.min(right, n.getBoundingClientRect().right)
+    }
+    return right
+  }
+
   const tooWide = []
   const sideScrollers = []
   const nestedScrollers = []
@@ -37,7 +59,7 @@ export function measure({ contentSelector, allow }) {
     if (!visible(el)) continue
     const r = el.getBoundingClientRect()
     const s = getComputedStyle(el)
-    if (r.right > vw + 1 && s.position !== 'fixed') tooWide.push(`${label(el)} right=${Math.round(r.right)}`)
+    if (r.right > vw + 1 && s.position !== 'fixed' && visibleRight(el) > vw + 1) tooWide.push(`${label(el)} right=${Math.round(visibleRight(el))}`)
     if (/(auto|scroll)/.test(s.overflowX) && el.scrollWidth > el.clientWidth + 1) sideScrollers.push(label(el))
     // A dialog's own scroller (the More sheet) and native form controls that
     // scroll their own text are the sanctioned exceptions.

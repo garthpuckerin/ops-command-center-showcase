@@ -23,8 +23,9 @@
  *   D  the full desktop view: reachable from More, laid out at ≥1024 with a
  *      visible way back, and it does NOT grant desk authority on a phone
  *
- * `--self-test` runs checks 1–4 against the desktop layout forced onto the
- * phone and FAILS unless every one of them fails there. A gate that cannot
+ * `--self-test` runs checks 1–4 against two desktop shapes forced onto the
+ * phone and FAILS unless checks 1, 2 and 4 fail on both (runSelfTest says why
+ * check 3 is reported but not required). A gate that cannot
  * fail is worse than none.
  *
  *   node scripts/mobile-sweep.mjs [--self-test]     (BASE_URL=… to skip the build)
@@ -200,28 +201,59 @@ async function runDesktopView(browser, base) {
   await context.close()
 }
 
+/* Two desktop shapes on a phone; checks 1, 2 and 4 must FAIL on both:
+ *  A · the desktop shell at the phone's own width — the defect class this gate
+ *      exists for. Built by asking for the desktop while holding the viewport
+ *      meta at device width (a browser that ignores the meta switch); the phone
+ *      then zooms the page out to fit it, as a real one does.
+ *  B · the real full desktop view (?layout=desktop): laid out at 1280, scaled.
+ * Check 3 is printed but not required: it is measured in CSS px, and a page a
+ * phone has ZOOMED OUT keeps its content just as high in CSS px — so it cannot
+ * tell a zoomed desktop from the companion. Its power to fail is on record in
+ * the baseline (docs/ISSUES.md: 30 check-3 failures on the pre-fix phone
+ * layout, which collapsed instead of zooming). janus-showcase states the same
+ * three checks for its self-test. */
+const SELF_TEST_SHAPES = [
+  { id: 'A · desktop shell at device width (the phone zooms it out)', freezeViewportMeta: true, mustFail: ['1', '2', '4'] },
+  { id: 'B · full desktop view (?layout=desktop, scaled)', freezeViewportMeta: false, mustFail: ['1', '2', '4'] },
+]
+
 async function runSelfTest(browser, base) {
-  const { context, page } = await phonePage(browser)
-  await gotoRoute(page, base, 'home', { query: 'layout=desktop' })
-  const m = await measurePage(page)
-  await context.close()
-  const checks = [
-    ['1 · desktop chrome absent', judge.chromeAbsent(m)],
-    ['2 · tab bar fixed, tabs ≥44×44', judge.tabBar(m)],
-    ['3 · first content high', judge.firstContent(m)],
-    ['4 · every target ≥44×44', judge.touch(m)],
-  ]
-  console.log(`\n--self-test: the desktop layout forced onto an iPhone 13 (?layout=desktop; layout ${m.vw}×${m.vh}, shell=${m.shell})`)
   let allFailed = true
-  for (const [id, r] of checks) {
-    console.log(`${r.ok ? '✗ (did NOT fail — the gate cannot tell this from the companion)' : '✓ (correctly FAILS)'} ${id} — ${r.detail}`)
-    if (r.ok) allFailed = false
+  for (const shape of SELF_TEST_SHAPES) {
+    const { context, page } = await phonePage(browser)
+    if (shape.freezeViewportMeta) {
+      await context.addInitScript(() => {
+        const original = Element.prototype.setAttribute
+        Element.prototype.setAttribute = function (name, value) {
+          if (this.tagName === 'META' && this.getAttribute('name') === 'viewport' && name === 'content') return
+          return original.call(this, name, value)
+        }
+      })
+    }
+    await gotoRoute(page, base, 'home', { query: 'layout=desktop' })
+    const m = await measurePage(page)
+    await context.close()
+    const checks = [
+      ['1', '1 · desktop chrome absent', judge.chromeAbsent(m)],
+      ['2', '2 · tab bar fixed, tabs ≥44×44', judge.tabBar(m)],
+      ['3', '3 · first content high', judge.firstContent(m)],
+      ['4', '4 · every target ≥44×44', judge.touch(m)],
+    ]
+    console.log(`\n--self-test ${shape.id} (iPhone 13; layout ${m.vw}×${m.vh}, shell=${m.shell})`)
+    for (const [n, id, r] of checks) {
+      const required = shape.mustFail.includes(n)
+      if (required && r.ok) allFailed = false
+      const mark = !required ? '· (not required here)' : r.ok ? '✗ (did NOT fail — the gate cannot tell this from the companion)' : '✓ (correctly FAILS)'
+      console.log(`${mark} ${id} — ${r.detail}`)
+    }
   }
-  console.log(allFailed ? '\nself-test PASSED: the squeezed desktop fails checks 1–4.' : '\nself-test FAILED: at least one check passed on the squeezed desktop.')
+  console.log(allFailed ? '\nself-test PASSED: both desktop shapes fail every check they must.' : '\nself-test FAILED: a desktop shape passed a check it must fail.')
   if (!allFailed) process.exitCode = 1
 }
 
-await withPreviewServer({ port: 4288, outDir: 'dist-sweep' }, async (base) => {
+// The self-test serves its own build so it can run beside the full sweep.
+await withPreviewServer(SELF_TEST ? { port: 4289, outDir: 'dist-selftest' } : { port: 4288, outDir: 'dist-sweep' }, async (base) => {
   const browser = await chromium.launch()
   try {
     if (SELF_TEST) return await runSelfTest(browser, base)
