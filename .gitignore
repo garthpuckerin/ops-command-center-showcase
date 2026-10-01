@@ -12,3 +12,4 @@ playwright-report/
 dist-sweep/
 dist-viewport/
 media/
+dist-selftest/

@@ -46,7 +46,7 @@ test.describe('phone companion', () => {
     await seedState(page, { role: 'lead', view: 'exceptions', campaignId: 'camp-st-anne' })
     await page.goto('/')
 
-    const tabbar = page.locator('.mobile-tabbar')
+    const tabbar = page.locator('.companion-tabs')
     await expect(tabbar.getByText('Alerts')).toBeVisible()
     await expect(tabbar.getByText('Approvals')).toHaveCount(0)
 
@@ -77,8 +77,10 @@ test.describe('phone companion — advertised authority', () => {
     await seedState(page, { role: 'lead', view: 'home', campaignId: 'camp-st-anne' })
     await page.goto('/')
 
-    await page.getByRole('button', { name: 'Toggle demo role switcher' }).click()
-    await page.getByRole('button', { name: 'Start tour' }).click()
+    // On the companion the tour starts from the More sheet — there is no
+    // floating demo control sitting over the page's own controls.
+    await page.locator('.companion-tabs').getByRole('button', { name: 'More' }).click()
+    await page.getByRole('button', { name: 'Start the guided tour' }).click()
     const dialog = page.locator('.tour-card')
     await expect(dialog).toBeVisible()
 

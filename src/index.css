@@ -488,17 +488,15 @@
   /* Uniform header-control height: every interactive control in the bar
      (campaign switcher, RISK banner, Tour/Campaign buttons, icon buttons,
      avatar at size 32) sits at the same 32px — only the informational pills
-     ("You are", "Mock data") keep their own pill height. Desktop only: on
-     phones the switcher stays a full-size touch target. */
-  @media (min-width: 721px) {
-    .topbar-right .campaign-switcher,
-    .topbar-right .whats-new,
-    .topbar-right .btn {
-      height: 32px;
-      box-sizing: border-box;
-      padding-top: 0;
-      padding-bottom: 0;
-    }
+     ("You are", "Mock data") keep their own pill height. The topbar exists
+     only on the workstation shell (src/shell/WorkstationShell.jsx). */
+  .topbar-right .campaign-switcher,
+  .topbar-right .whats-new,
+  .topbar-right .btn {
+    height: 32px;
+    box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   .iconbtn {
@@ -512,65 +510,24 @@
     background: var(--accent); border-radius: 50%;
   }
 
-  /* Hamburger trigger + drawer backdrop — hidden on desktop, revealed at the
-     mobile breakpoint below. Additive: desktop layout is untouched. */
-  .nav-toggle { display: none; }
-  .nav-backdrop { display: none; }
+  /* The full desktop view on a small device: its way back leads the topbar. */
+  .back-to-phone { gap: 8px; white-space: nowrap; }
 
-  /* Surface-scoped authority: on the phone drawer, workstation-only surfaces
-     carry a small "desk" mark so the scoping reads as policy, not breakage.
-     Hidden on desktop where those surfaces are fully live. */
+  /* Surface-scoped authority: wherever desk authority is gated (the full
+     desktop view on a phone), workstation-only surfaces carry a small "desk"
+     mark so the scoping reads as policy, not breakage. Hidden where those
+     surfaces are fully live. */
   .desk-mark { display: none; }
-  @media (max-width: 720px) {
-    .side-link .desk-mark {
-      display: inline-block;
-      margin-left: auto;
-      font-size: 9px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      border: 1px solid var(--rule);
-      padding: 1px 5px;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .side { transition: none; }
-  }
-
-  /* Phone bottom tab bar — hidden on desktop, enabled at <=720px. */
-  .mobile-tabbar {
-    display: none;
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 90;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-    background: var(--paper);
-    border-top: 1px solid var(--rule);
-    padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom) env(safe-area-inset-left, 0px);
-    box-shadow: 0 -6px 20px oklch(0% 0 0 / 0.05);
-  }
-  .mobile-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    min-height: 56px;
-    padding: 7px 4px;
-    background: transparent;
-    border: 0;
-    color: var(--muted);
-    cursor: pointer;
-  }
-  .mobile-tab span {
-    font-family: var(--mono);
-    font-size: 9.5px;
-    letter-spacing: 0.08em;
+  :where([data-authority="gated"]) .side-link .desk-mark {
+    display: inline-block;
+    margin-left: auto;
+    font-size: 9px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    padding: 1px 5px;
   }
-  .mobile-tab-on { color: var(--accent-deep); }
-  .mobile-tab-on svg { color: var(--accent); }
 
   .role-floater {
     position: fixed;
@@ -1780,7 +1737,7 @@
   }
 
   /* Content two-column layouts collapse while the inline sidebar is still
-     present (drawer breakpoint is 980px). Below ~1200px the sidebar + a
+     present (the workstation starts at 1024px). Below ~1200px the sidebar + a
      two-column content grid leave the main column too narrow for real
      table/card content (a queue card overflowed ~17px at 1100px), so single-
      column it through the whole narrow-desktop band. */
@@ -1791,84 +1748,60 @@
     .focal-meta { grid-template-columns: repeat(2, 1fr); }
   }
 
-  @media (max-width: 980px) {
-    /* Collapse the two-column shell to a single column so the topbar +
-       content span the full viewport width and no longer clip. */
-    .shell { grid-template-columns: 1fr; }
-
-    /* Sidebar becomes a fixed off-canvas drawer. */
-    .side {
-      position: fixed;
-      inset: 0 auto 0 0;
-      width: min(var(--side-w), 84vw);
-      height: 100vh;
-      height: 100dvh;
-      z-index: 60;
-      transform: translateX(-100%);
-      transition: transform 0.22s ease;
-      /* Drawer hugs the left edge — keep its content clear of a landscape notch/island. */
-      padding-left: max(18px, env(safe-area-inset-left, 0px));
-    }
-    .side.is-open { transform: translateX(0); }
-
-    /* Dim the content behind the open drawer; click closes it. */
-    .nav-backdrop {
-      display: block;
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: var(--scrim);
-    }
-
-    /* Reveal the hamburger trigger as the leftmost topbar control. */
-    .nav-toggle { display: grid; flex-shrink: 0; }
-
-    /* Let the topbar wrap and its groups shrink so nothing clips. */
-    .topbar-inner { flex-wrap: wrap; padding-inline: max(24px, env(safe-area-inset-left, 0px)) max(24px, env(safe-area-inset-right, 0px)); }
-    .topbar-left { flex: 1 1 auto; min-width: 0; }
-    .topbar-left .small { max-width: 100%; }
-    .topbar-right { width: 100%; justify-content: space-between; flex-wrap: wrap; }
-    .role-floater { right: max(16px, env(safe-area-inset-right, 0px)); bottom: 16px; }
-    .campaign-switcher { min-width: min(100%, 320px); flex: 1; }
-    .campaign-notice,
-    .campaign-notice-meta,
-    .demo-hero,
-    .walkthrough-grid,
-    .settings-grid,
-    .report-layout {
+  /* ────────────────────────────────────────────────────────────────
+     Companion content — screens shared with the workstation, laid out for
+     phones and tablets. Keyed off <html data-surface="companion"> (set by
+     src/surface.js); :where() keeps each rule at the specificity it had as
+     a width media query, so the cascade order is unchanged.
+     ──────────────────────────────────────────────────────────────── */
+  :where([data-surface="companion"]) .campaign-notice,
+    :where([data-surface="companion"]) .campaign-notice-meta,
+    :where([data-surface="companion"]) .demo-hero,
+    :where([data-surface="companion"]) .walkthrough-grid,
+    :where([data-surface="companion"]) .settings-grid,
+    :where([data-surface="companion"]) .report-layout {
       grid-template-columns: 1fr;
     }
-    .demo-hero-aside { border-left: 0; border-top: 1px solid var(--rule); }
-    .scenario-grid { grid-template-columns: 1fr; }
-    .theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .session-calendar:not(.session-calendar-month) .session-calendar-grid {
+
+  :where([data-surface="companion"]) .demo-hero-aside { border-left: 0; border-top: 1px solid var(--rule); }
+
+  :where([data-surface="companion"]) .scenario-grid { grid-template-columns: 1fr; }
+
+  :where([data-surface="companion"]) .theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  :where([data-surface="companion"]) .session-calendar:not(.session-calendar-month) .session-calendar-grid {
       grid-template-columns: 1fr;
     }
-    .session-calendar-month .session-calendar-grid {
+
+  :where([data-surface="companion"]) .session-calendar-month .session-calendar-grid {
       grid-template-columns: repeat(2, minmax(160px, 1fr));
     }
-    .session-day {
+
+  :where([data-surface="companion"]) .session-day {
       border-right: 0;
       border-bottom: 1px solid var(--rule);
     }
-    .session-day:last-child { border-bottom: 0; }
-    .stat-grid-4 { grid-template-columns: repeat(2, 1fr); }
-  }
 
-  @media (max-width: 720px) {
-    .content { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
-    .topbar-inner { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); }
-    /* Grid utilities collapse to a single column on phones. */
-    .grid-2, .grid-3, .card-grid-2 { grid-template-columns: 1fr; }
+  :where([data-surface="companion"]) .session-day:last-child { border-bottom: 0; }
 
-    /* ── Phone tables cardify ──────────────────────────────────────────
-       A data-dense workstation table does not port to a phone. Below 720px
-       every .tbl row becomes a stacked label/value card (labels come from the
+  :where([data-surface="companion"]) .stat-grid-4 { grid-template-columns: repeat(2, 1fr); }
+
+  :where([data-surface="companion"]) .content { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+
+  /* Grid utilities collapse to a single column on phones. */
+
+  :where([data-surface="companion"]) .grid-2, :where([data-surface="companion"]) .grid-3, :where([data-surface="companion"]) .card-grid-2 { grid-template-columns: 1fr; }
+
+  /* ── Phone tables cardify ──────────────────────────────────────────
+       A data-dense workstation table does not port to a phone. On the
+       companion every .tbl row becomes a stacked label/value card (labels come from the
        data-label the Table primitive threads onto each cell). This kills the
        N-wide grid, the fixed-px horizontal overflow, and the ellipsis-to-
        nothing text — one fix across ~15 screens. */
-    .tbl-head { display: none; }
-    .tbl-row {
+
+  :where([data-surface="companion"]) .tbl-head { display: none; }
+
+  :where([data-surface="companion"]) .tbl-row {
       display: block;
       padding: 14px 16px;
       border: 1px solid var(--rule);
@@ -1876,9 +1809,12 @@
       margin-bottom: 10px;
       background: var(--paper);
     }
-    .tbl-row:last-child { border-bottom: 1px solid var(--rule); }
-    .tbl-row.is-selected { box-shadow: inset 3px 0 0 0 var(--accent); }
-    .tbl-cell {
+
+  :where([data-surface="companion"]) .tbl-row:last-child { border-bottom: 1px solid var(--rule); }
+
+  :where([data-surface="companion"]) .tbl-row.is-selected { box-shadow: inset 3px 0 0 0 var(--accent); }
+
+  :where([data-surface="companion"]) .tbl-cell {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
@@ -1889,8 +1825,10 @@
       padding: 5px 0;
       min-height: 0;
     }
-    .tbl-cell + .tbl-cell { border-top: 1px solid var(--rule-2); }
-    .tbl-cell::before {
+
+  :where([data-surface="companion"]) .tbl-cell + .tbl-cell { border-top: 1px solid var(--rule-2); }
+
+  :where([data-surface="companion"]) .tbl-cell::before {
       content: attr(data-label);
       flex: 0 0 40%;
       color: var(--muted);
@@ -1900,75 +1838,81 @@
       letter-spacing: 0.1em;
       align-self: center;
     }
-    .tbl-cell:not([data-label])::before { content: none; }
-    .tbl-cell > * { text-align: right; min-width: 0; }
 
-    /* Dense forms and metric strips go single-column on phones. */
-    .form-grid { grid-template-columns: 1fr; }
-    .report-metric-grid { grid-template-columns: 1fr 1fr; }
+  :where([data-surface="companion"]) .tbl-cell:not([data-label])::before { content: none; }
 
-    /* Filter bars pack two-up instead of one tall stack, so the queue/list
+  :where([data-surface="companion"]) .tbl-cell > * { text-align: right; min-width: 0; }
+
+  /* Dense forms and metric strips go single-column on phones. */
+
+  :where([data-surface="companion"]) .form-grid { grid-template-columns: 1fr; }
+
+  :where([data-surface="companion"]) .report-metric-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Filter bars pack two-up instead of one tall stack, so the queue/list
        below stays reachable without a long scroll past the controls. */
-    .filterbar-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .filterbar-row > * { min-width: 0; }
-    .filterbar-sep, .filterbar-spacer { display: none; }
 
-    /* Blocker queue rows wrap instead of crushing the title into a 4-col grid. */
-    .queue-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
-    .queue-row .queue-main { flex: 1 1 62%; min-width: 0; }
+  :where([data-surface="companion"]) .filterbar-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    /* Tables cardify on phones, so the column-alignment width no longer applies —
+  :where([data-surface="companion"]) .filterbar-row > * { min-width: 0; }
+
+  :where([data-surface="companion"]) .filterbar-sep, :where([data-surface="companion"]) .filterbar-spacer { display: none; }
+
+  /* Blocker queue rows wrap instead of crushing the title into a 4-col grid. */
+
+  :where([data-surface="companion"]) .queue-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+
+  :where([data-surface="companion"]) .queue-row .queue-main { flex: 1 1 62%; min-width: 0; }
+
+  /* Tables cardify on phones, so the column-alignment width no longer applies —
        let status/risk pills size to their label inside each card row. */
-    .pill-block, .pill-sev { width: auto; max-width: none; }
 
-    /* Tap-target floor: interactive chrome reaches 44px on touch. */
-    .iconbtn, .icon-btn { width: 40px; height: 40px; }
-    .seg-btn, .tab, .btn-sm { min-height: 40px; }
-    .side-link, .role-btn { min-height: 44px; }
+  :where([data-surface="companion"]) .pill-block, :where([data-surface="companion"]) .pill-sev { width: auto; max-width: none; }
 
-    /* Declutter the topbar on phones: demo-only chrome (mock-data pill, theme
-       toggle, tour, new-campaign, search) is hidden so the campaign switcher,
-       notifications, and avatar get room. */
-    .mobile-hide { display: none !important; }
+  /* Tap-target floor: every interactive control reaches 44×44 on the companion. */
 
-    /* The bottom tab bar owns the floor; lift the demo floaters above it. */
-    .mobile-tabbar { display: grid; }
-    .role-floater { bottom: calc(64px + env(safe-area-inset-bottom)); }
-    .tour-card { bottom: calc(78px + env(safe-area-inset-bottom)); }
-    .role-floater-trigger { min-width: 156px; }
-    .role-floater-panel { width: min(270px, calc(100vw - 32px)); }
-    .tour-card { bottom: 74px; }
-    .campaign-switcher { min-width: 0; }
-    .campaign-switcher span { display: none; }
-    .campaign-notice-meta { grid-template-columns: 1fr; }
-    .demo-hero-main,
-    .demo-hero-aside { padding: 20px; }
-    .theme-grid { grid-template-columns: 1fr; }
-    .session-calendar-head {
+  :where([data-surface="companion"]) .iconbtn, :where([data-surface="companion"]) .icon-btn { width: 44px; height: 44px; }
+
+  :where([data-surface="companion"]) .seg-btn, :where([data-surface="companion"]) .tab, :where([data-surface="companion"]) .btn-sm { min-height: 44px; }
+
+  :where([data-surface="companion"]) .role-btn { min-height: 44px; }
+
+  :where([data-surface="companion"]) .campaign-notice-meta { grid-template-columns: 1fr; }
+
+  :where([data-surface="companion"]) .demo-hero-main,
+    :where([data-surface="companion"]) .demo-hero-aside { padding: 20px; }
+
+  :where([data-surface="companion"]) .theme-grid { grid-template-columns: 1fr; }
+
+  :where([data-surface="companion"]) .session-calendar-head {
       align-items: flex-start;
       flex-direction: column;
     }
-    .session-calendar-legend {
+
+  :where([data-surface="companion"]) .session-calendar-legend {
       flex-wrap: wrap;
       gap: 8px 12px;
     }
-    .calendar-toolbar {
+
+  :where([data-surface="companion"]) .calendar-toolbar {
       align-items: flex-start;
       flex-direction: column;
     }
-    .calendar-toolbar-actions {
+
+  :where([data-surface="companion"]) .calendar-toolbar-actions {
       justify-content: flex-start;
     }
-    .session-calendar-month .session-calendar-grid {
+
+  :where([data-surface="companion"]) .session-calendar-month .session-calendar-grid {
       grid-template-columns: 1fr;
     }
-    .stat-grid,
-    .stat-grid-4,
-    .two-col,
-    .two-col-66 {
+
+  :where([data-surface="companion"]) .stat-grid,
+    :where([data-surface="companion"]) .stat-grid-4,
+    :where([data-surface="companion"]) .two-col,
+    :where([data-surface="companion"]) .two-col-66 {
       grid-template-columns: 1fr;
     }
-  }
 
   /* ────────────────────────────────────────────────────────────────
      Marketing landing (pre-app hero)
@@ -2029,17 +1973,15 @@
     color: var(--muted); font-size: 10.5px; letter-spacing: 0.04em;
   }
 
-  @media (max-width: 980px) {
-    .landing { padding-inline: max(24px, env(safe-area-inset-left, 0px)) max(24px, env(safe-area-inset-right, 0px)); }
-    .landing-main { padding: 44px 0; gap: var(--pad-section); }
-    .landing-features { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 720px) {
-    .landing { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); }
-    .landing-main { padding: 28px 0; }
-    .landing-top { flex-wrap: wrap; }
-    .landing-foot { flex-direction: column; align-items: flex-start; gap: 6px; }
-  }
+  :where([data-surface="companion"]) .landing { padding-inline: max(24px, env(safe-area-inset-left, 0px)) max(24px, env(safe-area-inset-right, 0px)); }
+
+  :where([data-surface="companion"]) .landing-main { padding: 44px 0; gap: var(--pad-section); }
+
+  :where([data-surface="companion"]) .landing-features { grid-template-columns: 1fr; }
+  :where([data-surface="companion"]) .landing { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); }
+  :where([data-surface="companion"]) .landing-main { padding: 28px 0; }
+  :where([data-surface="companion"]) .landing-top { flex-wrap: wrap; }
+  :where([data-surface="companion"]) .landing-foot { flex-direction: column; align-items: flex-start; gap: 6px; }
 
   /* ────────────────────────────────────────────────────────────────
      Toast
@@ -2050,3 +1992,225 @@
     border-radius: 2px; font-size: 13px; z-index: 100;
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
   }
+
+  /* ────────────────────────────────────────────────────────────────
+     Landing — touch floor at every shape (found by the viewport gate,
+     2026-09-30): the theme toggle and "Launch demo" reach 44×44.
+     ──────────────────────────────────────────────────────────────── */
+  .landing .iconbtn { width: 44px; height: 44px; }
+  .landing .btn { min-height: 44px; }
+
+  /* ────────────────────────────────────────────────────────────────
+     Companion shell — phones and tablets below the workstation tier.
+     Its own component tree (src/shell/CompanionShell.jsx); the tier is
+     read from <html data-surface/data-tier/data-shape>, which
+     src/surface.js sets — never from a width media query here.
+     ──────────────────────────────────────────────────────────────── */
+  .companion {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .companion-appbar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 10px;
+    min-height: 52px; box-sizing: border-box;
+    padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+  .companion-appbar-title { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; line-height: 1.25; }
+  .companion-appbar-title strong { font-size: 15px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .companion-appbar-campaign {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .companion-main { flex: 1 1 auto; }
+  :where([data-surface="companion"]) .content { padding-top: 16px; }
+
+  /* The tab bar owns the floor: fixed, safe-area padded, every tab ≥44×44. */
+  .companion-tabs {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 30;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+    padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    box-shadow: 0 -6px 20px oklch(0% 0 0 / 0.05);
+  }
+  .companion-tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px;
+    min-height: 56px; min-width: 44px;
+    padding: 7px 4px;
+    background: transparent; border: 0;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+  }
+  .companion-tab span {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .companion-tab-on { color: var(--accent-deep); }
+  .companion-tab-on svg { color: var(--accent); }
+
+  /* Page furniture sized for a phone: the first screen shows the work, not a
+     44px masthead. */
+  :where([data-surface="companion"]) .screen { gap: 14px; }
+  :where([data-surface="companion"]) .page-header { flex-direction: column; align-items: stretch; gap: 12px; padding-bottom: 14px; }
+  :where([data-surface="companion"]) .page-header .display-lg { font-size: 23px; line-height: 1.2; margin-top: 0; }
+  :where([data-surface="companion"]) .page-sub { font-size: 13px; margin-top: 8px; }
+  /* On a phone the app bar already names the screen, so the masthead's eyebrow
+     repeats it, and the explanatory sub-line is desk context: both go, and the
+     title states the screen's claim on its own. A tablet keeps the sub-line. */
+  :where([data-tier="phone"]) .page-header .eyebrow,
+  :where([data-tier="phone"]) .page-header .page-sub { display: none; }
+  :where([data-surface="companion"]) .btn { min-height: 44px; }
+  :where([data-surface="companion"]) .select-inline select,
+  :where([data-surface="companion"]) .select-inline input { min-height: 44px; }
+
+  /* Filter bars: a flat strip, one disclosure (FilterFold), and every field a
+     full-width 44px control — label above, never a 17px select in a box. */
+  :where([data-surface="companion"]) .filterbar { padding: 0; border: 0; background: transparent; box-shadow: none; }
+  :where([data-surface="companion"]) .filterbar .grow { width: 100%; }
+  :where([data-surface="companion"]) .session-filter-select {
+    display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+    padding: 6px 10px 0; min-width: 0;
+  }
+  :where([data-surface="companion"]) .session-filter-select select,
+  :where([data-surface="companion"]) .session-filter-select input { width: 100%; min-width: 0; min-height: 44px; font-size: 15px; }
+  :where([data-surface="companion"]) .session-filter-toggle { min-height: 44px; }
+  /* People search: the input is the control; its label stays as the
+     accessible name but is visually hidden (the placeholder says "Name…"). */
+  :where([data-surface="companion"]) .people-filterbar .grow > span {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  :where([data-surface="companion"]) .people-filterbar .grow { padding-top: 0; }
+
+  /* Buttons styled as links (a record name in a card, a metric value) are real
+     targets on a phone: a 44×44 hit area, the look unchanged. */
+  :where([data-surface="companion"]) .link-btn,
+  :where([data-surface="companion"]) .linkbtn {
+    display: inline-flex; align-items: center;
+    min-height: 44px; min-width: 44px;
+  }
+  :where([data-surface="companion"]) .tour-card { bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Tablet companion (768–1023): wider cards, two columns. */
+  :where([data-tier="tablet"]) .stat-grid,
+  :where([data-tier="tablet"]) .stat-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  :where([data-tier="tablet"]) .person-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* ────────────────────────────────────────────────────────────────
+     Companion — the More sheet (a dialog: the one sanctioned scroller)
+     ──────────────────────────────────────────────────────────────── */
+  .companion-sheet {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; flex-direction: column; gap: 18px;
+    background: var(--paper);
+    overflow-y: auto; overscroll-behavior: contain;
+    padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  }
+  .sheet-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--ink);
+  }
+  .sheet-title { font-family: var(--serif); font-size: 24px; line-height: 1.2; margin-top: 4px; }
+  .sheet-close {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border: 1px solid var(--rule); background: var(--paper); color: var(--ink);
+    font: inherit; font-size: 24px; line-height: 1; cursor: pointer;
+  }
+  .sheet-close:hover { border-color: var(--ink); background: var(--hover); }
+  .sheet-field { display: flex; flex-direction: column; gap: 6px; }
+  .sheet-field select {
+    width: 100%; min-height: 44px; padding: 0 10px;
+    border: 1px solid var(--rule-strong); background: var(--paper); color: var(--ink);
+    font: inherit; font-size: 15px;
+  }
+  .sheet-group { display: flex; flex-direction: column; gap: 2px; }
+  .sheet-group-label { margin-bottom: 6px; }
+  .sheet-link {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; min-height: 48px; padding: 0 12px;
+    border: 0; background: transparent; color: var(--ink-2);
+    font: inherit; font-size: 15px; text-align: left;
+    cursor: pointer;
+  }
+  .sheet-link:hover { background: var(--hover); color: var(--ink); }
+  .sheet-link-on { background: var(--ink); color: var(--paper); }
+  .sheet-link-on svg { color: var(--paper); }
+  .sheet-link .pill { margin-left: auto; }
+  .desk-tag {
+    margin-left: auto;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); border: 1px solid var(--rule); padding: 2px 6px;
+  }
+  .sheet-link-on .desk-tag { color: var(--paper); border-color: currentColor; }
+
+  /* ────────────────────────────────────────────────────────────────
+     Companion — People (cards, the record screen, folded filters)
+     ──────────────────────────────────────────────────────────────── */
+  .person-list { display: grid; gap: 10px; }
+  .person-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; min-height: 64px; padding: 12px 14px;
+    border: 1px solid var(--rule); border-radius: 2px;
+    background: var(--paper); color: var(--ink);
+    font: inherit; text-align: left; cursor: pointer;
+  }
+  .person-card:hover { background: var(--hover); border-color: var(--ink); }
+  .person-card-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .list-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .back-link {
+    align-self: flex-start;
+    min-height: 44px; padding: 0 4px;
+    border: 0; background: transparent; color: var(--ink-2);
+    font: inherit; font-size: 14px; cursor: pointer;
+  }
+  .back-link:hover { color: var(--ink); text-decoration: underline; }
+  .filter-more summary {
+    display: flex; align-items: center; min-height: 44px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-2); cursor: pointer;
+  }
+  .filter-more[open] summary { margin-bottom: 10px; }
+
+  /* ────────────────────────────────────────────────────────────────
+     Companion — short landscape (a phone on its side). Fixed bars may not
+     take the height: the tabs become a side rail, the app bar scrolls away.
+     Imported last in the split layout so it overrides the portrait rules.
+     ──────────────────────────────────────────────────────────────── */
+  :where([data-shape="short-landscape"]) .companion { padding-left: calc(76px + env(safe-area-inset-left, 0px)); }
+  :where([data-shape="short-landscape"]) .companion-appbar { position: static; min-height: 44px; padding-left: 18px; }
+  :where([data-shape="short-landscape"]) .companion-tabs {
+    top: 0; right: auto; bottom: 0;
+    width: calc(76px + env(safe-area-inset-left, 0px));
+    grid-auto-flow: row; grid-auto-rows: 1fr; grid-auto-columns: auto;
+    border-top: 0; border-right: 1px solid var(--rule);
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    box-shadow: none;
+  }
+  :where([data-shape="short-landscape"]) .companion-tab { min-height: 44px; padding: 4px; }
+  :where([data-shape="short-landscape"]) .content { padding-top: 12px; padding-left: 18px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+  /* A sideways phone is still a phone: the compact masthead applies whatever
+     the width tier says, and the app bar is one line. */
+  :where([data-shape="short-landscape"]) .companion-appbar { min-height: 32px; }
+  :where([data-shape="short-landscape"]) .companion-appbar-campaign { display: none; }
+  :where([data-shape="short-landscape"]) .screen { gap: 12px; }
+  :where([data-shape="short-landscape"]) .page-header { padding-bottom: 10px; }
+  :where([data-shape="short-landscape"]) .page-header .display-lg { font-size: 20px; }
+  :where([data-shape="short-landscape"]) .page-header .eyebrow,
+  :where([data-shape="short-landscape"]) .page-header .page-sub { display: none; }
+  /* People: the search and the Filters disclosure share one row; an open
+     disclosure takes its own full row under the search. */
+  :where([data-shape="short-landscape"]) .people-filterbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; align-items: start; }
+  :where([data-shape="short-landscape"]) .people-filterbar .filter-more[open] { grid-column: 1 / -1; }
+  :where([data-shape="short-landscape"]) .tour-card { bottom: 12px; }

@@ -6,6 +6,15 @@ import { cls, statusTone, statusLabel, fmt, fmtDate, Eyebrow, Rule, Pill, Icon, 
 import { CampaignAccessNotice, Cell, KV, Metric, PageHeader, Row, Section, Table, campaignById, campaignData, campaignMetrics, campaignSetupSummary, campaignTemplate, campaignTerms, isOpenException, openExceptionsForDepartment, departmentNameById, facilityNameById, pct, riskPill, setupSectionsForCampaign, teamForOwner, triggerLabel } from './_shared.jsx'
 import { isStuckLearner, stuckThresholdMinutes } from '../compliance.js'
 import { SessionsScreen } from './sessions.jsx'
+import { useSurfaceInfo } from '../shell/SurfaceContext.js'
+
+// Role-home CTAs that open a workstation surface render only where that surface
+// is live (desk authority), so a phone or tablet never advertises authority it
+// gates (src/shell/nav.js DESK_ONLY_VIEWS).
+function DeskOnly({ children }) {
+  const { deskAuthority } = useSurfaceInfo();
+  return deskAuthority ? children : null;
+}
 
 function CommandCenterScreen({ onNav, campaignId }) {
   const campaign = campaignById(campaignId);
@@ -137,8 +146,8 @@ function RoleHomeScreen({ onNav, campaignId }) {
         <div className="focal-actions">
           <Button kind="solid" iconRight="arrow" onClick={() => onNav("exceptions")}>Open work queue</Button>
           {/* Workstation surfaces aren't advertised on the phone companion. */}
-          <span className="mobile-hide"><Button kind="ghost" onClick={() => onNav("imports")}>Review imports</Button></span>
-          <span className="mobile-hide"><Button kind="ghost" onClick={() => onNav("writebacks")}>Review write-backs</Button></span>
+          <DeskOnly><Button kind="ghost" onClick={() => onNav("imports")}>Review imports</Button></DeskOnly>
+          <DeskOnly><Button kind="ghost" onClick={() => onNav("writebacks")}>Review write-backs</Button></DeskOnly>
         </div>
       </div>
     );
@@ -165,9 +174,9 @@ function RoleHomeScreen({ onNav, campaignId }) {
         <div className="focal-actions">
           {/* The wizard and scoring are workstation surfaces — not advertised
               on the phone companion, where the launch gate leads instead. */}
-          <span className="mobile-hide"><Button kind="solid" iconRight="arrow" onClick={() => onNav("imports")}>Open import wizard</Button></span>
+          <DeskOnly><Button kind="solid" iconRight="arrow" onClick={() => onNav("imports")}>Open import wizard</Button></DeskOnly>
           <Button kind="ghost" onClick={() => onNav("setup")}>Review launch gate</Button>
-          <span className="mobile-hide"><Button kind="ghost" onClick={() => onNav("scoring")}>Tune scoring</Button></span>
+          <DeskOnly><Button kind="ghost" onClick={() => onNav("scoring")}>Tune scoring</Button></DeskOnly>
           <Button kind="ghost" onClick={() => onNav("reports")}>Preview reports</Button>
         </div>
       </div>
@@ -385,7 +394,7 @@ function DemoWalkthroughScreen({ campaignId, onNav }) {
           </div>
           <div className="focal-actions">
             <Button kind="solid" iconRight="arrow" onClick={() => onNav(active?.route)}>Open this screen</Button>
-            <span className="mobile-hide"><Button kind="ghost" onClick={() => onNav("org-settings")}>Deployment settings</Button></span>
+            <DeskOnly><Button kind="ghost" onClick={() => onNav("org-settings")}>Deployment settings</Button></DeskOnly>
           </div>
         </Card>
       </div>
