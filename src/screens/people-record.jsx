@@ -98,7 +98,7 @@ export function PeopleTrainingSection({ title, items, empty, completed }) {
 /** The companion's person record — its own screen, reached by `#people/<id>`. */
 export function PersonRecordScreen({ person, loading, missing, onBack }) {
   return (
-    <div className="screen person-record">
+    <div className="screen">
       <button className="back-link" onClick={onBack}>‹ People Directory</button>
       {missing ? (
         <Card>
