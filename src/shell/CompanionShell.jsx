@@ -64,13 +64,33 @@ const DEMO_ROLES = [
 
 function MoreSheet({ shell, onClose }) {
   const { role, setRole, view, setView, campaignId, setCampaignId, campaigns, t, setTweak, onStartTour, onSignOut, surface } = shell;
+  const sheetRef = useRef(null);
   const closeRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // A modal dialog: focus moves in ONCE on open (re-renders — a campaign
+  // change, a theme toggle — must not yank it back), Tab cycles inside the
+  // sheet, Escape closes, and focus returns to what opened it.
   useEffect(() => {
+    const opener = document.activeElement;
     closeRef.current?.focus();
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e) => {
+      if (e.key === "Escape") { onCloseRef.current(); return; }
+      if (e.key !== "Tab" || !sheetRef.current) return;
+      const focusable = [...sheetRef.current.querySelectorAll("button, select, a[href], input, [tabindex]:not([tabindex='-1'])")].filter(el => !el.disabled);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      if (opener && typeof opener.focus === "function" && document.contains(opener)) opener.focus();
+    };
+  }, []);
 
   const go = (id) => { setView(id); onClose(); };
   const dark = (t.themeMode || "light") === "dark";
@@ -83,7 +103,7 @@ function MoreSheet({ shell, onClose }) {
   }, []);
 
   return (
-    <div className="companion-sheet" role="dialog" aria-modal="true" aria-label="More">
+    <div className="companion-sheet" role="dialog" aria-modal="true" aria-label="More" ref={sheetRef}>
       <div className="sheet-head">
         <div>
           <div className="eyebrow">{ROLE_LABELS[role]}</div>

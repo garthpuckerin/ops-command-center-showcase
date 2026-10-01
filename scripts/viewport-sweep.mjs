@@ -78,6 +78,10 @@ function judgeCell(cell, route, m) {
   if (DESK_ONLY_ROUTES.includes(route)) {
     if (!authority && (!m.deskOnly || m.approveButtons > 0)) p.push(`AUTHORITY: #${route} is live below the workstation tier (deskOnly=${m.deskOnly}, approve/reject=${m.approveButtons})`)
     if (authority && m.deskOnly) p.push(`#${route} is desk-gated on a workstation`)
+    // Positive control: at the workstation the approve buttons the authority
+    // check counts must exist — otherwise a relabelled button would make the
+    // "no Approve/Reject below the tier" check pass blind.
+    if (authority && route === 'writebacks' && m.approveButtons === 0) p.push('positive control failed: no Approve/Reject buttons on #writebacks at the workstation — the authority probe may be blind')
   }
 
   if (m.shell === 'companion') {

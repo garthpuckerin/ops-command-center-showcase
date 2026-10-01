@@ -40,14 +40,17 @@ export function measure({ contentSelector, allow }) {
     return null
   }
 
-  // What a person sees of an element's right edge: an ancestor that clips
-  // (overflow other than visible — an ellipsised table cell) hides the rest.
-  // Measuring the unclipped box once reported truncated #setup cell text as
-  // "past the viewport" at 1024–1280px.
+  // What a person sees of an element's right edge: text DELIBERATELY truncated
+  // by an ellipsis ancestor (an ellipsised table cell) ends at that ancestor —
+  // the reader sees "…", not a cut. Measuring the unclipped box once reported
+  // truncated #setup cell text as "past the viewport" at 1024–1280px. Only an
+  // ellipsis clipper counts: a hard overflow:hidden box that silently cuts
+  // content off is still a defect, so it does not shorten the edge.
   const visibleRight = (el) => {
     let right = el.getBoundingClientRect().right
     for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
-      if (getComputedStyle(n).overflowX !== 'visible') right = Math.min(right, n.getBoundingClientRect().right)
+      const s = getComputedStyle(n)
+      if (s.overflowX !== 'visible' && s.textOverflow === 'ellipsis') right = Math.min(right, n.getBoundingClientRect().right)
     }
     return right
   }

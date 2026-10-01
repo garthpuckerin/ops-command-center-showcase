@@ -43,9 +43,11 @@ export function deviceWidth({ screenWidth, screenHeight, landscape }) {
  * Resolve the surface for one moment.
  * - The forced desktop only takes effect on a device narrower than a
  *   workstation (a stored choice is ignored on a real desktop).
- * - Desk authority is scoped by DEVICE tier: only a workstation layout that is
- *   not a forced desktop on a small device gets it. A phone never does, in
- *   either orientation; the 721–1023 gap band never does.
+ * - Desk authority is scoped by DEVICE tier: it needs a workstation layout AND a
+ *   workstation-wide device. A phone never gets it — in either orientation, in
+ *   the forced desktop view, in a browser's own "Request desktop site", or in
+ *   the one render after "Back to the phone layout" while the layout is still
+ *   1280 wide. The 721–1023 gap band never gets it.
  */
 export function resolveSurface({ layoutWidth, layoutHeight, deviceWidthPx, forced }) {
   const forcedActive = Boolean(forced) && !isWorkstationWidth(deviceWidthPx);
@@ -53,7 +55,8 @@ export function resolveSurface({ layoutWidth, layoutHeight, deviceWidthPx, force
   const surface = workstation ? "workstation" : "companion";
   const tier = workstation ? "workstation" : layoutWidth <= PHONE_MAX ? "phone" : "tablet";
   const shortLandscape = !workstation && layoutWidth > layoutHeight && layoutHeight <= SHORT_LANDSCAPE_MAX_HEIGHT;
-  return { surface, tier, shortLandscape, forcedActive, deskAuthority: workstation && !forcedActive };
+  const deskAuthority = workstation && !forcedActive && isWorkstationWidth(deviceWidthPx);
+  return { surface, tier, shortLandscape, forcedActive, deskAuthority };
 }
 
 /** The viewport meta content for the current choice. */

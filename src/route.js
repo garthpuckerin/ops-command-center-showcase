@@ -7,7 +7,7 @@ const VIEW_PATTERN = /^[a-z][a-z0-9-]*$/;
 export function parseHash(hash) {
   const raw = String(hash || "").replace(/^#/, "");
   const slash = raw.indexOf("/");
-  const view = slash === -1 ? raw : raw.slice(0, slash);
+  const view = (slash === -1 ? raw : raw.slice(0, slash)).toLowerCase();
   if (!VIEW_PATTERN.test(view)) return { view: null, record: null };
   let record = slash === -1 ? "" : raw.slice(slash + 1);
   try { record = decodeURIComponent(record); } catch (err) { record = ""; }

@@ -63,6 +63,18 @@ test('the forced desktop on a small device is the workstation shell WITHOUT desk
   assert.equal(viewportContentFor({ forcedActive: true }), FORCED_DESKTOP_VIEWPORT_CONTENT)
 })
 
+// A desktop-WIDE layout on a phone-sized device without the force flag: the
+// render right after "Back to the phone layout" (state cleared, viewport meta
+// not yet re-laid-out) and a browser's own "Request desktop site". Authority
+// follows the DEVICE, so neither may approve anything.
+test('a wide layout on a small device never grants desk authority, forced or not', () => {
+  for (const layoutWidth of [1024, 1280]) {
+    const s = resolveSurface({ layoutWidth, layoutHeight: 2179, deviceWidthPx: 390, forced: false })
+    assert.equal(s.deskAuthority, false, `layout ${layoutWidth} on a 390px device`)
+    assert.equal(surfaceAttributes(s).authority, 'gated')
+  }
+})
+
 test('a stored force is ignored on a device that is already workstation-wide', () => {
   const s = resolveSurface({ layoutWidth: 1440, layoutHeight: 900, deviceWidthPx: 1920, forced: true })
   assert.equal(s.forcedActive, false)
@@ -90,8 +102,19 @@ test('no stylesheet declares a width breakpoint below the workstation tier', () 
   const offenders = []
   for (const f of files) {
     const css = readFileSync(new URL(String(f).replace(/\\/g, '/'), dir), 'utf8')
-    for (const m of css.matchAll(/@media[^{]*?(min|max)-width:\s*(\d+)px/g)) {
-      if (Number(m[2]) < WORKSTATION_MIN) offenders.push(`${f}: ${m[0].trim()}`)
+    // Every width a media query can name: (max-width: 720px), (min-device-width:
+    // 45em), range syntax (width <= 720px / 600px < width). em/rem = 16px.
+    for (const media of css.matchAll(/@media([^{]*)\{/g)) {
+      const params = media[1]
+      const lengths = [
+        ...[...params.matchAll(/(?:min|max)-(?:device-)?width\s*:\s*([\d.]+)(px|em|rem)/g)],
+        ...[...params.matchAll(/(?:device-)?width\s*[<>]=?\s*([\d.]+)(px|em|rem)/g)],
+        ...[...params.matchAll(/([\d.]+)(px|em|rem)\s*[<>]=?\s*(?:device-)?width/g)],
+      ]
+      for (const [, n, unit] of lengths) {
+        const px = Number(n) * (unit === 'px' ? 1 : 16)
+        if (px < WORKSTATION_MIN) offenders.push(`${f}: @media${params.trim()}`)
+      }
     }
   }
   assert.deepEqual(offenders, [])

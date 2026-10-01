@@ -52,9 +52,17 @@ test.describe('hash routing', () => {
 
   test('a learner deep link to an admin route is replaced, not pushed', async ({ page }) => {
     await seedState(page, { role: 'learner', view: 'home', campaignId: 'camp-st-anne' })
+    // A fresh tab: about:blank, then this load — two entries if the redirect
+    // REPLACED #org-settings, three if it pushed #home on top of it.
+    const pageEntries = async () => page.evaluate(() => history.length)
     await page.goto('/#org-settings')
     await expect(page).toHaveURL(/#home$/)
     await expect(page.getByText('Portable demo, governed platform.')).toHaveCount(0)
+    await page.locator('.side').getByRole('button', { name: 'My Record' }).click()
+    await expect(page).toHaveURL(/#learners$/)
+    expect(await pageEntries(), 'the redirect replaced its entry; only the click pushed one').toBe(3)
+    await page.goBack()
+    await expect(page, 'back lands on the redirected #home, never the forbidden #org-settings').toHaveURL(/#home$/)
   })
 
   test('a People record deep link opens the profile drawer at the workstation', async ({ page }) => {

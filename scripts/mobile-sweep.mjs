@@ -23,9 +23,9 @@
  *   D  the full desktop view: reachable from More, laid out at ≥1024 with a
  *      visible way back, and it does NOT grant desk authority on a phone
  *
- * `--self-test` runs checks 1–4 against two desktop shapes forced onto the
- * phone and FAILS unless checks 1, 2 and 4 fail on both (runSelfTest says why
- * check 3 is reported but not required). A gate that cannot
+ * `--self-test` runs checks 1–4 against three wrong layouts on the phone (two
+ * desktop shapes, and the companion with its tier styling lost) and FAILS
+ * unless each fails the checks listed for it in SELF_TEST_SHAPES. A gate that cannot
  * fail is worse than none.
  *
  *   node scripts/mobile-sweep.mjs [--self-test]     (BASE_URL=… to skip the build)
@@ -90,6 +90,20 @@ async function contractOnScreen(page, label, { list = false } = {}) {
   record(`4 · ${label}: every target ≥44×44`, judge.touch(top))
   record(`5 · ${label}: no table, no overflow, one scroller`, judge.hygiene(top))
   record(`6 · ${label}: nothing fixed covers a control`, judge.notCovered(top, end))
+  // A folded filter bar is one tap away: open every disclosure on the screen
+  // and hold what it reveals to the same floor.
+  const folds = page.locator('.screen details:not([open]) > summary')
+  if (await folds.count()) {
+    for (let guard = 0; guard < 20 && (await folds.count()); guard += 1) await folds.first().click()
+    await page.waitForTimeout(120)
+    const openTop = await measurePage(page)
+    await scrollToEnd(page)
+    const openEnd = await measurePage(page)
+    await scrollToTop(page)
+    record(`4 · ${label} (disclosures open): every target ≥44×44`, judge.touch(openTop))
+    record(`5 · ${label} (disclosures open): no table, no overflow, one scroller`, judge.hygiene(openTop))
+    record(`6 · ${label} (disclosures open): nothing fixed covers a control`, judge.notCovered(openTop, openEnd))
+  }
   return top
 }
 
@@ -201,21 +215,26 @@ async function runDesktopView(browser, base) {
   await context.close()
 }
 
-/* Two desktop shapes on a phone; checks 1, 2 and 4 must FAIL on both:
- *  A · the desktop shell at the phone's own width — the defect class this gate
- *      exists for. Built by asking for the desktop while holding the viewport
- *      meta at device width (a browser that ignores the meta switch); the phone
- *      then zooms the page out to fit it, as a real one does.
- *  B · the real full desktop view (?layout=desktop): laid out at 1280, scaled.
- * Check 3 is printed but not required: it is measured in CSS px, and a page a
- * phone has ZOOMED OUT keeps its content just as high in CSS px — so it cannot
- * tell a zoomed desktop from the companion. Its power to fail is on record in
- * the baseline (docs/ISSUES.md: 30 check-3 failures on the pre-fix phone
- * layout, which collapsed instead of zooming). janus-showcase states the same
- * three checks for its self-test. */
+/* Three wrong layouts on a phone, each with the checks it must FAIL:
+ *  A · the desktop shell at the phone's own width. Built by asking for the
+ *      desktop while holding the viewport meta at device width (a browser that
+ *      ignores the meta switch); Chromium's mobile emulation then lays the page
+ *      out wider to fit it (measured: 811px). Checks 1, 2, 4.
+ *  B · the real full desktop view (?layout=desktop): 1280 layout, scaled.
+ *      Checks 1, 2, 4.
+ * On A and B check 3 is printed but not required: it is measured in CSS px,
+ * and a page laid out wider than the device keeps its content just as high in
+ * CSS px, so check 3 cannot tell it from the companion (janus-showcase's
+ * self-test states the same three). Shape C (below) is where 3 must fail. */
 const SELF_TEST_SHAPES = [
-  { id: 'A · desktop shell at device width (the phone zooms it out)', freezeViewportMeta: true, mustFail: ['1', '2', '4'] },
-  { id: 'B · full desktop view (?layout=desktop, scaled)', freezeViewportMeta: false, mustFail: ['1', '2', '4'] },
+  { id: 'A · desktop shell at device width (the phone zooms it out)', query: 'layout=desktop', freezeViewportMeta: true, mustFail: ['1', '2', '4'] },
+  { id: 'B · full desktop view (?layout=desktop, scaled)', query: 'layout=desktop', mustFail: ['1', '2', '4'] },
+  /* C · the realistic regression: the companion TREE with its tier styling
+   * lost (the <html> data attributes never stamped — e.g. the surface hook
+   * broken), i.e. the desktop CSS on the phone's components. Shell identity
+   * (1, 2) cannot catch that; the companion floors must: first content (3),
+   * the touch floor (4). This is where check 3 proves it can fail. */
+  { id: 'C · companion tree without its tier styling', query: '', freezeSurfaceAttributes: true, mustFail: ['3', '4'] },
 ]
 
 async function runSelfTest(browser, base) {
@@ -231,7 +250,19 @@ async function runSelfTest(browser, base) {
         }
       })
     }
-    await gotoRoute(page, base, 'home', { query: 'layout=desktop' })
+    if (shape.freezeSurfaceAttributes) {
+      await context.addInitScript(() => {
+        // The hook writes root.dataset[key]; give <html> (only) a dataset that
+        // drops writes. Patched on the prototype: when an init script runs,
+        // the parser has not created <html> yet.
+        const native = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'dataset')
+        Object.defineProperty(HTMLElement.prototype, 'dataset', {
+          configurable: true,
+          get() { return this.tagName === 'HTML' ? {} : native.get.call(this) },
+        })
+      })
+    }
+    await gotoRoute(page, base, 'exceptions', { query: shape.query })
     const m = await measurePage(page)
     await context.close()
     const checks = [
@@ -248,7 +279,7 @@ async function runSelfTest(browser, base) {
       console.log(`${mark} ${id} — ${r.detail}`)
     }
   }
-  console.log(allFailed ? '\nself-test PASSED: both desktop shapes fail every check they must.' : '\nself-test FAILED: a desktop shape passed a check it must fail.')
+  console.log(allFailed ? '\nself-test PASSED: every wrong layout fails every check it must.' : '\nself-test FAILED: a wrong layout passed a check it must fail.')
   if (!allFailed) process.exitCode = 1
 }
 

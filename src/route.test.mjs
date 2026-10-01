@@ -12,6 +12,10 @@ test('a record route parses its id', () => {
   assert.deepEqual(parseHash('#people/l-001'), { view: 'people', record: 'l-001' })
 })
 
+test('view names are case-insensitive; record ids keep their case', () => {
+  assert.deepEqual(parseHash('#People/L-001'), { view: 'people', record: 'L-001' })
+})
+
 test('an empty or garbage hash yields no view', () => {
   assert.deepEqual(parseHash(''), { view: null, record: null })
   assert.deepEqual(parseHash('#'), { view: null, record: null })

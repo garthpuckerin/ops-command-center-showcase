@@ -11,13 +11,13 @@ export function useHashRoute(initial) {
   // pushing one, so back never lands on a route that immediately redirects.
   const replaceNext = useRef(true);
 
+  // The flag is set OUTSIDE the state updater (updaters stay pure); a no-op
+  // navigation leaves it set only until the next route change consumes it,
+  // and every path that changes the route sets it first.
   const navigate = useCallback((next, { replace = false } = {}) => {
     const target = { view: next.view, record: next.record || null };
-    setRoute(prev => {
-      if (sameRoute(prev, target)) return prev;
-      replaceNext.current = replace;
-      return target;
-    });
+    replaceNext.current = replace;
+    setRoute(prev => (sameRoute(prev, target) ? prev : target));
   }, []);
 
   useEffect(() => {
@@ -34,6 +34,9 @@ export function useHashRoute(initial) {
     const onHashChange = () => {
       const parsed = parseHash(window.location.hash);
       if (!parsed.view) return;
+      // The URL already holds this entry: canonicalising it (#People → #people)
+      // must REPLACE it, never push a dead entry onto back.
+      replaceNext.current = true;
       setRoute(prev => (sameRoute(prev, parsed) ? prev : parsed));
     };
     window.addEventListener("hashchange", onHashChange);
