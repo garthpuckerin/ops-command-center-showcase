@@ -109,6 +109,19 @@ test('every stylesheet parses, and no comment has swallowed a rule', () => {
   }
 })
 
+// The split's target (benchmark: 200–400 lines each). A file past the cap is
+// the next monolith starting; split it by contiguous section, then prove the
+// move with `node scripts/css-rules.mjs --compare`.
+test('no stylesheet is longer than 400 lines', () => {
+  const long = cssFiles.map((f) => [rel(f), readFileSync(f, 'utf8').split('\n').length]).filter(([, n]) => n > 401)
+  assert.deepEqual(long, [], 'stylesheets over 400 lines')
+})
+
+test('the landscape companion stylesheet is imported last', () => {
+  const imports = [...readFileSync(join(SRC, 'styles', 'app.css'), 'utf8').matchAll(/@import\s+['"]([^'"]+)['"]/g)].map((m) => m[1])
+  assert.equal(imports.at(-1), './companion-landscape.css', 'short-landscape rules must override the portrait companion rules')
+})
+
 test('every stylesheet is reachable from the entry (none silently dropped)', () => {
   const entry = join(SRC, 'main.jsx')
   const reached = new Set()

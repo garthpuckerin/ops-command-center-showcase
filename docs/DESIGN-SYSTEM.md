@@ -10,7 +10,7 @@ add a raw color or a pill that can be cut off, the suite fails.
 
 ## 1. Tokens — every color comes from one
 
-All colors resolve from CSS custom properties defined in `src/index.css` under
+All colors resolve from CSS custom properties defined in `src/styles/tokens.css` under
 `:root` (light), `body[data-mode="dark"]` (dark), and `body[data-palette="…"]`
 (accent palettes). **Never write a raw `oklch()`/`rgba()`/`#hex` in a rule** —
 use a token. (The only raw values allowed anywhere are pure black/white alphas
@@ -126,3 +126,18 @@ restyled. Template: `portofolio-hub/docs/MOBILE_COMPANION_BENCHMARK.md`.
 - **Floors**: every target ≥ 44×44 (width and height); the document is the only
   scroller (the More sheet, a dialog, is the one exception); nothing is wider
   than the viewport.
+
+## 8. Stylesheet layout
+
+`src/styles/app.css` imports, in this order (the order the rules had in the
+former monolithic `src/index.css` — the split was a pure move, proven
+byte-identical in the built asset by `node scripts/css-rules.mjs --compare`):
+`tokens` · `base` · `shell` · `components` · `components-data` · `catalog` ·
+`sessions` · `reports` · `companion-content` · `landing` · `companion-shell` ·
+`companion-sheet` · `companion-people` · `companion-landscape` (always last).
+
+Guards (`src/stylesheet.test.mjs`): every class in JSX has a rule; no comment
+contains a rule a spliced banner swallowed; every stylesheet is imported; none
+exceeds 400 lines; the landscape file is last. To move rules between files,
+snapshot first (`--out`) and `--compare` after — a per-selector difference is a
+cascade change, not a move.

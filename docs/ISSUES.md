@@ -49,4 +49,9 @@
 - **Severity:** low (layout density, not a gate failure) · **Status:** open · **Visible:** yes, phone portrait Command Center
 - **Evidence:** the Command Center stat cards keep the desktop card padding and stack one per row on a phone (`media/viewport/phone-portrait--home.png`, sweep `--shots`), so the first screen shows only three numbers. A two-up compact stat strip on the phone tier would show all four plus the next card.
 
+### 2026-09-30 · `src/index.css` monolith (2,216 lines) split into `src/styles/` — done, recorded for the trail
+- **Status:** done on `fix/mobile-companion` · **Visible:** no (a pure move)
+- **Evidence:** 14 files in source order behind `src/styles/app.css` (largest `shell.css` 394 lines, landscape imported last). `node scripts/css-rules.mjs --compare` against the pre-split snapshot: **549 rules before and after, built asset byte-identical (sha256 `d110ca14…`), global rule order identical, 0 per-selector differences.** Gates added first and mutation-tested: orphan classes (3 structural hooks allowlisted with reasons), swallowed rules in comments, unimported stylesheets; plus a 400-line cap and "landscape last". The design-token guard now reads every split file (and fails on a raw `#ff0000` in one).
+- **Known limit:** two generic primitives (the KV list / one-line value, and the narrow-workstation two-column collapse) sit at the end of `sessions.css` and `reports.css` because that is where they were in source order; moving them is a cascade change, to be done (if wanted) with a `--compare` per selector.
+
 ## Closed
