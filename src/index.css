@@ -1984,6 +1984,13 @@
   :where([data-surface="companion"]) .landing-foot { flex-direction: column; align-items: flex-start; gap: 6px; }
 
   /* ────────────────────────────────────────────────────────────────
+     Landing — touch floor at every shape (found by the viewport gate,
+     2026-09-30): the theme toggle and "Launch demo" reach 44×44.
+     ──────────────────────────────────────────────────────────────── */
+  .landing .iconbtn { width: 44px; height: 44px; }
+  .landing .btn { min-height: 44px; }
+
+  /* ────────────────────────────────────────────────────────────────
      Toast
      ──────────────────────────────────────────────────────────────── */
   .toast {
@@ -1992,13 +1999,6 @@
     border-radius: 2px; font-size: 13px; z-index: 100;
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
   }
-
-  /* ────────────────────────────────────────────────────────────────
-     Landing — touch floor at every shape (found by the viewport gate,
-     2026-09-30): the theme toggle and "Launch demo" reach 44×44.
-     ──────────────────────────────────────────────────────────────── */
-  .landing .iconbtn { width: 44px; height: 44px; }
-  .landing .btn { min-height: 44px; }
 
   /* ────────────────────────────────────────────────────────────────
      Companion shell — phones and tablets below the workstation tier.
