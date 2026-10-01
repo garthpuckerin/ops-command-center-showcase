@@ -96,6 +96,58 @@ test.describe('phone companion — advertised authority', () => {
   })
 })
 
+// The 721–1023px gap band (ISSUES 2026-09-27): a phone turned to landscape,
+// a portrait tablet, a narrow desktop window. Every one of them is below the
+// workstation tier, so every desk-only surface stays desk-only — asserted as
+// the ABSENCE of approve/reject authority, not only the presence of the copy.
+const GAP_BAND = [
+  ['phone landscape', 844, 390],
+  ['large phone landscape', 932, 430],
+  ['tablet portrait', 768, 1024],
+  ['narrow desktop window', 1000, 760],
+]
+
+for (const [shape, width, height] of GAP_BAND) {
+  test.describe(`gap band — ${shape} (${width}×${height})`, () => {
+    test.use({ viewport: { width, height } })
+
+    test('write-back approvals stay desk-only', async ({ page }) => {
+      await seedState(page, { role: 'lead', view: 'writebacks', campaignId: 'camp-st-anne' })
+      await page.goto('/')
+
+      await expect(page.locator('.main').getByText('Write-back approvals stays at the desk.')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Approve', exact: true }), 'no approve authority below the workstation tier').toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Reject', exact: true }), 'no reject authority below the workstation tier').toHaveCount(0)
+    })
+
+    test('deep links to org settings and imports are guarded', async ({ page }) => {
+      await seedState(page, { role: 'lead', view: 'home', campaignId: 'camp-st-anne' })
+      await page.goto('/#org-settings')
+      await expect(page.locator('.main').getByText('Org settings stays at the desk.')).toBeVisible()
+      await expect(page.getByText('Portable demo, governed platform.')).toHaveCount(0)
+
+      await page.goto('/?r=1#imports')
+      await expect(page.locator('.main').getByText('Import wizard stays at the desk.')).toBeVisible()
+    })
+  })
+}
+
+test.describe('rotation', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  test('turning a phone to landscape does not un-gate approvals', async ({ page }) => {
+    await seedState(page, { role: 'lead', view: 'writebacks', campaignId: 'camp-st-anne' })
+    await page.goto('/')
+    await expect(page.locator('.main').getByText('Write-back approvals stays at the desk.')).toBeVisible()
+
+    // Rotate in place — no reload, the way a real phone turns.
+    await page.setViewportSize({ width: 844, height: 390 })
+    await page.waitForTimeout(250)
+    await expect(page.locator('.main').getByText('Write-back approvals stays at the desk.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Approve', exact: true }), 'rotation must not grant approve authority').toHaveCount(0)
+  })
+})
+
 test.describe('workstation', () => {
   test('the same surface keeps full authority at the desk', async ({ page }) => {
     await seedState(page, { role: 'lead', view: 'writebacks', campaignId: 'camp-st-anne' })

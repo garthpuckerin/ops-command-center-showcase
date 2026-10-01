@@ -1,112 +1,159 @@
-/* Viewport sweep — measures key screens across the real device matrix and
- * reports layout defects for ops-command-center's drawer-nav design:
- *   - sideways scroll (the page must never pan)
- *   - wrong nav tier: at <=980 the sidebar must be an off-canvas drawer with a
- *     hamburger; above 980 it must be the inline rail (no hamburger)
- *   - over-tall top bar
- *   - landing fit (fresh visitor) — no sideways scroll, CTA present
+#!/usr/bin/env node
+/* Viewport sweep — every surface at every shape it will actually be seen in
+ * (ported from janus-showcase/scripts/viewport-sweep.mjs, adapted to this
+ * app's routes, shells and desk-only authority).
  *
- *   BASE_URL=http://localhost:3200 node scripts/viewport-sweep.mjs
+ * The matrix: phone and tablet × portrait and landscape × { the layout the app
+ * chooses, the full desktop view forced with ?layout=desktop } + the extra
+ * phone sizes this repo has always swept + the narrow-desktop and desktop
+ * widths where the workstation topbar must stay one row.
+ *
+ * Every cell × screen is judged on: the expected shell (companion below the
+ * workstation tier, desktop at/above it or when forced); the floor (nothing
+ * wider than the viewport, no sideways scroller, the document is the only
+ * scroller); AUTHORITY (desk-only routes are desk-only in every cell below
+ * the workstation tier — forced desktop on a small device included — and live
+ * at the workstation); on the companion the phone contract (no table, targets
+ * ≥44×44, tab bar anchored, ≥60% of the height left for content, a side rail
+ * — not a bottom bar — on a short landscape screen, first content high); in
+ * the forced desktop a ≥1024 layout with the way back on screen.
+ *
+ *   node scripts/viewport-sweep.mjs            run the matrix
+ *   node scripts/viewport-sweep.mjs --shots    also write media/viewport/*.png
  */
-import { chromium } from '@playwright/test'
+import { mkdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { chromium, devices } from '@playwright/test'
+import { withPreviewServer, seedPastLanding, gotoRoute, ROOT, DESK_ONLY_ROUTES, WORKSTATION_MIN } from './lib/sweep-server.mjs'
+import { measurePage, measure, CONTENT_SELECTOR, TOUCH_TARGET_ALLOWLIST } from './lib/probes.mjs'
 
-const BASE = process.env.BASE_URL || 'http://localhost:3200'
-const DRAWER_BP = 980
+const SHOTS = process.argv.includes('--shots')
+const SHOT_DIR = join(ROOT, 'media', 'viewport')
 
-const VIEWPORTS = [
-  ['phone-P small', 360, 800], ['phone-P', 390, 844], ['phone-P max', 430, 932],
-  ['phone-L SE', 667, 375], ['phone-L', 844, 390], ['phone-L max', 932, 430],
-  ['tablet-P', 768, 1024], ['tablet-P big', 834, 1194], ['tablet-L', 1024, 768], ['tablet-L big', 1194, 834],
-  ['narrow-1050', 1050, 800], ['narrow-1100', 1100, 800], ['narrow-1250', 1250, 800], ['narrow-1520', 1520, 864],
-  ['laptop short', 1280, 720], ['laptop', 1366, 768], ['laptop 125%', 1536, 864],
-  ['desktop FHD', 1920, 1080], ['desktop QHD', 2560, 1440],
+const touch = (width, height, screen) => ({ viewport: { width, height }, screen, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
+const desktop = (width, height) => ({ viewport: { width, height }, screen: { width: Math.max(width, 1920), height: Math.max(height, 1080) }, deviceScaleFactor: 1, isMobile: false, hasTouch: false })
+
+const CELLS = [
+  { id: 'phone-portrait', device: devices['iPhone 13'] },
+  { id: 'phone-portrait-small', device: touch(360, 800, { width: 360, height: 800 }) },
+  { id: 'phone-portrait-max', device: touch(430, 932, { width: 430, height: 932 }) },
+  { id: 'phone-landscape', device: devices['iPhone 13 landscape'] },
+  { id: 'phone-landscape-SE', device: touch(667, 375, { width: 375, height: 667 }) },
+  { id: 'phone-landscape-844', device: touch(844, 390, { width: 390, height: 844 }) },
+  { id: 'phone-landscape-max', device: touch(932, 430, { width: 430, height: 932 }) },
+  { id: 'tablet-portrait', device: devices['iPad Mini'] },
+  { id: 'tablet-landscape', device: devices['iPad Mini landscape'] },
+  { id: 'tablet-large-portrait', device: devices['iPad Pro 11'] },
+  { id: 'tablet-large-landscape', device: devices['iPad Pro 11 landscape'] },
+  { id: 'phone-portrait-DESKTOP', device: devices['iPhone 13'], forced: true },
+  { id: 'phone-landscape-DESKTOP', device: devices['iPhone 13 landscape'], forced: true },
+  { id: 'tablet-portrait-DESKTOP', device: devices['iPad Mini'], forced: true },
+  { id: 'tablet-large-portrait-DESKTOP', device: devices['iPad Pro 11'], forced: true },
+  { id: 'desktop-1050', device: desktop(1050, 800) },
+  { id: 'desktop-1100', device: desktop(1100, 800) },
+  { id: 'desktop-1250', device: desktop(1250, 800) },
+  { id: 'desktop-1280', device: desktop(1280, 720) },
+  { id: 'desktop-1366', device: desktop(1366, 768) },
+  { id: 'desktop-1440', device: desktop(1440, 900) },
+  { id: 'desktop-1536', device: desktop(1536, 864) },
+  { id: 'desktop-1920', device: desktop(1920, 1080) },
+  { id: 'desktop-2560', device: desktop(2560, 1440) },
 ]
 
-const SCREENS = ['home', 'readiness', 'exceptions', 'writebacks', 'reports', 'setup', 'org-settings']
+const SCREENS = ['home', 'exceptions', 'people', 'readiness', 'reports', 'setup', 'writebacks', 'org-settings', 'imports']
 
-const browser = await chromium.launch()
-const issues = []
-const note = (vp, screen, what) => issues.push(`${vp} · ${screen}: ${what}`)
+function judgeCell(cell, route, m) {
+  const p = []
+  const w = cell.device.viewport.width
+  const expectDesktop = cell.forced || w >= WORKSTATION_MIN
+  // Authority is scoped by DEVICE tier: the forced desktop on a phone is still
+  // a phone, and a layout below the workstation tier is never a workstation.
+  const authority = !cell.forced && w >= WORKSTATION_MIN
+  if (m.shell !== (expectDesktop ? 'desktop' : 'companion')) p.push(`shell=${m.shell}, expected ${expectDesktop ? 'desktop' : 'companion'}`)
+  if (m.docWidth > m.vw + 1) p.push(`page scrolls sideways (${m.docWidth} > ${m.vw})`)
+  if (m.tooWideCount) p.push(`${m.tooWideCount} element(s) past the viewport: ${m.tooWide.join('; ')}`)
+  if (m.sideScrollers.length) p.push(`sideways scroller(s): ${m.sideScrollers.join(', ')}`)
+  if (Math.abs(m.bodyHeight - m.docHeight) > 1) p.push(`body is a scroller (${m.bodyHeight} vs ${m.docHeight})`)
 
-for (const [vpName, width, height] of VIEWPORTS) {
-  // Emulate a real touch device below the drawer breakpoint (matches actual
-  // phones/tablets and the mobile-sweep); desktop emulation above it.
-  const mobileTier = width <= 1024
-  const ctx = await browser.newContext({
-    viewport: { width, height },
-    deviceScaleFactor: mobileTier ? 2 : 1,
-    isMobile: mobileTier,
-    hasTouch: mobileTier,
-  })
-  const page = await ctx.newPage()
-  await page.addInitScript(() => {
-    try {
-      localStorage.setItem('ops:entered:v1', 'true')
-      localStorage.setItem('lms_ops_command_center_ui_state', JSON.stringify({ role: 'lead', view: 'home', campaignId: 'camp-st-anne' }))
-    } catch (e) {}
-  })
-
-  // NOTE: navigating this SPA to a URL that differs ONLY by hash is a
-  // same-document navigation in Chromium — it updates location.hash but does
-  // NOT remount the app, and app.jsx has no hashchange listener, so the
-  // rendered view never actually changes. Every screen after the first in this
-  // loop was silently re-scanning the previous screen's DOM. A cache-busting
-  // query param forces a real full navigation so initialView() re-reads the
-  // hash on every iteration.
-  for (const view of SCREENS) {
-    await page.goto(BASE + '/?_=' + Date.now() + '#' + view, { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('.side-link', { timeout: 10000 }).catch(() => note(vpName, view, 'shell never rendered'))
-    await page.waitForTimeout(250)
-
-    const m = await page.evaluate(() => {
-      const r = (sel) => { const el = document.querySelector(sel); if (!el) return null; const b = el.getBoundingClientRect(); const cs = getComputedStyle(el); return { x: b.x, w: b.width, h: b.height, display: cs.display, transform: cs.transform, position: cs.position } }
-      const toggle = document.querySelector('.nav-toggle')
-      const toggleVisible = toggle ? getComputedStyle(toggle).display !== 'none' : false
-      return {
-        vw: innerWidth,
-        scrollW: document.documentElement.scrollWidth,
-        side: r('.side'), topbar: r('.topbar'),
-        toggleVisible,
-      }
-    })
-
-    if (m.scrollW > m.vw + 1) note(vpName, view, `sideways scroll (${m.scrollW} > ${m.vw})`)
-    // Header invariant: on the inline (desktop) tier the topbar must stay ONE
-    // row. Its flexible controls compress with ellipsis rather than wrap, so a
-    // tall topbar (>84px ≈ two rows vs the ~64px single row) is the "broken
-    // header" defect. (Below the drawer breakpoint the topbar legitimately
-    // stacks for mobile, so only check width > 980.)
-    if (width > 980 && m.topbar && m.topbar.h > 84) note(vpName, view, `topbar wrapped to ${Math.round(m.topbar.h)}px (should be one row)`)
-
-    const isDrawerTier = width <= DRAWER_BP
-    if (isDrawerTier) {
-      // Off-canvas: the hamburger must be present and the sidebar must sit off
-      // the left edge (translated out) when closed.
-      if (!m.toggleVisible) note(vpName, view, 'drawer tier but no hamburger toggle')
-      if (m.side && m.side.x >= 0 && m.side.transform === 'none') note(vpName, view, 'drawer tier but sidebar is inline (not off-canvas)')
-    } else {
-      // Inline rail: hamburger must be hidden and the sidebar occupies real space.
-      if (m.toggleVisible) note(vpName, view, 'inline tier but hamburger is visible')
-      if (!m.side || m.side.w < 40) note(vpName, view, 'inline tier but sidebar has no width')
-    }
+  if (DESK_ONLY_ROUTES.includes(route)) {
+    if (!authority && (!m.deskOnly || m.approveButtons > 0)) p.push(`AUTHORITY: #${route} is live below the workstation tier (deskOnly=${m.deskOnly}, approve/reject=${m.approveButtons})`)
+    if (authority && m.deskOnly) p.push(`#${route} is desk-gated on a workstation`)
   }
 
-  // Landing fit (fresh visitor — clear the entered flag).
-  const fresh = await ctx.newPage()
-  await fresh.addInitScript(() => { try { localStorage.removeItem('ops:entered:v1') } catch (e) {} })
-  await fresh.goto(BASE + '/', { waitUntil: 'domcontentloaded' })
-  await fresh.waitForTimeout(200)
-  const lm = await fresh.evaluate(() => ({
-    sideways: document.documentElement.scrollWidth > innerWidth + 1,
-    headline: !!document.querySelector('.landing-headline'),
-  }))
-  if (lm.sideways) note(vpName, 'landing', 'sideways scroll')
-  if (!lm.headline) note(vpName, 'landing', 'headline missing')
+  if (m.shell === 'companion') {
+    if (m.hasTable) p.push('a <table> is rendered on the companion')
+    if (m.smallCount) p.push(`${m.smallCount} target(s) under 44×44: ${m.small.join('; ')}`)
+    if (m.nestedScrollers.length) p.push(`nested scroller(s): ${m.nestedScrollers.join(', ')}`)
+    if (m.tabBar && !m.sideRail && Math.abs(m.tabBar.bottom - m.vh) > 1) p.push(`bottom tab bar is ${m.vh - m.tabBar.bottom}px off the viewport bottom`)
+    const contentRatio = (m.vh - m.chrome) / m.vh
+    if (contentRatio < 0.6) p.push(`only ${Math.round(contentRatio * 100)}% of the height is left for content (${m.chrome}px of fixed bars in ${m.vh}px)`)
+    if (m.sideRail > m.vw * 0.15) p.push(`the side rail takes ${m.sideRail}px of a ${m.vw}px screen`)
+    if (m.vh <= 500 && m.vw > m.vh && m.sideRail === 0) p.push(`short landscape screen (${m.vw}×${m.vh}) still uses a bottom tab bar`)
+    if (m.firstContentTop !== null && m.firstContentTop > m.vh * 0.45) p.push(`first content starts at ${m.firstContentTop}px (${Math.round((m.firstContentTop / m.vh) * 100)}% down a ${m.vh}px screen)`)
+  }
 
-  await ctx.close()
+  if (cell.forced) {
+    if (m.vw < WORKSTATION_MIN) p.push(`the forced desktop is laid out at ${m.vw}px — it must be a real desktop width, scaled to the screen`)
+    if (!m.backToPhone) p.push('no visible "Back to the phone layout" in the forced desktop view')
+    else if (m.backToPhone.right > m.vw || m.backToPhone.left < 0) p.push(`"Back to the phone layout" is off-screen (left=${m.backToPhone.left}, right=${m.backToPhone.right}, vw=${m.vw})`)
+    if (m.sidebarWidth !== null && m.sidebarWidth > m.vw * 0.6) p.push(`the sidebar takes ${m.sidebarWidth}px of ${m.vw}px — a stacked reflow, not the desktop`)
+  } else if (expectDesktop && m.shell === 'desktop') {
+    // The workstation topbar stays ONE row; its controls compress, never wrap.
+    if (m.topbarHeight !== null && m.topbarHeight > 84) p.push(`topbar wrapped to ${m.topbarHeight}px (should be one row)`)
+    if (!m.sidebarWidth || m.sidebarWidth < 40) p.push('workstation without an inline sidebar')
+  }
+  return p
 }
 
-await browser.close()
-console.log('')
-if (issues.length === 0) console.log('✓ viewport sweep clean across ' + VIEWPORTS.length + ' viewports')
-else { console.log(`${issues.length} issue(s):`); issues.forEach((i) => console.log('  ✗ ' + i)); process.exitCode = 1 }
+function judgeLanding(cell, m) {
+  const p = []
+  if (m.shell !== 'landing') p.push(`expected the landing, saw shell=${m.shell}`)
+  if (m.docWidth > m.vw + 1) p.push(`landing scrolls sideways (${m.docWidth} > ${m.vw})`)
+  if (m.smallCount) p.push(`${m.smallCount} landing target(s) under 44×44: ${m.small.join('; ')}`)
+  return p
+}
+
+let checks = 0
+let failures = 0
+function report(cellId, label, m, problems) {
+  checks += 1
+  if (problems.length) failures += 1
+  console.log(`${problems.length ? '✗' : '✓'} ${label.padEnd(14)} shell=${m.shell.padEnd(9)} layout=${m.vw}×${m.vh} chrome=${m.chrome}px first=${m.firstContentTop ?? '—'}${problems.length ? `\n    - ${problems.join('\n    - ')}` : ''}`)
+}
+
+await withPreviewServer({ port: 4291, outDir: 'dist-viewport' }, async (base) => {
+  if (SHOTS) mkdirSync(SHOT_DIR, { recursive: true })
+  const browser = await chromium.launch()
+  try {
+    for (const cell of CELLS) {
+      const v = cell.device.viewport
+      console.log(`\n== ${cell.id}  (${v.width}×${v.height}${cell.forced ? ', full desktop view forced' : ''})`)
+      const context = await browser.newContext({ ...cell.device })
+      await seedPastLanding(context)
+      const page = await context.newPage()
+      for (const route of SCREENS) {
+        await gotoRoute(page, base, route, { query: cell.forced ? 'layout=desktop' : '' })
+        const m = await measurePage(page)
+        report(cell.id, `#${route}`, m, judgeCell(cell, route, m))
+        if (SHOTS && ['home', 'exceptions', 'writebacks'].includes(route)) await page.screenshot({ path: join(SHOT_DIR, `${cell.id}--${route}.png`) })
+      }
+      await context.close()
+
+      if (!cell.forced) {
+        // The landing, on a context nothing has seeded.
+        const fresh = await browser.newContext({ ...cell.device })
+        const fp = await fresh.newPage()
+        await fp.goto(base, { waitUntil: 'networkidle' })
+        await fp.waitForTimeout(150)
+        const m = await fp.evaluate(measure, { contentSelector: CONTENT_SELECTOR, allow: TOUCH_TARGET_ALLOWLIST })
+        report(cell.id, 'landing', m, judgeLanding(cell, m))
+        if (SHOTS) await fp.screenshot({ path: join(SHOT_DIR, `${cell.id}--landing.png`) })
+        await fresh.close()
+      }
+    }
+  } finally {
+    await browser.close()
+  }
+  console.log(`\n${checks - failures}/${checks} cell×screen checks passed, ${failures} failed.`)
+  if (failures) process.exitCode = 1
+})
