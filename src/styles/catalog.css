@@ -1,0 +1,46 @@
+/* catalog.css — Courses & Roles catalog grid and the blocker queue rows.
+   Split from the former src/index.css (lines 1272–1313) as a pure move:
+   src/styles/app.css imports every file in the original order. */
+
+/* ────────────────────────────────────────────────────────────────
+   Catalog
+   ──────────────────────────────────────────────────────────────── */
+.catalog-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+}
+.catalog-card {
+  display: flex; flex-direction: column;
+  background: var(--paper); border: 1px solid var(--rule);
+  cursor: pointer; overflow: hidden;
+  transition: border-color .15s, transform .15s;
+  border-radius: 2px;
+}
+.catalog-card:hover { border-color: var(--ink); background: var(--hover); }
+.catalog-card .cover { border-radius: 0; }
+.catalog-card-body { padding: var(--pad-card-sm); display: flex; flex-direction: column; gap: 8px; }
+.catalog-card-eyebrow {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.catalog-card-title { font-family: var(--serif); font-size: 22px; line-height: 1.18; margin: 0; }
+.catalog-card-desc {
+  color: var(--ink-3); font-size: 13px; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.catalog-card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-2); }
+.catalog-card-meta-2 { display: flex; gap: 14px; font-size: 11px; }
+
+
+
+.queue { }
+.queue-row {
+  display: grid; grid-template-columns: 32px 1fr auto auto;
+  align-items: center; gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rule);
+}
+.queue-row:last-child { border-bottom: 0; }
+/* .queue-row is a non-interactive summary row — no hover affordance. */
+.queue-title { font-weight: 500; font-size: 13.5px; }
+.queue-meta { color: var(--muted); }

@@ -1,0 +1,31 @@
+/* companion-people.css — Companion: People cards, the record screen, the folded filters.
+   Split from the former src/index.css (lines 2158–2185) as a pure move:
+   src/styles/app.css imports every file in the original order. */
+
+/* ────────────────────────────────────────────────────────────────
+   Companion — People (cards, the record screen, folded filters)
+   ──────────────────────────────────────────────────────────────── */
+.person-list { display: grid; gap: 10px; }
+.person-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; min-height: 64px; padding: 12px 14px;
+  border: 1px solid var(--rule); border-radius: 2px;
+  background: var(--paper); color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.person-card:hover { background: var(--hover); border-color: var(--ink); }
+.person-card-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.list-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.back-link {
+  align-self: flex-start;
+  min-height: 44px; padding: 0 4px;
+  border: 0; background: transparent; color: var(--ink-2);
+  font: inherit; font-size: 14px; cursor: pointer;
+}
+.back-link:hover { color: var(--ink); text-decoration: underline; }
+.filter-more summary {
+  display: flex; align-items: center; min-height: 44px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-2); cursor: pointer;
+}
+.filter-more[open] summary { margin-bottom: 10px; }

@@ -1,0 +1,186 @@
+/* reports.css — Admin roles grid and Reports (picker, preview, report doc, sheet preview). Ends with the narrow-workstation (≤1200px) two-column collapse, which follows Reports in source order.
+   Split from the former src/index.css (lines 1568–1750) as a pure move:
+   src/styles/app.css imports every file in the original order. */
+
+/* ────────────────────────────────────────────────────────────────
+   Admin
+   ──────────────────────────────────────────────────────────────── */
+.roles-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px;
+}
+.role-card { display: flex; flex-direction: column; gap: 6px; }
+.role-head { display: flex; align-items: center; justify-content: space-between; }
+.role-head .mono { font-family: var(--serif); font-size: 24px; color: var(--ink); }
+.role-title { font-family: var(--serif); font-size: 22px; margin: 4px 0 0; }
+.role-foot { display: flex; gap: 8px; }
+
+/* ────────────────────────────────────────────────────────────────
+   Reports
+   ──────────────────────────────────────────────────────────────── */
+.report-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.report-picker { display: flex; flex-direction: column; gap: 10px; }
+.report-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: var(--pad-card-sm);
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.report-card:hover { border-color: var(--ink); background: var(--hover); }
+.report-card-on {
+  border-color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--accent);
+  background: var(--accent-tint);
+}
+.report-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.report-preview { padding: var(--pad-card); min-height: 620px; }
+.report-preview-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+}
+.report-doc {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: var(--pad-card);
+}
+.report-doc-title h3 {
+  font-family: var(--serif);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1.1;
+  margin: 8px 0 8px;
+}
+.report-doc-title p { color: var(--ink-3); max-width: 68ch; margin: 0; }
+.report-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+}
+.report-metric {
+  position: relative;
+  border: 1px solid var(--rule);
+  padding: var(--pad-card-sm);
+  background: var(--paper);
+  overflow: hidden;
+}
+.report-metric-value {
+  font-family: var(--serif);
+  font-size: 42px;
+  line-height: 1;
+}
+.report-metric-label {
+  margin-top: 8px;
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.report-swatch {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ink);
+}
+.report-swatch-olive { background: var(--olive); }
+.report-swatch-terracotta { background: var(--terracotta); }
+.report-swatch-red { background: var(--red); }
+.report-swatch-ochre { background: var(--ochre); }
+.report-swatch-ink { background: var(--ink); }
+.report-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+}
+.report-bar-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 54px;
+  gap: 14px;
+  align-items: center;
+}
+.report-bar-label { color: var(--ink-2); font-size: 13px; }
+.report-mini-table { margin-top: 24px; }
+.sheet-preview {
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  overflow: hidden;
+}
+.sheet-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+.sheet-frame {
+  display: grid;
+  grid-template-columns: 42px repeat(6, minmax(132px, 1fr));
+  overflow: auto;
+}
+.sheet-corner,
+.sheet-col-head,
+.sheet-row-head {
+  background: var(--paper-3);
+  color: var(--muted);
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+}
+.sheet-row-head {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.sheet-cell {
+  min-height: 34px;
+  padding: 8px 10px;
+  border-right: 1px solid var(--rule-2);
+  border-bottom: 1px solid var(--rule-2);
+  background: var(--paper);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet-header {
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--paper-2);
+}
+
+/* Content two-column layouts collapse while the inline sidebar is still
+   present (the workstation starts at 1024px). Below ~1200px the sidebar + a
+   two-column content grid leave the main column too narrow for real
+   table/card content (a queue card overflowed ~17px at 1100px), so single-
+   column it through the whole narrow-desktop band. */
+@media (max-width: 1200px) {
+  .two-col,
+  .two-col-66,
+  .focal-grid { grid-template-columns: 1fr; }
+  .focal-meta { grid-template-columns: repeat(2, 1fr); }
+}

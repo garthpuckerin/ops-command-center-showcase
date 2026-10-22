@@ -9,7 +9,8 @@ test('public surfaces use the canonical Ops Command Center product name', async 
   const [index, landing, app] = await Promise.all([
     read('../index.html'),
     read('./Landing.jsx'),
-    read('./app.jsx'),
+    // The sidebar (and its brand line) moved out of app.jsx with the shell split.
+    read('./shell/WorkstationShell.jsx'),
   ])
 
   assert.match(index, /<title>Ops Command Center<\/title>/)

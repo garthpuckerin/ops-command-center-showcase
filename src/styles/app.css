@@ -1,0 +1,18 @@
+/* The stylesheet entry. Files are imported in the order their rules appeared
+   in the former monolithic src/index.css, so the built CSS is the same rule
+   sequence (scripts/css-rules.mjs --compare proves it). Companion surfaces
+   follow the shared ones; the landscape file is imported last. */
+@import './tokens.css';
+@import './base.css';
+@import './shell.css';
+@import './components.css';
+@import './components-data.css';
+@import './catalog.css';
+@import './sessions.css';
+@import './reports.css';
+@import './companion-content.css';
+@import './landing.css';
+@import './companion-shell.css';
+@import './companion-sheet.css';
+@import './companion-people.css';
+@import './companion-landscape.css';

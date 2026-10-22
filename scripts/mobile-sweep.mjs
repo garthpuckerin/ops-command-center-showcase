@@ -1,142 +1,303 @@
-/* Mobile/tablet sweep — on phones ops-command-center presents a bottom tab bar
- * (companion nav) plus a hamburger→off-canvas drawer for the full menu, so this
- * checks the defect classes that design can still ship:
+#!/usr/bin/env node
+/* Mobile sweep — the gate that is allowed to make a mobile claim
+ * (portofolio-hub/docs/MOBILE_COMPANION_BENCHMARK.md, "The gate"; ported from
+ * janus-showcase/scripts/mobile-sweep.mjs, adapted to this app's routes).
+ * Builds the app, serves the local build on `vite preview`, and runs the
+ * phone-companion contract on an emulated iPhone 13:
  *
- *  1. Sideways scroll — the page must never pan horizontally.
- *  2. Nested scroll regions — the app's scroll surface is .main (or the page).
- *     Any OTHER element that actually overflows is a finding on phone tiers.
- *     At <=720px .tbl genuinely cardifies (rows become display:block stacked
- *     label/value cards, not a fixed grid), so wide tables no longer x-scroll.
- *  3. Grids that stay multi-column beyond the tier's budget.
+ *   1  desktop chrome (aside.side / header.topbar) is NOT mounted
+ *   2  the tab bar is fixed (bottom bar, or side rail on a short landscape
+ *      screen) and every tab is ≥44×44
+ *   3  first real content in the top 35% of the first screen; ≥2 items on lists
+ *   4  every visible interactive target ≥44×44 — width AND height
+ *   5  no <table>, nothing wider than the viewport, no sideways or nested
+ *      scroller, the document is the only scroller
+ *   6  nothing fixed covers an in-flow control (top of screen and end of screen)
+ *   P  People: list and record ≤3.5 viewports, a bare #people/<id> deep link
+ *      opens that record in a FRESH context, hash navigation re-renders, and
+ *      in-app navigation writes the URL
+ *   A  authority: every desk-only route renders the desk-only state from a deep
+ *      link — with no Approve/Reject on screen — in every cell below the
+ *      workstation tier, the 721–1023px gap band (phone landscape, portrait
+ *      tablets, a narrow desktop window) included
+ *   D  the full desktop view: reachable from More, laid out at ≥1024 with a
+ *      visible way back, and it does NOT grant desk authority on a phone
  *
- * Route injection (hash), lead role, per viewport. Nav-interaction coverage
- * lives in the e2e suite; the sweep needs fast, deterministic state entry.
+ * `--self-test` runs checks 1–4 against three wrong layouts on the phone (two
+ * desktop shapes, and the companion with its tier styling lost) and FAILS
+ * unless each fails the checks listed for it in SELF_TEST_SHAPES. A gate that cannot
+ * fail is worse than none.
  *
- *   BASE_URL=http://localhost:3200 node scripts/mobile-sweep.mjs
+ *   node scripts/mobile-sweep.mjs [--self-test]     (BASE_URL=… to skip the build)
  */
-import { chromium } from '@playwright/test'
+import { chromium, devices } from '@playwright/test'
+import { LMS_DATA } from '../src/data.js'
+import { withPreviewServer, seedPastLanding, gotoRoute, DESK_ONLY_ROUTES, WORKSTATION_MIN } from './lib/sweep-server.mjs'
+import { measurePage, judge, scrollToEnd, scrollToTop } from './lib/probes.mjs'
 
-const BASE = process.env.BASE_URL || 'http://localhost:3200'
+const SELF_TEST = process.argv.includes('--self-test')
+const PHONE = devices['iPhone 13']
+const PRIMARY = 'nav[aria-label="Primary"]'
 
-const VIEWPORTS = [
-  ['phone-P', 375, 812, 'phone'],
-  ['phone-P small', 360, 800, 'phone'],
-  ['phone-L', 844, 390, 'phone-land'],
-  ['tablet-P', 768, 1024, 'tablet'],
-  ['tablet-L', 1024, 768, 'tablet'],
+const LEAD_SCREENS = [
+  { view: 'home' }, { view: 'exceptions', list: true }, { view: 'notifications', list: true },
+  { view: 'readiness' }, { view: 'sessions' }, { view: 'people', list: true }, { view: 'learners', list: true },
+  { view: 'reports' }, { view: 'setup' }, { view: 'departments' }, { view: 'facilities' },
+  { view: 'timeline' }, { view: 'integrations' }, { view: 'walkthrough' }, { view: 'scenarios' },
+  { view: 'catalog-map' }, { view: 'matrix' }, { view: 'settings' },
+  // The desk-only state is a phone screen too — its exits must be reachable.
+  ...DESK_ONLY_ROUTES.map((view) => ({ view })),
+]
+const ROLE_SCREENS = [
+  { role: 'trainer', view: 'home' }, { role: 'trainer', view: 'sessions' }, { role: 'trainer', view: 'exceptions', list: true },
+  { role: 'learner', view: 'home' }, { role: 'learner', view: 'learners' },
 ]
 
-const MAX_COLS = { phone: 2, 'phone-land': 3, tablet: 4 }
+/* The authority matrix: every shape below the workstation tier. */
+const custom = (width, height, screen, isMobile = true) => ({ viewport: { width, height }, screen, deviceScaleFactor: isMobile ? 2 : 1, isMobile, hasTouch: isMobile })
+const AUTHORITY_CELLS = [
+  ['phone portrait 390', PHONE],
+  ['phone landscape 750', devices['iPhone 13 landscape']],
+  ['phone landscape 844', custom(844, 390, { width: 390, height: 844 })],
+  ['phone landscape 932', custom(932, 430, { width: 430, height: 932 })],
+  ['tablet portrait 768', devices['iPad Mini']],
+  ['tablet portrait 834', devices['iPad Pro 11']],
+  ['narrow desktop window 1000', custom(1000, 760, { width: 1920, height: 1080 }, false)],
+]
 
-// Containers allowed to keep columns: twin-stat rows, key/value rows, segmented
-// controls, pill groups, nav (incl. the bottom tab bar, which is legitimately
-// N-across). NOTE: at phone tier (<=720px) .tbl cardifies to stacked rows
-// (display:block) so it is no longer a grid there; the tbl entries below only
-// exempt the tablet tier, where tables retain their column layout with room.
-const GRID_ALLOW = ['tbl', 'tbl-row', 'tbl-head', 'kv-list', 'seg', 'segmented', 'pill-group', 'stat-grid', 'stat-grid-4', 'two-col', 'theme-grid', 'roles-grid', 'card-grid', 'card-grid-2', 'side-nav', 'topbar', 'topbar-right', 'topbar-left', 'mobile-tabbar']
+/* A real record, picked by PROPERTY (the flagship campaign's first learner
+ * with an open exception), never a hardcoded id. */
+const PERSON = LMS_DATA.learners.find((l) => l.campaign_id === 'camp-st-anne' && l.exception) || LMS_DATA.learners[0]
 
-const SCREENS = ['home', 'readiness', 'departments', 'facilities', 'exceptions', 'sessions', 'people', 'imports', 'writebacks', 'reports', 'setup', 'scoring', 'ai', 'org-settings']
+const outcomes = []
+const record = (id, { ok, detail }) => outcomes.push({ id, ok, detail })
 
-const browser = await chromium.launch()
-const issues = []
-const note = (vp, screen, what) => issues.push(`${vp} · ${screen}: ${what}`)
-
-for (const [vpName, width, height, tier] of VIEWPORTS) {
-  const ctx = await browser.newContext({
-    viewport: { width, height },
-    isMobile: tier !== 'tablet',
-    hasTouch: true,
-    deviceScaleFactor: 2,
-  })
-  const page = await ctx.newPage()
-  await page.addInitScript(() => {
-    try {
-      localStorage.setItem('ops:entered:v1', 'true')
-      localStorage.setItem('lms_ops_command_center_ui_state', JSON.stringify({ role: 'lead', view: 'home', campaignId: 'camp-st-anne' }))
-    } catch (e) {}
-  })
-
-  const settle = async () => {
-    await page.waitForSelector('.side-link', { timeout: 10000 })
-    await page.waitForTimeout(250)
-  }
-
-  // NOTE: navigating this SPA to a URL that differs ONLY by hash is a
-  // same-document navigation in Chromium — it updates location.hash but does
-  // NOT remount the app, and app.jsx has no hashchange listener, so the
-  // rendered view never actually changes. Every screen after the first in this
-  // loop was silently re-scanning the previous screen's DOM. A cache-busting
-  // query param forces a real full navigation so initialView() re-reads the
-  // hash on every iteration.
-  const gotoView = (view) => page.goto(BASE + '/?_=' + Date.now() + '#' + view, { waitUntil: 'domcontentloaded' })
-
-  const scan = async (screen) => {
-    const r = await page.evaluate(({ tier, maxCols, allow }) => {
-      const out = []
-      const vis = (el) => {
-        const b = el.getBoundingClientRect()
-        if (b.width < 2 || b.height < 2) return false
-        const cs = getComputedStyle(el)
-        return cs.display !== 'none' && cs.visibility !== 'hidden'
-      }
-      const label = (el) => `${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 3).join('.') : ''}`
-
-      // 1. Sideways scroll.
-      if (document.documentElement.scrollWidth > innerWidth + 1) {
-        out.push(`page pans sideways (${document.documentElement.scrollWidth} > ${innerWidth})`)
-      }
-
-      // 2. Nested scroll regions. Allowed: the main content column, the
-      // off-canvas nav drawer, any dialog/drawer surface, and native form
-      // controls (textarea/select) that are DESIGNED to scroll their own
-      // content once it exceeds their rows/size — that's expected browser
-      // behavior, not the "forgotten overflow override" bug class this scan
-      // targets.
-      for (const el of document.querySelectorAll('*')) {
-        if (!vis(el)) continue
-        const cs = getComputedStyle(el)
-        const scrollsX = /(auto|scroll)/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 2
-        const scrollsY = /(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 2
-        const allowedScroll = el.classList.contains('main') || el.classList.contains('content') ||
-          el.closest('.side') || // the nav drawer and its scrolling nav list are allowed to scroll
-          el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' ||
-          el === document.documentElement || el === document.body || el.closest('[role="dialog"], .drawer-panel, .profile-drawer, .nav-backdrop')
-        if (allowedScroll) continue
-        if (scrollsX) out.push(`x-scroll region: ${label(el)} (${el.scrollWidth}>${el.clientWidth})`)
-        if (scrollsY) out.push(`nested y-scroll region: ${label(el)} (${el.scrollHeight}>${el.clientHeight})`)
-      }
-
-      // 3. Multi-column grids beyond the tier's budget.
-      for (const el of document.querySelectorAll('*')) {
-        if (!vis(el)) continue
-        const cs = getComputedStyle(el)
-        if (cs.display !== 'grid') continue
-        if (allow.some((c) => el.classList.contains(c))) continue
-        const tracks = cs.gridTemplateColumns.split(' ').map(parseFloat).filter((w) => w > 24)
-        const cols = tracks.length
-        const maxTrack = Math.max(0, ...tracks)
-        const per = el.getBoundingClientRect().width / (cols || 1)
-        if (cols > maxCols && maxTrack < 120) out.push(`${cols}-column grid at ${Math.round(per)}px/col: ${label(el)}`)
-      }
-      return out
-    }, { tier, maxCols: MAX_COLS[tier], allow: GRID_ALLOW })
-    for (const w of [...new Set(r)]) note(vpName, screen, w)
-  }
-
-  for (const view of SCREENS) {
-    await gotoView(view)
-    await settle()
-    await scan(view)
-  }
-
-  await ctx.close()
+async function phonePage(browser, device = PHONE, seed = {}) {
+  const context = await browser.newContext({ ...device })
+  await seedPastLanding(context, seed)
+  return { context, page: await context.newPage() }
 }
 
-await browser.close()
-console.log('')
-if (issues.length === 0) console.log('✓ mobile sweep clean across ' + VIEWPORTS.length + ' viewports')
-else {
-  console.log(`${issues.length} issue(s):`)
-  issues.forEach((i) => console.log('  ✗ ' + i))
-  process.exitCode = 1
+async function contractOnScreen(page, label, { list = false } = {}) {
+  await scrollToTop(page)
+  const top = await measurePage(page)
+  await scrollToEnd(page)
+  const end = await measurePage(page)
+  await scrollToTop(page)
+  record(`1 · ${label}: desktop chrome absent`, judge.chromeAbsent(top))
+  record(`2 · ${label}: tab bar fixed, tabs ≥44×44`, judge.tabBar(top))
+  record(`3 · ${label}: first content high${list ? ', ≥2 items' : ''}`, judge.firstContent(top, { list }))
+  record(`4 · ${label}: every target ≥44×44`, judge.touch(top))
+  record(`5 · ${label}: no table, no overflow, one scroller`, judge.hygiene(top))
+  record(`6 · ${label}: nothing fixed covers a control`, judge.notCovered(top, end))
+  // A folded filter bar is one tap away: open every disclosure on the screen
+  // and hold what it reveals to the same floor.
+  const folds = page.locator('.screen details:not([open]) > summary')
+  if (await folds.count()) {
+    for (let guard = 0; guard < 20 && (await folds.count()); guard += 1) await folds.first().click()
+    await page.waitForTimeout(120)
+    const openTop = await measurePage(page)
+    await scrollToEnd(page)
+    const openEnd = await measurePage(page)
+    await scrollToTop(page)
+    record(`4 · ${label} (disclosures open): every target ≥44×44`, judge.touch(openTop))
+    record(`5 · ${label} (disclosures open): no table, no overflow, one scroller`, judge.hygiene(openTop))
+    record(`6 · ${label} (disclosures open): nothing fixed covers a control`, judge.notCovered(openTop, openEnd))
+  }
+  return top
 }
+
+async function openMore(page) {
+  await page.locator(PRIMARY).getByRole('button', { name: /^More/ }).click()
+  await page.waitForTimeout(200)
+}
+
+async function runContract(browser, base) {
+  const { context, page } = await phonePage(browser)
+  for (const s of LEAD_SCREENS) {
+    await gotoRoute(page, base, s.view)
+    await contractOnScreen(page, `#${s.view}`, s)
+  }
+  await gotoRoute(page, base, 'home')
+  await openMore(page)
+  const sheet = await measurePage(page)
+  record('4 · More (open): every target ≥44×44', judge.touch(sheet))
+  record('5 · More (open): no overflow, one scroller', judge.hygiene(sheet))
+  await context.close()
+
+  for (const s of ROLE_SCREENS) {
+    const r = await phonePage(browser, PHONE, { role: s.role })
+    await gotoRoute(r.page, base, s.view)
+    await contractOnScreen(r.page, `${s.role} #${s.view}`, s)
+    await r.context.close()
+  }
+}
+
+async function heading(page) {
+  return (await page.locator('.screen h1').first().innerText().catch(() => '')).trim()
+}
+
+async function runPeople(browser, base) {
+  const { context, page } = await phonePage(browser)
+  await gotoRoute(page, base, 'people')
+  record('P1 · #people: the list is ≤3.5 viewports', judge.length(await measurePage(page)))
+
+  // In-app navigation must write the URL, or nothing on the phone can be shared.
+  await page.locator(PRIMARY).getByRole('button', { name: 'Queue' }).click()
+  await page.waitForTimeout(200)
+  const hashAfterTab = await page.evaluate(() => location.hash)
+  record('P2 · tapping the Queue tab writes #exceptions to the URL', { ok: hashAfterTab === '#exceptions', detail: `location.hash=${hashAfterTab || '(empty)'}` })
+
+  // Same-document hash navigation (a pasted link, the back button) re-renders.
+  await gotoRoute(page, base, 'exceptions')
+  const exceptionsHeading = await heading(page)
+  await gotoRoute(page, base, 'home')
+  await page.evaluate(() => { location.hash = '#exceptions' })
+  await page.waitForTimeout(300)
+  const afterHashChange = await heading(page)
+  record('P3 · a hashchange (#home → #exceptions) re-renders the screen', { ok: afterHashChange === exceptionsHeading, detail: `heading after hashchange "${afterHashChange}", expected "${exceptionsHeading}"` })
+  await context.close()
+
+  // A bare record link opened by someone with no session.
+  const fresh = await browser.newContext({ ...PHONE })
+  await seedPastLanding(fresh)
+  const fp = await fresh.newPage()
+  await gotoRoute(fp, base, `people/${PERSON.id}`)
+  const recordHeading = await heading(fp)
+  record(`P4 · a bare deep link #people/${PERSON.id} opens that record in a fresh context`, { ok: recordHeading === PERSON.name, detail: `heading "${recordHeading}", expected "${PERSON.name}"` })
+  if (recordHeading === PERSON.name) {
+    const m = await contractOnScreen(fp, `#people/${PERSON.id}`)
+    record(`P5 · #people/${PERSON.id}: the record is ≤3.5 viewports`, judge.length(m))
+  }
+  await fresh.close()
+}
+
+async function runAuthority(browser, base) {
+  for (const [cellName, device] of AUTHORITY_CELLS) {
+    const w = device.viewport.width
+    if (w >= WORKSTATION_MIN) throw new Error(`authority cell ${cellName} is not below the workstation tier`)
+    const { context, page } = await phonePage(browser, device)
+    for (const route of DESK_ONLY_ROUTES) {
+      await gotoRoute(page, base, route)
+      const m = await measurePage(page)
+      const ok = m.deskOnly && m.approveButtons === 0
+      record(`A · ${cellName} (${w}×${device.viewport.height}) #${route}: desk-only, no Approve/Reject`, { ok, detail: ok ? 'desk-only state, 0 approve/reject buttons' : `deskOnly=${m.deskOnly} approve/reject buttons=${m.approveButtons} shell=${m.shell}` })
+    }
+    await context.close()
+  }
+}
+
+async function runDesktopView(browser, base) {
+  const { context, page } = await phonePage(browser)
+  await gotoRoute(page, base, 'home')
+  await openMore(page)
+  const openLink = page.getByRole('button', { name: 'Open the desktop layout' })
+  const reachable = (await openLink.count()) > 0
+  record('D1 · More offers "Open the desktop layout"', { ok: reachable, detail: reachable ? 'present' : 'not found in More' })
+  if (!reachable) { await context.close(); return }
+  await openLink.click()
+  await page.waitForTimeout(400)
+  const forced = await measurePage(page)
+  const backOnScreen = forced.backToPhone && forced.backToPhone.left >= 0 && forced.backToPhone.right <= forced.vw && forced.backToPhone.top >= 0 && forced.backToPhone.bottom <= forced.vh
+  record('D2 · the full desktop view is the real desktop (≥1024 layout) with a way back on screen', {
+    ok: forced.shell === 'desktop' && forced.vw >= WORKSTATION_MIN && Boolean(backOnScreen),
+    detail: `shell=${forced.shell} layout=${forced.vw}px backToPhone=${JSON.stringify(forced.backToPhone)}`,
+  })
+  await gotoRoute(page, base, 'writebacks')
+  const gated = await measurePage(page)
+  record('D3 · the forced desktop on a phone keeps write-backs desk-only (no Approve/Reject)', { ok: gated.deskOnly && gated.approveButtons === 0, detail: `shell=${gated.shell} deskOnly=${gated.deskOnly} approve/reject=${gated.approveButtons}` })
+  if (backOnScreen) {
+    await page.locator('[data-back-to-phone]').click()
+    await page.waitForTimeout(400)
+    const back = await measurePage(page)
+    record('D4 · "Back to the phone layout" returns to the companion at the device width', { ok: back.shell === 'companion' && back.vw === PHONE.viewport.width, detail: `shell=${back.shell} layout=${back.vw}px` })
+  }
+  await context.close()
+}
+
+/* Three wrong layouts on a phone, each with the checks it must FAIL:
+ *  A · the desktop shell at the phone's own width. Built by asking for the
+ *      desktop while holding the viewport meta at device width (a browser that
+ *      ignores the meta switch); Chromium's mobile emulation then lays the page
+ *      out wider to fit it (measured: 811px). Checks 1, 2, 4.
+ *  B · the real full desktop view (?layout=desktop): 1280 layout, scaled.
+ *      Checks 1, 2, 4.
+ * On A and B check 3 is printed but not required: it is measured in CSS px,
+ * and a page laid out wider than the device keeps its content just as high in
+ * CSS px, so check 3 cannot tell it from the companion (janus-showcase's
+ * self-test states the same three). Shape C (below) is where 3 must fail. */
+const SELF_TEST_SHAPES = [
+  { id: 'A · desktop shell at device width (the phone zooms it out)', query: 'layout=desktop', freezeViewportMeta: true, mustFail: ['1', '2', '4'] },
+  { id: 'B · full desktop view (?layout=desktop, scaled)', query: 'layout=desktop', mustFail: ['1', '2', '4'] },
+  /* C · the realistic regression: the companion TREE with its tier styling
+   * lost (the <html> data attributes never stamped — e.g. the surface hook
+   * broken), i.e. the desktop CSS on the phone's components. Shell identity
+   * (1, 2) cannot catch that; the companion floors must: first content (3),
+   * the touch floor (4). This is where check 3 proves it can fail. */
+  { id: 'C · companion tree without its tier styling', query: '', freezeSurfaceAttributes: true, mustFail: ['3', '4'] },
+]
+
+async function runSelfTest(browser, base) {
+  let allFailed = true
+  for (const shape of SELF_TEST_SHAPES) {
+    const { context, page } = await phonePage(browser)
+    if (shape.freezeViewportMeta) {
+      await context.addInitScript(() => {
+        const original = Element.prototype.setAttribute
+        Element.prototype.setAttribute = function (name, value) {
+          if (this.tagName === 'META' && this.getAttribute('name') === 'viewport' && name === 'content') return
+          return original.call(this, name, value)
+        }
+      })
+    }
+    if (shape.freezeSurfaceAttributes) {
+      await context.addInitScript(() => {
+        // The hook writes root.dataset[key]; give <html> (only) a dataset that
+        // drops writes. Patched on the prototype: when an init script runs,
+        // the parser has not created <html> yet.
+        const native = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'dataset')
+        Object.defineProperty(HTMLElement.prototype, 'dataset', {
+          configurable: true,
+          get() { return this.tagName === 'HTML' ? {} : native.get.call(this) },
+        })
+      })
+    }
+    await gotoRoute(page, base, 'exceptions', { query: shape.query })
+    const m = await measurePage(page)
+    await context.close()
+    const checks = [
+      ['1', '1 · desktop chrome absent', judge.chromeAbsent(m)],
+      ['2', '2 · tab bar fixed, tabs ≥44×44', judge.tabBar(m)],
+      ['3', '3 · first content high', judge.firstContent(m)],
+      ['4', '4 · every target ≥44×44', judge.touch(m)],
+    ]
+    console.log(`\n--self-test ${shape.id} (iPhone 13; layout ${m.vw}×${m.vh}, shell=${m.shell})`)
+    for (const [n, id, r] of checks) {
+      const required = shape.mustFail.includes(n)
+      if (required && r.ok) allFailed = false
+      const mark = !required ? '· (not required here)' : r.ok ? '✗ (did NOT fail — the gate cannot tell this from the companion)' : '✓ (correctly FAILS)'
+      console.log(`${mark} ${id} — ${r.detail}`)
+    }
+  }
+  console.log(allFailed ? '\nself-test PASSED: every wrong layout fails every check it must.' : '\nself-test FAILED: a wrong layout passed a check it must fail.')
+  if (!allFailed) process.exitCode = 1
+}
+
+// The self-test serves its own build so it can run beside the full sweep.
+await withPreviewServer(SELF_TEST ? { port: 4289, outDir: 'dist-selftest' } : { port: 4288, outDir: 'dist-sweep' }, async (base) => {
+  const browser = await chromium.launch()
+  try {
+    if (SELF_TEST) return await runSelfTest(browser, base)
+    await runContract(browser, base)
+    await runPeople(browser, base)
+    await runAuthority(browser, base)
+    await runDesktopView(browser, base)
+  } finally {
+    await browser.close()
+  }
+  console.log('')
+  for (const o of outcomes) console.log(`${o.ok ? '✓' : '✗'} ${o.id} — ${o.detail}`)
+  const failed = outcomes.filter((o) => !o.ok).length
+  console.log(`\n${outcomes.length - failed}/${outcomes.length} mobile checks passed, ${failed} failed.`)
+  if (failed) process.exitCode = 1
+})
