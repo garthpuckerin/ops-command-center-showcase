@@ -1,0 +1,149 @@
+/* tokens.css — Design tokens: type, neutrals, accents, semantic status, spacing — light, dark and the three accent palettes. The ONLY file that defines colours (src/design-tokens.test.mjs).
+   Split from the former src/index.css (lines 1–146) as a pure move:
+   src/styles/app.css imports every file in the original order. */
+
+/* ════════════════════════════════════════════════════════════════════
+   LMS OPS COMMAND CENTER · DESIGN SYSTEM
+   A warm, operational dashboard aesthetic. Hairlines, generous whitespace,
+   small-caps eyebrows, monospace for metadata. Tabular figures everywhere.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Type */
+  --serif:  "Instrument Serif", "Source Serif 4", Georgia, serif;
+  --sans:   "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono:   "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Neutrals — unified with Grant Tracker's ledger-paper system: warm paper
+     (hue ~85) under cool blue-grey ink (hue 250). Values matched to GT.
+     (OCC legacy warm-ink values were paper 97.5%/80, ink 20%/70, rule 86%/80.) */
+  --paper:    oklch(98.5% 0.006 85);
+  --paper-2:  oklch(97% 0.008 85);
+  --paper-3:  oklch(95% 0.009 85);
+  --ink:      oklch(16% 0.015 250);
+  --ink-2:    oklch(32% 0.015 250);
+  --ink-3:    oklch(48% 0.015 250);
+  --rule:     oklch(87% 0.010 80);
+  --rule-2:   oklch(91% 0.008 80);
+  --rule-strong: oklch(78% 0.012 80);
+  --muted:    oklch(54% 0.014 250);
+  --muted-2:  oklch(66% 0.012 250);
+
+  /* Accents — overridden per palette */
+  --terracotta: oklch(52% 0.15 35);       /* GT federal amber/rust */
+  --terracotta-deep: oklch(30% 0.10 35);
+  --terracotta-tint: oklch(95% 0.03 50);
+
+  --olive:        oklch(52% 0.09 130);
+  --olive-deep:   oklch(38% 0.08 130);
+  --olive-tint:   oklch(93% 0.04 130);
+
+  --ochre:        oklch(72% 0.13 75);
+  --ochre-deep:   oklch(50% 0.12 75);
+  --ochre-tint:   oklch(94% 0.05 75);
+
+  --red:          oklch(55% 0.18 25);
+  --red-tint:     oklch(94% 0.04 25);
+
+  /* Cover tones (theme-independent editorial art) — base + deep gradient stop */
+  --c-terracotta: oklch(58% 0.13 35);
+  --c-terracotta-deep: oklch(48% 0.13 25);
+  --c-olive:      oklch(50% 0.08 130);
+  --c-olive-deep: oklch(40% 0.08 130);
+  --c-ochre:      oklch(70% 0.13 75);
+  --c-ochre-deep: oklch(58% 0.13 65);
+  --c-ink:        oklch(28% 0.02 240);
+  --c-ink-deep:   oklch(18% 0.025 240);
+  --cover-fg:     oklch(95% 0.01 60);   /* light text on dark covers */
+  --cover-fg-ink: oklch(20% 0.02 70);   /* dark text on the light ochre cover */
+
+  /* Primary (palette token) */
+  --accent:       var(--terracotta);
+  --accent-deep:  var(--terracotta-deep);
+  --accent-tint:  var(--terracotta-tint);
+
+  /* Foundational surfaces + derived roles (see docs/DESIGN-SYSTEM.md) */
+  --paper-float:   var(--paper);        /* raised floating-panel surface */
+  --grain-a:       oklch(96% 0.012 80); /* body corner-wash glow A */
+  --grain-b:       oklch(96% 0.013 50); /* body corner-wash glow B */
+  --scrim:         color-mix(in oklch, var(--ink) 30%, transparent); /* modal/nav dim */
+  --ink-on-accent: var(--paper);        /* foreground on an accent fill */
+  --scrollbar-thumb:       color-mix(in oklch, var(--ink) 20%, transparent);
+  --scrollbar-thumb-hover: color-mix(in oklch, var(--ink) 34%, transparent);
+  /* Universal hover overlay — darkens any surface in light, lightens it in dark
+     (--ink flips), so a hover is visible on paper, paper-2, paper-3, or a tint,
+     in either theme. Every surface/row/tile/icon hover uses these. */
+  --hover:        color-mix(in oklch, var(--ink) 6%, transparent);
+  --hover-strong: color-mix(in oklch, var(--ink) 11%, transparent);
+
+  --side-w: 248px;
+  /* Content cap — fills up to here, then centers on ultrawide (matches GT). */
+  --maxw:   1720px;
+}
+
+/* Palette overrides */
+body[data-palette="olive"]   { --accent: var(--olive);      --accent-deep: var(--olive-deep);      --accent-tint: var(--olive-tint); }
+body[data-palette="inkblue"] { --accent: oklch(45% 0.11 245); --accent-deep: oklch(34% 0.10 245); --accent-tint: oklch(94% 0.03 245); }
+/* ── LEGACY dark theme (pre-GT-unification) — PRESERVED for possible later use.
+   To restore OCC's original higher-contrast charcoal dark mode, swap these
+   values back into body[data-mode="dark"] below (accent was NOT lifted):
+     --paper 16% 0.015 250;  --paper-2 20% 0.015 250;  --paper-3 24% 0.012 250;
+     --ink 94% 0.008 85;     --ink-2 82% 0.010 85;     --ink-3 68% 0.012 85;
+     --rule 31% 0.014 250;   --rule-2 26% 0.012 250;
+     --muted 68% 0.012 85;   --muted-2 52% 0.012 85;
+     --terracotta-tint 25% 0.035 35;
+     olive palette accent-tint var(--olive-tint); inkblue accent-tint 23% 0.035 245;
+   ──────────────────────────────────────────────────────────────────────── */
+body[data-mode="dark"] {
+  /* Neutrals matched to Grant Tracker's dark (softer charcoal, hue 250). */
+  --paper:    oklch(20% 0.012 250);
+  --paper-2:  oklch(25% 0.014 250);
+  --paper-3:  oklch(28% 0.013 250);
+  --ink:      oklch(95% 0.006 85);
+  --ink-2:    oklch(82% 0.008 85);
+  --ink-3:    oklch(66% 0.010 85);
+  --rule:     oklch(34% 0.014 250);
+  --rule-2:   oklch(28% 0.013 250);
+  --rule-strong: oklch(46% 0.016 250);
+  --muted:    oklch(66% 0.010 85);
+  --muted-2:  oklch(52% 0.012 85);
+  /* Lift accent AND every semantic status color on dark surfaces so pill text
+     stays legible on its dark tint (GT does this; OCC's drift did not). */
+  --terracotta:      oklch(72% 0.14 45);
+  --terracotta-deep: oklch(80% 0.12 45);
+  --terracotta-tint: oklch(30% 0.05 45);
+  --olive:           oklch(70% 0.12 130);
+  --olive-deep:      oklch(80% 0.10 130);
+  --olive-tint:      oklch(28% 0.05 150);
+  --ochre:           oklch(80% 0.14 78);
+  --ochre-deep:      oklch(82% 0.12 75);
+  --ochre-tint:      oklch(32% 0.055 75);
+  --red:             oklch(68% 0.17 28);
+  --red-tint:        oklch(30% 0.06 28);
+  /* Re-declare so --accent re-substitutes against the lifted dark terracotta
+     (a var() in :root resolves once against :root's value, not a descendant's). */
+  --accent:          var(--terracotta);
+  --accent-deep:     var(--terracotta-deep);
+  --accent-tint:     var(--terracotta-tint);
+  /* Foundational surfaces adapt; --scrim derives from --ink, cover tokens are
+     theme-independent, so neither needs a dark value here. */
+  --paper-float:     oklch(19% 0.012 250);
+  --grain-a:         oklch(22% 0.020 250 / 0.72);
+  --grain-b:         oklch(20% 0.018 250 / 0.62);
+  --ink-on-accent:   oklch(12% 0.012 80);
+}
+/* Alt palettes also lift their accent on dark surfaces. */
+body[data-mode="dark"][data-palette="olive"]   { --accent: oklch(70% 0.12 130); --accent-deep: oklch(80% 0.10 130); --accent-tint: var(--olive-tint); }
+body[data-mode="dark"][data-palette="inkblue"] { --accent: oklch(72% 0.11 250); --accent-deep: oklch(82% 0.09 250); --accent-tint: oklch(28% 0.05 250); }
+
+/* Density — a 3-step card-padding scale so every card interior comes from a
+   token (dense tiles / standard cards / hero panels) instead of ad-hoc px,
+   and the compact toggle actually tightens all of them. */
+body[data-density="compact"] {
+  --pad-card: 18px;
+  --pad-card-sm: 14px;
+  --pad-card-lg: 26px;
+  --pad-section: 36px;
+  --gap-row: 10px;
+}
+body { --pad-card: 26px; --pad-card-sm: 18px; --pad-card-lg: 34px; --pad-section: 56px; --gap-row: 14px; }

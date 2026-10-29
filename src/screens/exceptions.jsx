@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { LMS_DATA as D } from '../data.js'
 import * as LMS_API from '../api-client.js'
 import { statusLabel, fmtDate, Eyebrow, Rule, Pill, Card, Button } from '../components.jsx'
-import { Cell, KV, PageHeader, Row, Table, addDays, campaignData, dateKey, departmentById, facilityById, localDate, riskPill, todayDate } from './_shared.jsx'
+import { Cell, FilterFold, KV, PageHeader, Row, Table, addDays, campaignData, dateKey, departmentById, facilityById, localDate, riskPill, todayDate } from './_shared.jsx'
 
 function ExceptionsScreen({ campaignId, onDataChanged }) {
   const scoped = campaignData(campaignId);
@@ -65,6 +65,7 @@ function ExceptionsScreen({ campaignId, onDataChanged }) {
       <PageHeader eyebrow="Exception Queue" title="Open blockers and escalations." sub="The daily work queue for readiness leads, trainers, access teams, and department owners." />
       {message && <Pill tone={message.startsWith("Update failed") ? "red" : "olive"}>{message}</Pill>}
       <Card className="filterbar">
+        <FilterFold active={Object.values(filters).filter(v => v && v !== "all").length}>
         <div className="filterbar-row">
           <QueueSelect label="Status" value={filters.status} onChange={v => setFilters({ ...filters, status: v })} options={["all", "open", "in_progress", "blocked", "resolved", "closed"]} />
           <QueueSelect label="Severity" value={filters.severity} onChange={v => setFilters({ ...filters, severity: v })} options={["all", "critical", "high", "medium", "low"]} />
@@ -74,6 +75,7 @@ function ExceptionsScreen({ campaignId, onDataChanged }) {
           <QueueSelect label="Department" value={filters.department} onChange={v => setFilters({ ...filters, department: v })} options={["all", ...scoped.departments.map(d => d.id)]} render={id => id === "all" ? "All" : departmentById(id)?.name || id} />
           <QueueSelect label="Due" value={filters.due} onChange={v => setFilters({ ...filters, due: v })} options={["all", "overdue", "today", "week"]} />
         </div>
+        </FilterFold>
       </Card>
 
       <div className="two-col">

@@ -1,0 +1,169 @@
+/* companion-content.css — Companion content: shared screens laid out for phones and tablets (cardified tables, single-column grids, the 44px floor). Keyed off <html data-surface="companion">.
+   Split from the former src/index.css (lines 1751–1916) as a pure move:
+   src/styles/app.css imports every file in the original order. */
+
+/* ────────────────────────────────────────────────────────────────
+   Companion content — screens shared with the workstation, laid out for
+   phones and tablets. Keyed off <html data-surface="companion"> (set by
+   src/surface.js); :where() keeps each rule at the specificity it had as
+   a width media query, so the cascade order is unchanged.
+   ──────────────────────────────────────────────────────────────── */
+:where([data-surface="companion"]) .campaign-notice,
+  :where([data-surface="companion"]) .campaign-notice-meta,
+  :where([data-surface="companion"]) .demo-hero,
+  :where([data-surface="companion"]) .walkthrough-grid,
+  :where([data-surface="companion"]) .settings-grid,
+  :where([data-surface="companion"]) .report-layout {
+    grid-template-columns: 1fr;
+  }
+
+:where([data-surface="companion"]) .demo-hero-aside { border-left: 0; border-top: 1px solid var(--rule); }
+
+:where([data-surface="companion"]) .scenario-grid { grid-template-columns: 1fr; }
+
+:where([data-surface="companion"]) .theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+:where([data-surface="companion"]) .session-calendar:not(.session-calendar-month) .session-calendar-grid {
+    grid-template-columns: 1fr;
+  }
+
+:where([data-surface="companion"]) .session-calendar-month .session-calendar-grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+:where([data-surface="companion"]) .session-day {
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+:where([data-surface="companion"]) .session-day:last-child { border-bottom: 0; }
+
+:where([data-surface="companion"]) .stat-grid-4 { grid-template-columns: repeat(2, 1fr); }
+
+:where([data-surface="companion"]) .content { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+
+/* Grid utilities collapse to a single column on phones. */
+
+:where([data-surface="companion"]) .grid-2, :where([data-surface="companion"]) .grid-3, :where([data-surface="companion"]) .card-grid-2 { grid-template-columns: 1fr; }
+
+/* ── Phone tables cardify ──────────────────────────────────────────
+     A data-dense workstation table does not port to a phone. On the
+     companion every .tbl row becomes a stacked label/value card (labels come from the
+     data-label the Table primitive threads onto each cell). This kills the
+     N-wide grid, the fixed-px horizontal overflow, and the ellipsis-to-
+     nothing text — one fix across ~15 screens. */
+
+:where([data-surface="companion"]) .tbl-head { display: none; }
+
+:where([data-surface="companion"]) .tbl-row {
+    display: block;
+    padding: 14px 16px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    margin-bottom: 10px;
+    background: var(--paper);
+  }
+
+:where([data-surface="companion"]) .tbl-row:last-child { border-bottom: 1px solid var(--rule); }
+
+:where([data-surface="companion"]) .tbl-row.is-selected { box-shadow: inset 3px 0 0 0 var(--accent); }
+
+:where([data-surface="companion"]) .tbl-cell {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    padding: 5px 0;
+    min-height: 0;
+  }
+
+:where([data-surface="companion"]) .tbl-cell + .tbl-cell { border-top: 1px solid var(--rule-2); }
+
+:where([data-surface="companion"]) .tbl-cell::before {
+    content: attr(data-label);
+    flex: 0 0 40%;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    align-self: center;
+  }
+
+:where([data-surface="companion"]) .tbl-cell:not([data-label])::before { content: none; }
+
+:where([data-surface="companion"]) .tbl-cell > * { text-align: right; min-width: 0; }
+
+/* Dense forms and metric strips go single-column on phones. */
+
+:where([data-surface="companion"]) .form-grid { grid-template-columns: 1fr; }
+
+:where([data-surface="companion"]) .report-metric-grid { grid-template-columns: 1fr 1fr; }
+
+/* Filter bars pack two-up instead of one tall stack, so the queue/list
+     below stays reachable without a long scroll past the controls. */
+
+:where([data-surface="companion"]) .filterbar-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+:where([data-surface="companion"]) .filterbar-row > * { min-width: 0; }
+
+:where([data-surface="companion"]) .filterbar-sep, :where([data-surface="companion"]) .filterbar-spacer { display: none; }
+
+/* Blocker queue rows wrap instead of crushing the title into a 4-col grid. */
+
+:where([data-surface="companion"]) .queue-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+
+:where([data-surface="companion"]) .queue-row .queue-main { flex: 1 1 62%; min-width: 0; }
+
+/* Tables cardify on phones, so the column-alignment width no longer applies —
+     let status/risk pills size to their label inside each card row. */
+
+:where([data-surface="companion"]) .pill-block, :where([data-surface="companion"]) .pill-sev { width: auto; max-width: none; }
+
+/* Tap-target floor: every interactive control reaches 44×44 on the companion. */
+
+:where([data-surface="companion"]) .iconbtn, :where([data-surface="companion"]) .icon-btn { width: 44px; height: 44px; }
+
+:where([data-surface="companion"]) .seg-btn, :where([data-surface="companion"]) .tab, :where([data-surface="companion"]) .btn-sm { min-height: 44px; }
+
+:where([data-surface="companion"]) .role-btn { min-height: 44px; }
+
+:where([data-surface="companion"]) .campaign-notice-meta { grid-template-columns: 1fr; }
+
+:where([data-surface="companion"]) .demo-hero-main,
+  :where([data-surface="companion"]) .demo-hero-aside { padding: 20px; }
+
+:where([data-surface="companion"]) .theme-grid { grid-template-columns: 1fr; }
+
+:where([data-surface="companion"]) .session-calendar-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+:where([data-surface="companion"]) .session-calendar-legend {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+:where([data-surface="companion"]) .calendar-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+:where([data-surface="companion"]) .calendar-toolbar-actions {
+    justify-content: flex-start;
+  }
+
+:where([data-surface="companion"]) .session-calendar-month .session-calendar-grid {
+    grid-template-columns: 1fr;
+  }
+
+:where([data-surface="companion"]) .stat-grid,
+  :where([data-surface="companion"]) .stat-grid-4,
+  :where([data-surface="companion"]) .two-col,
+  :where([data-surface="companion"]) .two-col-66 {
+    grid-template-columns: 1fr;
+  }

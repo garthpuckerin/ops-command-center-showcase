@@ -9,3 +9,8 @@ playwright-report/
 .DS_Store
 
 
+dist-sweep/
+dist-viewport/
+media/
+dist-selftest/
+dist-css-check/

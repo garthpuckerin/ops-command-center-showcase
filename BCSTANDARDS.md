@@ -48,8 +48,9 @@
 - **Verify before pushing:** `npm run build` (clean), `npm run test:unit`
   (fixture-coherence + governed-AI gates), and `npm run test:e2e` (smoke, RBAC
   read-scope, §4b empty states — zero console/page/network errors) must pass.
-  The layout sweeps (`sweep:whiteglove` / `sweep:mobile` / `sweep:viewport`,
-  run against the dev server) must be clean. The e2e error assertions are strict
+  The layout sweeps must be clean: `sweep:whiteglove` (against the dev server),
+  `sweep:mobile` plus `sweep:mobile -- --self-test`, and `sweep:viewport` (each
+  builds the app and sweeps its own `vite preview`). The e2e error assertions are strict
   by design — a failed request or console error is a real defect, never weaken
   them.
 - Tags: not adopted here; don't tag unilaterally.

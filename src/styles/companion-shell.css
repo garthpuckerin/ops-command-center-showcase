@@ -1,0 +1,111 @@
+/* companion-shell.css — Companion shell: app bar, tab bar, phone masthead, folded filter bars, the tablet two-column tier.
+   Split from the former src/index.css (lines 2003–2110) as a pure move:
+   src/styles/app.css imports every file in the original order. */
+
+/* ────────────────────────────────────────────────────────────────
+   Companion shell — phones and tablets below the workstation tier.
+   Its own component tree (src/shell/CompanionShell.jsx); the tier is
+   read from <html data-surface/data-tier/data-shape>, which
+   src/surface.js sets — never from a width media query here.
+   ──────────────────────────────────────────────────────────────── */
+.companion {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.companion-appbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  min-height: 52px; box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.companion-appbar-title { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; line-height: 1.25; }
+.companion-appbar-title strong { font-size: 15px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.companion-appbar-campaign {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.companion-main { flex: 1 1 auto; }
+:where([data-surface="companion"]) .content { padding-top: 16px; }
+
+/* The tab bar owns the floor: fixed, safe-area padded, every tab ≥44×44. */
+.companion-tabs {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  box-shadow: 0 -6px 20px oklch(0% 0 0 / 0.05);
+}
+.companion-tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  min-height: 56px; min-width: 44px;
+  padding: 7px 4px;
+  background: transparent; border: 0;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+.companion-tab span {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.companion-tab-on { color: var(--accent-deep); }
+.companion-tab-on svg { color: var(--accent); }
+
+/* Page furniture sized for a phone: the first screen shows the work, not a
+   44px masthead. */
+:where([data-surface="companion"]) .screen { gap: 14px; }
+:where([data-surface="companion"]) .page-header { flex-direction: column; align-items: stretch; gap: 12px; padding-bottom: 14px; }
+:where([data-surface="companion"]) .page-header .display-lg { font-size: 23px; line-height: 1.2; margin-top: 0; }
+:where([data-surface="companion"]) .page-sub { font-size: 13px; margin-top: 8px; }
+/* On a phone the app bar already names the screen, so the masthead's eyebrow
+   repeats it, and the explanatory sub-line is desk context: both go, and the
+   title states the screen's claim on its own. A tablet keeps the sub-line. */
+:where([data-tier="phone"]) .page-header .eyebrow,
+:where([data-tier="phone"]) .page-header .page-sub { display: none; }
+:where([data-surface="companion"]) .btn { min-height: 44px; }
+:where([data-surface="companion"]) .select-inline select,
+:where([data-surface="companion"]) .select-inline input { min-height: 44px; }
+
+/* Filter bars: a flat strip, one disclosure (FilterFold), and every field a
+   full-width 44px control — label above, never a 17px select in a box. */
+:where([data-surface="companion"]) .filterbar { padding: 0; border: 0; background: transparent; box-shadow: none; }
+:where([data-surface="companion"]) .filterbar .grow { width: 100%; }
+:where([data-surface="companion"]) .session-filter-select {
+  display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+  padding: 6px 10px 0; min-width: 0;
+}
+:where([data-surface="companion"]) .session-filter-select select,
+:where([data-surface="companion"]) .session-filter-select input { width: 100%; min-width: 0; min-height: 44px; font-size: 15px; }
+:where([data-surface="companion"]) .session-filter-toggle { min-height: 44px; }
+/* People search: the input is the control; its label stays as the
+   accessible name but is visually hidden (the placeholder says "Name…"). */
+:where([data-surface="companion"]) .people-filterbar .grow > span {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+:where([data-surface="companion"]) .people-filterbar .grow { padding-top: 0; }
+
+/* Buttons styled as links (a record name in a card, a metric value) are real
+   targets on a phone: a 44×44 hit area, the look unchanged. */
+:where([data-surface="companion"]) .link-btn,
+:where([data-surface="companion"]) .linkbtn {
+  display: inline-flex; align-items: center;
+  min-height: 44px; min-width: 44px;
+}
+:where([data-surface="companion"]) .tour-card { bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
+
+/* Tablet companion (768–1023): wider cards, two columns. */
+:where([data-tier="tablet"]) .stat-grid,
+:where([data-tier="tablet"]) .stat-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:where([data-tier="tablet"]) .person-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }

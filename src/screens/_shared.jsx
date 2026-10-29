@@ -5,6 +5,7 @@ import { LMS_DATA as D } from '../data.js'
 import { computeReadiness as computeReadinessPure } from '../scoring.js'
 import { teamForOwner as teamForOwnerPure, teamRollup as teamRollupPure, teamsForCampaign as teamsForCampaignPure } from '../teams.js'
 import { cls, statusTone, statusLabel, fmtDate, Eyebrow, Pill, Card } from '../components.jsx'
+import { useSurfaceInfo } from '../shell/SurfaceContext.js'
 
 const byId = (items, id) => items.find(x => x.id === id);
 const facilityById = id => byId(D.facilities, id);
@@ -172,6 +173,20 @@ function FilterSelect({ label, value, onChange, children }) {
 }
 
 
+// On the companion a filter bar folds behind ONE native disclosure, so the
+// queue or list it filters starts on the first screen; the workstation keeps
+// the open row. `active` counts the filters narrowing the list right now.
+function FilterFold({ active = 0, children }) {
+  const { companion } = useSurfaceInfo();
+  if (!companion) return children;
+  return (
+    <details className="filter-more">
+      <summary>{active ? `Filters · ${active} on` : "Filters"}</summary>
+      {children}
+    </details>
+  );
+}
+
 function localDate(key) {
   const [year, month, day] = key.split("-").map(Number);
   return new Date(year, month - 1, day);
@@ -317,5 +332,5 @@ function Cell({ children, label }) {
 
 
 export {
-  byId, facilityById, departmentById, appById, userById, campaignById, campaignTemplate, campaignTerms, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, teamForOwner, teamRollup, teamsForCampaign, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
+  byId, facilityById, departmentById, appById, userById, campaignById, campaignTemplate, campaignTerms, facilityNameById, departmentNameById, riskPill, pct, triggerLabel, campaignData, campaignMetrics, teamForOwner, teamRollup, teamsForCampaign, computeReadiness, isOpenException, openExceptionsForDepartment, openExceptionsForFacility, readinessForFacility, overCapacitySessions, CampaignAccessNotice, setupSectionsForCampaign, campaignSetupSummary, FilterSelect, FilterFold, localDate, todayDate, addDays, dateKey, sessionDate, sessionTime, formatSessionStart, PageHeader, Section, Metric, KV, Segmented, Table, Row, Cell,
 };

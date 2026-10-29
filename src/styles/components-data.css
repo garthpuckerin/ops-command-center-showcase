@@ -1,0 +1,279 @@
+/* components-data.css — Data-display primitives: filter bars (incl. the session filter controls), covers, the focal card, tables, stat numbers.
+   Split from the former src/index.css (lines 995–1271) as a pure move:
+   src/styles/app.css imports every file in the original order. */
+
+/* ────────────────────────────────────────────────────────────────
+   Filter bar
+   ──────────────────────────────────────────────────────────────── */
+.filterbar { padding: 10px 14px; }
+.filterbar-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.filterbar-sep { width: 1px; height: 22px; background: var(--rule); }
+.filterbar-spacer { flex: 1; }
+.people-filterbar .grow { flex: 1 1 260px; }
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--rule);
+}
+.link-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.link-btn:hover { color: var(--ink); text-decoration: underline; }
+.stack { display: grid; gap: 10px; }
+.stack-tight { display: grid; gap: 2px; }
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--scrim);
+  display: flex;
+  justify-content: flex-end;
+}
+.profile-drawer {
+  width: min(520px, 100vw);
+  height: 100%;
+  overflow: auto;
+  background: var(--paper);
+  border-left: 1px solid var(--rule-strong);
+  padding: var(--pad-card);
+}
+.drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.icon-btn:hover { background: var(--hover); border-color: var(--ink); color: var(--ink); }
+.profile-section { display: grid; gap: 12px; }
+.profile-campaign {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.profile-campaign-pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.training-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--rule);
+  background: color-mix(in oklch, var(--paper) 92%, var(--ink) 8%);
+}
+.session-filterbar {
+  padding: 0;
+  overflow: hidden;
+}
+.session-filterbar-head {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 12px;
+  background: var(--paper);
+}
+.session-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 9px;
+}
+.session-filter-toggle:hover {
+  border-color: var(--ink);
+}
+.session-filterbar-open .session-filter-toggle svg:last-child {
+  transform: rotate(90deg);
+}
+.session-filterbar-body {
+  padding: 10px 14px;
+  border-top: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+.session-search {
+  max-width: 260px;
+  min-width: 210px;
+}
+.session-filter-select {
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 8px 12px;
+}
+.session-filter-select span {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.session-filter-select select {
+  border: 0;
+  padding: 0;
+  min-width: 104px;
+}
+/* The People search label carries an <input> (siblings carry <select>) — give
+   it the same borderless-inside-the-box reset so it isn't browser-default and
+   cramped, and let it grow to fill the .grow field. */
+.session-filter-select input {
+  flex: 1;
+  border: 0;
+  padding: 0;
+  min-width: 104px;
+  background: transparent;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  outline: none;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Cover (no images; editorial composition)
+   ──────────────────────────────────────────────────────────────── */
+.cover {
+  position: relative; overflow: hidden;
+  background: var(--c-ink);
+  color: var(--cover-fg);
+  border-radius: 2px;
+}
+.cover-terracotta { background: linear-gradient(135deg, var(--c-terracotta), var(--c-terracotta-deep)); }
+/* Accent-following cover — for decorative panels that should flip with the
+   selected accent palette (terracotta / olive / inkblue) rather than staying
+   locked to one hue. */
+.cover-accent     { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); }
+.cover-olive      { background: linear-gradient(135deg, var(--c-olive),      var(--c-olive-deep)); }
+.cover-ochre      { background: linear-gradient(135deg, var(--c-ochre),      var(--c-ochre-deep)); color: var(--cover-fg-ink); }
+.cover-ink        { background: linear-gradient(135deg, var(--c-ink),        var(--c-ink-deep)); }
+.cover-grid {
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, oklch(100% 0 0 / 0.06) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(90deg, oklch(100% 0 0 / 0.06) 0 1px, transparent 1px 32px);
+}
+.cover-mark {
+  position: absolute; left: 12px; top: 12px;
+  font-size: 10px; letter-spacing: 0.16em;
+  color: currentColor; opacity: 0.85;
+}
+.cover-code {
+  position: absolute; right: 12px; bottom: 12px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em;
+  border: 1px solid oklch(100% 0 0 / 0.4); padding: 1px 6px;
+}
+.cover-ochre .cover-code { border-color: oklch(0% 0 0 / 0.4); }
+/* Prominent focal figure for a cover (e.g. the readiness % on the home hero). */
+.cover-figure {
+  position: absolute; left: 20px; bottom: 18px;
+  display: flex; flex-direction: column;
+  font-family: var(--serif); font-size: 68px; line-height: 0.92;
+  color: currentColor;
+}
+.cover-figure-sub {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; opacity: 0.85; margin-top: 8px;
+}
+.cover-sm { width: 88px; flex-shrink: 0; }
+.cover-sm .cover-mark { font-size: 8.5px; left: 7px; top: 7px; }
+.cover-sm .cover-code { font-size: 9px; right: 7px; bottom: 7px; padding: 0 4px; }
+.cover-md { }
+.cover-lg { }
+
+/* ────────────────────────────────────────────────────────────────
+   Focal card (Dashboard "pick up where you left off")
+   ──────────────────────────────────────────────────────────────── */
+.focal { overflow: hidden; }
+.focal-grid {
+  display: grid; grid-template-columns: 340px 1fr;
+  border-radius: 2px; overflow: hidden;
+}
+.focal-grid .cover { border-radius: 0; height: 100% !important; min-height: 280px; }
+.focal-body { padding: var(--pad-card-lg); }
+.focal-body .display-md { margin-top: 12px; }
+.focal-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 6px 0 18px; }
+.focal-actions { display: flex; gap: 10px; }
+
+.metric { }
+.metric-k {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted);
+}
+.metric-v { font-size: 14px; color: var(--ink); margin-top: 4px; }
+
+
+/* ────────────────────────────────────────────────────────────────
+   Tables
+   ──────────────────────────────────────────────────────────────── */
+.tbl {
+  display: flex; flex-direction: column;
+  font-size: 13px;
+}
+.tbl-head, .tbl-row {
+  display: grid; grid-template-columns: var(--cols); align-items: center;
+  gap: 16px; padding: 10px 18px;
+}
+.tbl-head {
+  border-bottom: 1px solid var(--ink);
+  font-family: var(--mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.tbl-row {
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-2);
+}
+.tbl-row:last-child { border-bottom: 0; }
+.tbl-row.is-clickable:hover { background: var(--hover); }
+/* Master-detail selection: a clickable row shows a pointer, and the row whose
+   detail is open is highlighted with an accent rail so the pairing is clear. */
+.tbl-row.is-clickable { cursor: pointer; }
+.tbl-row.is-selected { background: var(--paper-2); box-shadow: inset 3px 0 0 0 var(--accent); }
+.tbl-row.is-clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tbl-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.meta-stack { display: inline-flex; align-items: center; gap: 8px; }
+.due { display: flex; flex-direction: column; line-height: 1.2; }
+
+.rosterbar { display: flex; align-items: center; gap: 10px; }
+.rosterbar .bar-wrap { flex: 1; }
+.link { cursor: pointer; }
+.link:hover { color: var(--ink); text-decoration: underline; }
+
+/* ────────────────────────────────────────────────────────────────
+   Stat numbers / streak
+   ──────────────────────────────────────────────────────────────── */
+.statnum { padding: 4px 0; }
+.statnum-val {
+  font-family: var(--serif); font-size: 44px; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.statnum-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 8px; }
+.statnum-hint { font-size: 11.5px; color: var(--muted-2); margin-top: 4px; }

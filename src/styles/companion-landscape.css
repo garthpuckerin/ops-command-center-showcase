@@ -1,0 +1,35 @@
+/* companion-landscape.css — Companion: short landscape (a phone on its side). Imported LAST so it overrides the portrait companion rules.
+   Split from the former src/index.css (lines 2186–2216) as a pure move:
+   src/styles/app.css imports every file in the original order. */
+
+/* ────────────────────────────────────────────────────────────────
+   Companion — short landscape (a phone on its side). Fixed bars may not
+   take the height: the tabs become a side rail, the app bar scrolls away.
+   Imported last in the split layout so it overrides the portrait rules.
+   ──────────────────────────────────────────────────────────────── */
+:where([data-shape="short-landscape"]) .companion { padding-left: calc(76px + env(safe-area-inset-left, 0px)); }
+:where([data-shape="short-landscape"]) .companion-appbar { position: static; min-height: 44px; padding-left: 18px; }
+:where([data-shape="short-landscape"]) .companion-tabs {
+  top: 0; right: auto; bottom: 0;
+  width: calc(76px + env(safe-area-inset-left, 0px));
+  grid-auto-flow: row; grid-auto-rows: 1fr; grid-auto-columns: auto;
+  border-top: 0; border-right: 1px solid var(--rule);
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  box-shadow: none;
+}
+:where([data-shape="short-landscape"]) .companion-tab { min-height: 44px; padding: 4px; }
+:where([data-shape="short-landscape"]) .content { padding-top: 12px; padding-left: 18px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+/* A sideways phone is still a phone: the compact masthead applies whatever
+   the width tier says, and the app bar is one line. */
+:where([data-shape="short-landscape"]) .companion-appbar { min-height: 32px; }
+:where([data-shape="short-landscape"]) .companion-appbar-campaign { display: none; }
+:where([data-shape="short-landscape"]) .screen { gap: 12px; }
+:where([data-shape="short-landscape"]) .page-header { padding-bottom: 10px; }
+:where([data-shape="short-landscape"]) .page-header .display-lg { font-size: 20px; }
+:where([data-shape="short-landscape"]) .page-header .eyebrow,
+:where([data-shape="short-landscape"]) .page-header .page-sub { display: none; }
+/* People: the search and the Filters disclosure share one row; an open
+   disclosure takes its own full row under the search. */
+:where([data-shape="short-landscape"]) .people-filterbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; align-items: start; }
+:where([data-shape="short-landscape"]) .people-filterbar .filter-more[open] { grid-column: 1 / -1; }
+:where([data-shape="short-landscape"]) .tour-card { bottom: 12px; }
