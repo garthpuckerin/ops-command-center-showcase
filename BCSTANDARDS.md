@@ -84,3 +84,36 @@
 - Canonical memory policy: `standards/Memory_Standard.md` in
   blurred-concepts-engineering — it governs on any conflict.
 <!-- /bcstd:managed -->
+
+## Agent Orchestration (Landing Cost)
+<!-- bcstd:managed orchestration v1 -->
+- CRITICAL for any agent that delegates, spawns sub-agents or lands changes:
+  plan by LANDINGS (one merge plus one deploy), not items. Before a list,
+  state landings, gate-minutes and agent count. Small and medium items in
+  one area share one branch, one gate, one deploy; small settled work is
+  done inline with a one-line `Deviation:` entry; a brief over about 250
+  words or 3+ status turns on one small item is the tripwire.
+- One authoritative full suite per landing; never skip hooks. No status
+  chatter while a gate or session runs (report at launch and at end). One
+  approval covers a sequence the owner has named; a deploy is its own go.
+  Report landings done vs planned and gate runs, failures and retries.
+- Canonical text: `standards/Agent_Orchestration_Standard.md` section 11.4
+  in blurred-concepts-engineering. It governs on any conflict.
+<!-- /bcstd:managed -->
+
+## Performance in Every Build
+<!-- bcstd:managed performance v1 -->
+- CRITICAL for any agent that specifies, builds or lands a change: state its
+  cost at production size in the spec (size, time, CPU, background load, what
+  it blocks, growth, headroom) and set a threshold before measuring. A landing
+  that cannot change cost says `Cost: none - <reason>`.
+- Measure before merge at or above production size, through the real path, on
+  the configuration production runs. Other hardware is a labelled stand-in,
+  re-measured at deploy-verify. A miss blocks the merge; "not measured" is not
+  a pass. Only the owner changes a threshold.
+- Background work shows rate times size against what the resource can serve,
+  measures idle cost, and keeps defaults safe at production size. A test on a
+  small fixture is not proof. Once a threshold is met, stop.
+- Canonical text: `standards/Performance_Standard.md` in
+  blurred-concepts-engineering. It governs on any conflict.
+<!-- /bcstd:managed -->
